@@ -15,8 +15,8 @@
  *    NEXT_PUBLIC_CONTACT_SCRIPT_URL=https://script.google.com/macros/s/XXXX/exec
  */
 
-// Change this to the name of the sheet tab you want submissions in.
-var SHEET_NAME = 'Sheet1'
+// Sheet tab that receives home enquiry form submissions.
+var SHEET_NAME = 'Leads from website'
 
 // Sheet tab that receives post-payment (paid prototype) customer details.
 var PAID_SHEET_NAME = 'Paid prototype customers'
