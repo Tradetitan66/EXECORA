@@ -26,6 +26,23 @@ function initPaymentCta() {
 
 initPaymentCta()
 
+function initHeaderGlass() {
+  const header = document.querySelector('.nav-bar')
+  if (!header) return
+  let ticking = false
+  const update = () => {
+    header.classList.toggle('is-scrolled', window.scrollY > 8)
+    ticking = false
+  }
+  window.addEventListener('scroll', () => {
+    if (ticking) return
+    ticking = true
+    requestAnimationFrame(update)
+  }, { passive: true })
+  update()
+}
+initHeaderGlass()
+
 const menuToggle = document.getElementById('menu-toggle')
 const siteNav = document.getElementById('site-nav')
 

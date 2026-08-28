@@ -2,6 +2,23 @@ const WHATSAPP_NUMBER = '4407345384868'
 const WA_BASE = 'https://wa.me/'
 const CONTACT_SCRIPT_URL = import.meta.env.NEXT_PUBLIC_CONTACT_SCRIPT_URL
 
+function initHeaderGlass() {
+  const header = document.querySelector('.nav-bar')
+  if (!header) return
+  let ticking = false
+  const update = () => {
+    header.classList.toggle('is-scrolled', window.scrollY > 8)
+    ticking = false
+  }
+  window.addEventListener('scroll', () => {
+    if (ticking) return
+    ticking = true
+    requestAnimationFrame(update)
+  }, { passive: true })
+  update()
+}
+initHeaderGlass()
+
 const form = document.getElementById('detail-form')
 const note = document.getElementById('detail-note')
 
