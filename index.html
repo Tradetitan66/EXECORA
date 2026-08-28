@@ -423,27 +423,27 @@
             <form class="enquiry-form" id="enquiry-form" novalidate>
               <div class="form-row">
                 <div class="field">
-                  <label for="f-name">Name</label>
+                  <label for="f-name">Name <span class="req">*</span></label>
                   <input id="f-name" name="name" type="text" autocomplete="name" required />
                 </div>
                 <div class="field">
-                  <label for="f-business">Business name</label>
+                  <label for="f-business">Business name <span class="req">*</span></label>
                   <input id="f-business" name="business" type="text" autocomplete="organization" required />
                 </div>
               </div>
               <div class="form-row">
                 <div class="field">
-                  <label for="f-email">Email</label>
+                  <label for="f-email">Email <span class="req">*</span></label>
                   <input id="f-email" name="email" type="email" autocomplete="email" required />
                 </div>
                 <div class="field">
-                  <label for="f-phone">Phone</label>
-                  <input id="f-phone" name="phone" type="tel" autocomplete="tel" />
+                  <label for="f-phone">Phone <span class="req">*</span></label>
+                  <input id="f-phone" name="phone" type="tel" autocomplete="tel" required />
                 </div>
               </div>
               <div class="field">
-                <label for="f-message">Tell us about your business</label>
-                <textarea id="f-message" name="message" rows="4"></textarea>
+                <label for="f-message">Tell us about your business <span class="req">*</span></label>
+                <textarea id="f-message" name="message" rows="4" required></textarea>
               </div>
               <button class="btn-sub btn-block" type="submit">Send enquiry</button>
               <p class="form-note" id="form-note">We’ll be in touch soon - no spam, ever.</p>

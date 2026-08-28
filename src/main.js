@@ -84,11 +84,31 @@ function openWhatsApp(data) {
   window.open(`${'https://wa.me/'}${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank', 'noopener')
 }
 
+// Validate a UK WhatsApp number. Accepts either the international form
+// (+44 7xxxxxxxxx) or the national form (07xxxxxxxxx), ignoring spaces/dashes.
+function isValidWhatsApp(value) {
+  const digits = String(value || '').replace(/\D/g, '')
+  if (digits.length === 12 && digits.startsWith('447')) return true // +44 7xxxxxxxxx
+  if (digits.length === 11 && digits.startsWith('07')) return true  // 07xxxxxxxxx
+  return false
+}
+
+const phoneInput = document.getElementById('f-phone')
+function validatePhone() {
+  const msg = isValidWhatsApp(phoneInput.value)
+    ? ''
+    : 'Please enter a valid UK WhatsApp number starting with +44 (e.g. +44 7912 345678).'
+  phoneInput.setCustomValidity(msg)
+  return phoneInput.validity.valid
+}
+phoneInput.addEventListener('input', validatePhone)
+
 // Store the details so the WhatsApp button can open with them on click.
 let savedData = null
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault()
+  validatePhone()
   if (!form.checkValidity()) {
     form.reportValidity()
     return

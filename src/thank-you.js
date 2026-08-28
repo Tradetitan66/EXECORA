@@ -5,6 +5,25 @@ const CONTACT_SCRIPT_URL = import.meta.env.NEXT_PUBLIC_CONTACT_SCRIPT_URL
 const form = document.getElementById('detail-form')
 const note = document.getElementById('detail-note')
 
+// Validate a UK WhatsApp number. Accepts either the international form
+// (+44 7xxxxxxxxx) or the national form (07xxxxxxxxx), ignoring spaces/dashes.
+function isValidWhatsApp(value) {
+  const digits = String(value || '').replace(/\D/g, '')
+  if (digits.length === 12 && digits.startsWith('447')) return true // +44 7xxxxxxxxx
+  if (digits.length === 11 && digits.startsWith('07')) return true  // 07xxxxxxxxx
+  return false
+}
+
+const phoneInput = document.getElementById('d-phone')
+function validatePhone() {
+  const msg = isValidWhatsApp(phoneInput.value)
+    ? ''
+    : 'Please enter a valid UK WhatsApp number starting with +44 (e.g. +44 7912 345678).'
+  phoneInput.setCustomValidity(msg)
+  return phoneInput.validity.valid
+}
+phoneInput.addEventListener('input', validatePhone)
+
 function formatValue(label, value) {
   if (!value) return ''
   return `\n• ${label}: ${value}`
@@ -37,6 +56,7 @@ function buildWhatsAppMessage(data) {
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault()
+  validatePhone()
   if (!form.checkValidity()) {
     form.reportValidity()
     return

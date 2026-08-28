@@ -792,6 +792,7 @@ section {
   color: var(--ink);
   margin-bottom: 0.35rem;
 }
+.req { color: var(--coral-deep); }
 .field input,
 .field textarea {
   font-family: var(--font-head);
