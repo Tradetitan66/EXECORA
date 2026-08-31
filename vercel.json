@@ -2,7 +2,7 @@
   "redirects": [
     {
       "source": "/(.*)",
-      "destination": "https://www.execora.work/:splat",
+      "destination": "https://www.execora.work/$1",
       "permanent": true
     }
   ]
