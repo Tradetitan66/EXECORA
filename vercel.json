@@ -1,9 +1,10 @@
 {
   "redirects": [
     {
-      "source": "/(.*)",
-      "destination": "https://www.execora.work/$1",
-      "permanent": true
+      "source": "/:path*",
+      "destination": "https://www.execora.work/:path*",
+      "permanent": true,
+      "hosts": ["execora.work"]
     }
   ]
 }
