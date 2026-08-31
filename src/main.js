@@ -357,3 +357,24 @@ function initShowcase() {
   start()
 }
 initShowcase()
+
+/* ============================================================
+   Pricing — keep matching <details> sections in sync across all
+   plan cards so the same section opens side-by-side for comparison
+   ============================================================ */
+const planSectionDetails = Array.from(
+  document.querySelectorAll('.pricing-grid details[data-plan-section]')
+)
+if (planSectionDetails.length) {
+  let syncing = false
+  const sync = (details) => {
+    if (syncing) return
+    const group = details.dataset.planSection
+    syncing = true
+    planSectionDetails
+      .filter((d) => d.dataset.planSection === group && d !== details)
+      .forEach((d) => { d.open = details.open })
+    syncing = false
+  }
+  planSectionDetails.forEach((d) => d.addEventListener('toggle', () => sync(d)))
+}

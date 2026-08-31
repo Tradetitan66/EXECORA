@@ -672,6 +672,51 @@ section {
   box-shadow: 0 0 0 3px rgba(201, 164, 92, 0.22);
 }
 
+/* Expandable plan details (accordion) */
+.plan-details {
+  margin: 0 0 1.4rem;
+  border-top: 1px solid var(--stone-100);
+  padding-top: 0.2rem;
+}
+.plan-details details {
+  border-bottom: 1px solid var(--stone-100);
+}
+.plan-details summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0.2rem;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink);
+  cursor: pointer;
+  list-style: none;
+}
+.plan-details summary::-webkit-details-marker { display: none; }
+.plan-details summary::after {
+  content: "+";
+  font-size: 1.15rem;
+  font-weight: 400;
+  color: var(--coral-deep);
+  transition: transform 0.35s var(--ease-slow);
+  line-height: 1;
+}
+.plan-details details[open] summary::after { transform: rotate(45deg); }
+.plan-details-body { padding: 0 0.2rem 1rem; }
+.plan-details .plan-who,
+.plan-details .plan-examples { margin: 0; }
+.plan-details .plan-examples { margin-top: 0.5rem; }
+.plan-details .plan-structure {
+  margin: 0;
+  padding: 0;
+  border-top: 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
 .plan-actions {
   display: flex;
   flex-wrap: wrap;
