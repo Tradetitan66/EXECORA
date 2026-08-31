@@ -51,7 +51,7 @@ function doPost(e) {
     var v = values[h]
     return v !== undefined ? String(v) : ''
   })
-  row[0] = new Date().toISOString()
+  row[0] = Utilities.formatDate(new Date(), 'Europe/London', 'dd/MM/yyyy HH:mm:ss')
   sheet.appendRow(row)
 
   return ContentService
