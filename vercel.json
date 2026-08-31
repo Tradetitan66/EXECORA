@@ -5,6 +5,26 @@
       "has": [{ "type": "host", "value": "execora.work" }],
       "destination": "https://www.execora.work/$1",
       "permanent": true
+    },
+    {
+      "source": "/admin",
+      "destination": "https://execora.sanity.studio",
+      "permanent": true
+    },
+    {
+      "source": "/admin/:path*",
+      "destination": "https://execora.sanity.studio/:path*",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/blog",
+      "destination": "/blog.html"
+    },
+    {
+      "source": "/blog/:slug*",
+      "destination": "/blog.html"
     }
   ]
 }

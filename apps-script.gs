@@ -112,6 +112,7 @@ function getHeaders_(paid) {
     'business',
     'email',
     'phone',
+    'plan',
     'message'
   ]
 }

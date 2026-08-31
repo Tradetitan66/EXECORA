@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Practical ideas to help local businesses improve their website, build trust online and turn more visitors into enquiries."
+    />
+    <meta name="theme-color" content="#FDFCF8" />
+    <title>Insights for local businesses - Execora</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Reenie+Beanie&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/blog.css" />
+    <meta
+      property="og:description"
+      content="Practical ideas to help local businesses improve their website, build trust online and turn more visitors into enquiries."
+    />
+    <meta property="og:url" content="https://www.execora.work/blog/" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <!-- Grain overlay -->
+    <div class="grain" aria-hidden="true"></div>
+
+    <!-- ============ NAVIGATION ============ -->
+    <header class="nav-bar" data-header>
+      <div class="nav-inner">
+        <a class="nav-logo" href="/" aria-label="Execora home">
+          <span class="logo-dot" aria-hidden="true"><span class="logo-core"></span></span>
+          <span class="logo-word">Execora</span>
+        </a>
+        <nav class="nav-links" id="site-nav" aria-label="Primary">
+          <a href="/">Home</a>
+          <a href="/#pricing">Pricing</a>
+          <a href="/blog" aria-current="page">Blog</a>
+          <a class="nav-cta" href="/#contact">Get discovered</a>
+        </nav>
+        <button
+          class="menu-toggle"
+          id="menu-toggle"
+          aria-expanded="false"
+          aria-controls="site-nav"
+          aria-label="Toggle menu"
+        >
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </button>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- Static shells; blog.js renders index or article into these. -->
+      <div id="blog-index" class="blog-page" hidden></div>
+      <article id="blog-article" class="blog-article" hidden></article>
+
+      <!-- Loading state -->
+      <div id="blog-loading" class="blog-loading">
+        <span class="eyebrow">Execora journal</span>
+        <p class="blog-loading-text">Loading…</p>
+      </div>
+
+      <noscript>
+        <section class="blog-page">
+          <div class="blog-head">
+            <span class="eyebrow">Execora journal</span>
+            <h1 class="blog-title">Insights for local businesses</h1>
+            <p class="blog-lead">
+              Practical ideas to help local businesses improve their website, build trust online and turn more visitors into enquiries.
+            </p>
+          </div>
+          <p class="blog-noscript">Please enable JavaScript to view the blog.</p>
+        </section>
+      </noscript>
+    </main>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a class="nav-logo" href="/" aria-label="Execora home">
+            <span class="logo-dot" aria-hidden="true"><span class="logo-core"></span></span>
+            <span class="logo-word">Execora</span>
+          </a>
+          <p class="footer-tagline">Helping local businesses show up, stand out, and grow.</p>
+        </div>
+        <nav class="footer-links" aria-label="Footer">
+          <div class="footer-col">
+            <h4 class="footer-heading">Explore</h4>
+            <a href="/#how-it-works">How it works</a>
+            <a href="/#services">Services</a>
+            <a href="/#pricing">Pricing</a>
+            <a href="/blog">Blog</a>
+            <a href="/#contact">Contact</a>
+            <a href="/#faqs">FAQs</a>
+          </div>
+          <div class="footer-col">
+            <h4 class="footer-heading">Company</h4>
+            <a href="/#why-execora">Why Execora</a>
+            <a href="/#top" id="privacy-link">Privacy</a>
+          </div>
+        </nav>
+      </div>
+      <div class="footer-legal">
+        <div class="legal-inner">
+          <p>© 2026 Execora.</p>
+          <p class="legal-note">Made for local businesses.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/blog.js"></script>
+  </body>
+</html>

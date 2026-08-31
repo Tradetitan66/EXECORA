@@ -1,6 +1,10 @@
 import './style.css'
+import { hydrateHomepage } from './sanity/site.js'
 
 const PAYMENT_LINK = import.meta.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK
+
+// Fetch editable homepage copy from Sanity (falls back to hard-coded copy).
+hydrateHomepage()
 
 function initPaymentCta() {
   const buttons = document.querySelectorAll('[data-payment-cta]')
@@ -74,6 +78,66 @@ const io = new IntersectionObserver(
   { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
 )
 revealEls.forEach((el) => io.observe(el))
+
+/* ============================================================
+   Hero — rotating word (found · trusted · chosen · contacted)
+   ============================================================ */
+function initHeroRotator() {
+  const word = document.querySelector('.hero-word')
+  if (!word) return
+
+  const words = ['found', 'trusted', 'chosen', 'contacted']
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const TYPE_MS = 70        // per character typed
+  const DELETE_MS = 40      // per character deleted
+  const HOLD_MS = 1800      // pause on full word
+  const END_MS = 500        // brief pause after deleting before typing next
+  let index = 0
+  let timer = null
+
+  // Reserve width for the widest word so the headline never reflows.
+  const probe = word.cloneNode(true)
+  probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;left:-9999px;top:0'
+  probe.textContent = words[0]
+  const container = word.parentElement
+  container.appendChild(probe)
+  let maxWidth = 0
+  words.forEach((w) => {
+    probe.textContent = w
+    maxWidth = Math.max(maxWidth, probe.offsetWidth)
+  })
+  probe.remove()
+  word.style.minWidth = maxWidth + 'px'
+
+  if (reduced) {
+    word.textContent = 'found'
+    return
+  }
+
+  function type(i, charIndex) {
+    if (charIndex <= words[i].length) {
+      word.textContent = words[i].slice(0, charIndex)
+      timer = setTimeout(() => type(i, charIndex + 1), TYPE_MS)
+    } else {
+      // word complete — hold, then delete
+      timer = setTimeout(() => erase(i, words[i].length), HOLD_MS)
+    }
+  }
+
+  function erase(i, charIndex) {
+    if (charIndex >= 0) {
+      word.textContent = words[i].slice(0, charIndex)
+      timer = setTimeout(() => erase(i, charIndex - 1), DELETE_MS)
+    } else {
+      const next = (i + 1) % words.length
+      timer = setTimeout(() => type(next, 0), END_MS)
+    }
+  }
+
+  // start typing the first word after the hero reveal settles
+  timer = setTimeout(() => type(0, 0), 1400)
+}
+initHeroRotator()
 
 const WHATSAPP_NUMBER = '4407345384868'
 const CONTACT_SCRIPT_URL = import.meta.env.NEXT_PUBLIC_CONTACT_SCRIPT_URL
@@ -177,6 +241,14 @@ successWaBtn.addEventListener('click', () => {
 document.querySelectorAll('[data-focus-form]').forEach((btn) => {
   btn.addEventListener('click', (e) => {
     e.preventDefault()
+    const plan = btn.getAttribute('data-plan')
+    if (plan) {
+      const planField = document.getElementById('f-plan')
+      if (planField) planField.value = plan
+    } else {
+      const planField = document.getElementById('f-plan')
+      if (planField && planField.value === '') planField.value = 'General enquiry'
+    }
     const nameField = document.getElementById('f-name')
     form.scrollIntoView({ behavior: 'smooth', block: 'center' })
     setTimeout(() => nameField.focus(), 500)

@@ -23,3 +23,7 @@ npm-debug.log*
 .vscode/*
 !.vscode/extensions.json
 .idea
+
+# Sanity
+.sanity
+studio/dist

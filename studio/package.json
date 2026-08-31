@@ -1,0 +1,33 @@
+{
+  "name": "execora-studio",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Execora Sanity Studio — content management for execora.work",
+  "scripts": {
+    "dev": "sanity dev",
+    "start": "sanity start",
+    "build": "sanity build",
+    "deploy": "sanity deploy",
+    "deploy-graphql": "sanity graphql deploy",
+    "schemas": "sanity schema extract"
+  },
+  "keywords": [
+    "sanity",
+    "cms",
+    "execora",
+    "content"
+  ],
+  "dependencies": {
+    "@sanity/icons": "^5.2.1",
+    "@sanity/ui": "^4.0.6",
+    "@sanity/vision": "^6.11.0",
+    "react": "^19.2.2",
+    "react-dom": "^19.2.2",
+    "sanity": "^6.11.0",
+    "styled-components": "^6.1.15"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}
