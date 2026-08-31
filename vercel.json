@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "destination": "https://www.execora.work/:splat",
+      "permanent": true
+    }
+  ]
+}
