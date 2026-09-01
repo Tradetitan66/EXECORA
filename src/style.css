@@ -930,7 +930,7 @@ section {
 .showcase-track {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(240px, 300px);
+  grid-auto-columns: minmax(200px, 260px);
   gap: 1.25rem;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
@@ -950,6 +950,21 @@ section {
   transition: transform 0.35s var(--ease-slow), box-shadow 0.35s var(--ease-slow);
 }
 .showcase-card:hover { transform: translateY(-6px); box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.14); }
+
+/* Real screenshot cards — uniform portrait crop, top-aligned */
+.showcase-shot-card { display: block; }
+.showcase-shot {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--stone-50);
+}
+.showcase-shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
 
 /* Browser chrome bar */
 .browser-bar {
@@ -1060,6 +1075,105 @@ section {
 .showcase-arrow.next { right: -14px; }
 .showcase-arrow:hover { transform: translateY(-50%) translateY(-3px); box-shadow: 0 14px 30px -10px rgba(0, 0, 0, 0.18); }
 .showcase-arrow.is-disabled { opacity: 0.35; cursor: not-allowed; transform: translateY(-50%); box-shadow: none; }
+
+/* ============================================================
+   Social proof / customer feedback
+   ============================================================ */
+.reviews-head { max-width: 720px; margin-inline: auto; text-align: center; margin-bottom: 2.6rem; }
+.reviews .section-title, .reviews .section-lead { margin-inline: auto; }
+
+.rating-summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 1.4rem;
+  padding: 0.7rem 1.2rem;
+  background: var(--stone-50);
+  border: 1px solid var(--stone-100);
+  border-radius: 999px;
+}
+.rating-stars {
+  color: #f6b73c;
+  font-size: 1.05rem;
+  letter-spacing: 0.1em;
+}
+.rating-score {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+.rating-note {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.reviews-slider {
+  position: relative;
+  max-width: 1080px;
+  margin-inline: auto;
+}
+.reviews-track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(240px, 300px);
+  gap: 1.25rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  padding: 0.3rem;
+  scrollbar-width: none;
+  perspective: 1200px;
+}
+.reviews-track::-webkit-scrollbar { display: none; }
+
+.review-card {
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.5rem;
+  background: #fff;
+  border: 1px solid var(--stone-100);
+  border-radius: 16px;
+  box-shadow: var(--shadow-soft);
+  transform-style: preserve-3d;
+  will-change: transform;
+  backface-visibility: hidden;
+  transition: transform 0.6s var(--ease-slow), box-shadow 0.6s var(--ease-slow);
+}
+.review-stars {
+  color: #f6b73c;
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+}
+.review-quote {
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.review-author {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.review-author strong {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+.review-author span {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .review-card:hover {
+    box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.16);
+  }
+}
 
 /* ============================================================
    Contact / form
@@ -1195,6 +1309,7 @@ section {
   padding-bottom: 2.5rem;
 }
 .footer-tagline { margin-top: 1rem; max-width: 30ch; color: var(--muted); font-size: 0.95rem; font-weight: 300; }
+.footer-location { margin-top: 0.5rem; color: var(--muted); font-size: 0.9rem; font-weight: 300; }
 .footer-links { display: flex; flex-wrap: wrap; gap: 3rem; }
 .footer-col { display: flex; flex-direction: column; gap: 0.6rem; }
 .footer-heading {
@@ -1322,9 +1437,11 @@ section {
   .enquiry-form .field { text-align: left; }
   .footer-links { gap: 2rem; }
 
-  .showcase-track { grid-auto-columns: minmax(230px, 78vw); }
+  .showcase-track { grid-auto-columns: minmax(190px, 62vw); }
   .showcase-arrow.prev { left: 2px; }
   .showcase-arrow.next { right: 2px; }
+
+  .reviews-track { grid-auto-columns: minmax(230px, 78vw); }
 }
 
 /* ============ TABLET portrait (iPad) & below ============ */

@@ -65,7 +65,6 @@ menuToggle.addEventListener('click', () => {
 siteNav.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu))
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu() })
 
-const revealEls = document.querySelectorAll('.reveal')
 const io = new IntersectionObserver(
   (entries) => {
     entries.forEach((entry) => {
@@ -77,7 +76,29 @@ const io = new IntersectionObserver(
   },
   { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
 )
-revealEls.forEach((el) => io.observe(el))
+
+const STAGGER_GRIDS = ['.step-grid', '.offer-grid', '.card-grid', '.pricing-grid']
+const revealEls = new Set(document.querySelectorAll('.reveal'))
+
+document.querySelectorAll('main > section > *').forEach((block) => {
+  if (block.hasAttribute('hidden') || block.getAttribute('aria-hidden') === 'true') return
+  revealEls.add(block)
+})
+
+STAGGER_GRIDS.forEach((sel) => {
+  document.querySelectorAll(sel).forEach((grid) => {
+    grid.querySelectorAll(':scope > *').forEach((child, idx) => {
+      if (child.hasAttribute('hidden')) return
+      revealEls.add(child)
+      if (idx < 5) child.style.transitionDelay = `${idx * 90}ms`
+    })
+  })
+})
+
+revealEls.forEach((el) => {
+  el.classList.add('reveal')
+  io.observe(el)
+})
 
 /* ============================================================
    Hero — rotating word (found · trusted · chosen · contacted)
@@ -287,21 +308,20 @@ privacyLink.addEventListener('click', (e) => {
 })
 
 /* ============================================================
-   Showcase — auto-scrolling local-website slider
+   Showcase + Reviews — auto-scrolling horizontal sliders
    ============================================================ */
-function initShowcase() {
-  const track = document.querySelector('[data-showcase-track]')
+function initAutoScrollTrack({ trackSel, prevSel, nextSel, autoMs = 4000 }) {
+  const track = document.querySelector(trackSel)
   if (!track) return
 
-  const prev = document.querySelector('[data-showcase-prev]')
-  const next = document.querySelector('[data-showcase-next]')
+  const prev = document.querySelector(prevSel)
+  const next = document.querySelector(nextSel)
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  const AUTO_MS = 4000
   let timer = null
   let restartTimer = null
 
   const card = () => {
-    const el = track.querySelector('.showcase-card')
+    const el = track.querySelector('.showcase-card, .review-card')
     return el ? el.getBoundingClientRect().width + 20 : 300
   }
 
@@ -336,7 +356,7 @@ function initShowcase() {
         step(1)
       }
       updateArrows()
-    }, AUTO_MS)
+    }, autoMs)
   }
 
   function restartSoon() {
@@ -356,7 +376,36 @@ function initShowcase() {
   updateArrows()
   start()
 }
-initShowcase()
+initAutoScrollTrack({ trackSel: '[data-showcase-track]', prevSel: '[data-showcase-prev]', nextSel: '[data-showcase-next]' })
+initAutoScrollTrack({ trackSel: '[data-reviews-track]', prevSel: '[data-reviews-prev]', nextSel: '[data-reviews-next]' })
+
+/* ============================================================
+   Reviews — subtle 3D tilt on each card as the pointer moves
+   ============================================================ */
+function initCardTilt() {
+  const cards = document.querySelectorAll('.review-card')
+  if (cards.length === 0) return
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+  const MAX_X = 8   // degrees of rotateX (vertical tilt)
+  const MAX_Y = 10  // degrees of rotateY (horizontal tilt)
+
+  cards.forEach((card) => {
+    card.addEventListener('pointermove', (e) => {
+      const rect = card.getBoundingClientRect()
+      const px = (e.clientX - rect.left) / rect.width
+      const py = (e.clientY - rect.top) / rect.height
+      const rotY = (px - 0.5) * 2 * MAX_Y
+      const rotX = (0.5 - py) * 2 * MAX_X
+      card.style.transform = `rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg)`
+    })
+
+    card.addEventListener('pointerleave', () => {
+      card.style.transform = 'rotateX(0deg) rotateY(0deg)'
+    })
+  })
+}
+initCardTilt()
 
 /* ============================================================
    Pricing — keep matching <details> sections in sync across all
