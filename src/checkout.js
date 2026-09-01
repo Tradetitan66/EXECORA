@@ -25,6 +25,7 @@ export function closeModal(target) {
       ? document.querySelector(target)
       : target && target.closest?.('.checkout-modal')
   if (!modal) return
+  modal.hidden = true
   modal.classList.remove('is-open')
   document.body.classList.remove('modal-open')
   const closeBtn = modal.querySelector('[data-checkout-close]')
@@ -34,6 +35,7 @@ export function closeModal(target) {
 export function openModal() {
   const modal = document.getElementById('checkout-modal')
   if (!modal) return
+  modal.hidden = false
   modal.classList.add('is-open')
   document.body.classList.add('modal-open')
   const first = modal.querySelector('input, select, textarea')
