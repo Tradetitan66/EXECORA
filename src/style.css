@@ -896,7 +896,7 @@ section {
   letter-spacing: -0.02em;
   color: var(--ink);
 }
-.quote-text .cursive { color: var(--coral-deep); font-size: 1.1em; font-weight: 700; }
+.quote-text .cursive { color: var(--coral-deep); font-size: 1.25em; font-weight: 700; }
 .quote-rule {
   display: block;
   width: 56px;
