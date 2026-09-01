@@ -49,6 +49,15 @@
   max-width: 46ch;
   margin-inline: auto;
 }
+.thanks-payment-id {
+  display: block;
+  font-family: monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  opacity: 0.6;
+  margin-bottom: 0.8rem;
+}
 .thanks-inner .btn-coral { display: inline-block; margin-top: 0.5rem; }
 .thanks-actions {
   display: flex;

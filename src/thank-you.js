@@ -92,7 +92,11 @@ async function loadPaymentIntent() {
       body: JSON.stringify({ session_id: sessionId }),
     })
     const json = await res.json().catch(() => ({}))
-    if (res.ok && json.payment_intent) paymentIntent = json.payment_intent
+    if (res.ok && json.payment_intent) {
+      paymentIntent = json.payment_intent
+      const el = document.getElementById('thanks-payment-id')
+      if (el) el.textContent = paymentIntent
+    }
   } catch (err) {
     console.warn('[Execora] Could not load payment ID:', err)
   }
