@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Thank you for starting with Execora. Tell us a little about your business and we’ll begin crafting your website prototype."
+      content="Thank you for starting with Execora. Your £5 prototype payment is confirmed and we’re ready to begin crafting your website prototype."
     />
     <meta name="theme-color" content="#FDFCF8" />
     <title>Thank you - Execora</title>
@@ -48,96 +48,11 @@
           </span>
           <span class="eyebrow">Payment received</span>
           <h1 class="thanks-title">Thank you for your <span class="cursive accent">trust.</span></h1>
-          <p class="thanks-sub">
-            Your £5 prototype payment went through. To get started, tell us a little about your
-            business below - then we’ll begin crafting your website prototype.
+          <p class="thanks-sub" id="thanks-sub">
+            Your £5 prototype payment went through. We’ve got your business details and we’re
+            ready to begin crafting your website prototype.
           </p>
-        </div>
-      </section>
-
-      <!-- ============ BUSINESS DETAILS FORM ============ -->
-      <section class="details" id="details">
-        <div class="details-inner">
-          <div class="details-head">
-            <span class="eyebrow">Let’s get started</span>
-            <h2 class="section-title">Tell us about your business</h2>
-            <p class="section-lead">The more you share, the better your prototype will match your business.</p>
-          </div>
-
-          <form class="detail-form" id="detail-form" novalidate>
-            <div class="form-row">
-              <div class="field">
-                <label for="d-name">Name <span class="req">*</span></label>
-                <input id="d-name" name="name" type="text" autocomplete="name" required />
-              </div>
-              <div class="field">
-                <label for="d-business">Business name <span class="req">*</span></label>
-                <input id="d-business" name="business" type="text" autocomplete="organization" required />
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="field">
-                <label for="d-email">Email <span class="req">*</span></label>
-                <input id="d-email" name="email" type="email" autocomplete="email" required />
-              </div>
-              <div class="field">
-                <label for="d-phone">WhatsApp number <span class="req">*</span></label>
-                <input id="d-phone" name="phone" type="tel" autocomplete="tel" required placeholder="e.g. +44 7912 345678" />
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="field">
-                <label for="d-type">Business type <span class="req">*</span></label>
-                <select id="d-type" name="type" required>
-                  <option value="" selected>Please choose…</option>
-                  <option value="tradespeople">Tradesperson</option>
-                  <option value="salon">Salon / beauty</option>
-                  <option value="cafe">Café / restaurant</option>
-                  <option value="clinic">Clinic / health</option>
-                  <option value="fitness">Fitness studio</option>
-                  <option value="home-services">Home services</option>
-                  <option value="specialist-shop">Specialist shop / retail</option>
-                  <option value="other">Something else</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="d-location">Location <span class="req">*</span></label>
-                <input id="d-location" name="location" type="text" placeholder="e.g. Edinburgh" autocomplete="address-level2" required />
-              </div>
-            </div>
-
-            <div class="field">
-              <label for="d-services">Services you offer <span class="req">*</span></label>
-              <textarea id="d-services" name="services" rows="3" placeholder="What do you offer your customers?" required></textarea>
-            </div>
-
-            <div class="field">
-              <label for="d-social">Social links</label>
-              <input id="d-social" name="social" type="text" placeholder="Instagram, Facebook, Google - optional" />
-            </div>
-
-            <div class="field">
-                <label for="d-style">Preferred style <span class="req">*</span></label>
-                <select id="d-style" name="style" required>
-                  <option value="" selected>Please choose…</option>
-                <option value="warm-clean">Warm &amp; clean</option>
-                <option value="premium-dark">Premium &amp; refined</option>
-                <option value="bold-playful">Bold &amp; playful</option>
-                <option value="minimal-modern">Minimal &amp; modern</option>
-                <option value="not-sure">Not sure - you decide</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label for="d-notes">Additional notes</label>
-              <textarea id="d-notes" name="notes" rows="4" placeholder="Anything else you’d like us to know…"></textarea>
-            </div>
-
-            <button class="btn-sub btn-block" type="submit">Send my details</button>
-            <p class="form-note" id="detail-note">We’ll use these details to create your website prototype.</p>
-          </form>
+          <a class="btn btn-coral" href="/">Back to home</a>
         </div>
       </section>
     </main>

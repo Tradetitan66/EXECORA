@@ -1,34 +1,12 @@
 import './style.css'
 import { hydrateHomepage } from './sanity/site.js'
-
-const PAYMENT_LINK = import.meta.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK
+import { initCheckout } from './checkout.js'
 
 // Fetch editable homepage copy from Sanity (falls back to hard-coded copy).
 hydrateHomepage()
 
-function initPaymentCta() {
-  const buttons = document.querySelectorAll('[data-payment-cta]')
-  if (buttons.length === 0) return
-
-  if (!PAYMENT_LINK) {
-    buttons.forEach((btn) => {
-      btn.classList.add('is-disabled')
-      btn.setAttribute('disabled', '')
-      btn.setAttribute('aria-disabled', 'true')
-      btn.setAttribute('title', 'Online checkout coming soon')
-      btn.textContent = 'Coming soon'
-    })
-    return
-  }
-
-  buttons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      window.location.href = PAYMENT_LINK
-    })
-  })
-}
-
-initPaymentCta()
+// Wire all £5 prototype CTAs to open the checkout modal (Stripe Checkout flow).
+initCheckout()
 
 function initHeaderGlass() {
   const header = document.querySelector('.nav-bar')
