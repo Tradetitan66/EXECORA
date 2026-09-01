@@ -897,6 +897,7 @@ section {
   color: var(--ink);
 }
 .quote-text .cursive { color: var(--coral-deep); font-size: 1.25em; font-weight: 700; }
+.problem .section-title .cursive { color: var(--coral-deep); font-size: 1.25em; font-weight: 700; }
 .quote-rule {
   display: block;
   width: 56px;
