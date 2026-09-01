@@ -36,4 +36,25 @@ function personalise() {
   clearHeldData()
 }
 
+function initWhatsApp() {
+  const btn = document.getElementById('thanks-wa-btn')
+  if (!btn) return
+  const WHATSAPP_NUMBER = '4407345384868'
+  btn.addEventListener('click', (e) => {
+    e.preventDefault()
+    const message = [
+      'Hi Execora,',
+      '',
+      'I just paid for my £5 prototype on your website.',
+      'I\'d like to get in touch.'
+    ].join('\n')
+    window.open(
+      `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`,
+      '_blank',
+      'noopener'
+    )
+  })
+}
+
 personalise()
+initWhatsApp()
