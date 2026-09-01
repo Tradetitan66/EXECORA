@@ -277,6 +277,14 @@ section {
   color: var(--ink);
   margin-bottom: 1.4rem;
 }
+.original-price {
+  text-decoration: line-through;
+  color: var(--stone-400);
+  font-weight: 400;
+  font-size: 0.6em;
+  margin-right: 0.3rem;
+  vertical-align: super;
+}
 .hero .cursive { font-size: 1.15em; color: var(--coral-deep); }
 .hero-rotator { display: inline-block; }
 .hero-word {
