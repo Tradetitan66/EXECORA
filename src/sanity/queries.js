@@ -30,10 +30,7 @@ export const blogPostsQuery = `
     excerpt,
     publishedDate,
     readingTime,
-    "image": image.asset->{
-      url,
-      altText
-    }
+    image
   }
 `
 
@@ -48,10 +45,7 @@ export const blogPostBySlugQuery = `
     excerpt,
     publishedDate,
     readingTime,
-    "image": image.asset->{
-      url,
-      altText
-    },
+    image,
     body[]{
       ...,
       markDefs[]{

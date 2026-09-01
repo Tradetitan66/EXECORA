@@ -1,4 +1,4 @@
-import { client, isSanityConfigured } from './client'
+import { client } from './client'
 import { siteSettingsQuery } from './queries'
 
 /**
@@ -41,9 +41,6 @@ function applyIf(el, value) {
 }
 
 export async function hydrateHomepage() {
-  // Only fetch when a dataset/project id is present (avoid pointless requests).
-  if (!isSanityConfigured()) return
-
   let settings
   try {
     settings = await client.fetch(siteSettingsQuery)

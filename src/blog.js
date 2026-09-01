@@ -222,7 +222,7 @@ async function renderArticle(slug) {
 
   const img = post.image ? imageUrlFor(post.image) : null
   const imgUrl = img ? img.width(1400).auto('format').url() : ''
-  const alt = post.image?.altText || post.title || ''
+  const alt = post.image?.alt || post.title || ''
   const date = formatDate(post.publishedDate)
   const body = Array.isArray(post.body) ? portableTextToHtml(post.body) : ''
   const pageUrl = `https://www.execora.work/blog/${post.slug?.current || ''}`
