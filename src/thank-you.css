@@ -49,6 +49,7 @@
   max-width: 46ch;
   margin-inline: auto;
 }
+.thanks-inner .btn-coral { display: inline-block; margin-top: 0.5rem; }
 
 /* Details */
 .details { background: linear-gradient(180deg, var(--paper) 0%, #fff 40%); padding-top: 0.5rem; }
