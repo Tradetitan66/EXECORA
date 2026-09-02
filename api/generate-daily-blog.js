@@ -73,7 +73,7 @@ function defaultImageFetch({ apiKey, model, body }) {
   return fetchWithRetry(`${OPENAI_BASE}/images/generations`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, n: 1, response_format: 'b64_json', ...body }),
+    body: JSON.stringify({ model, n: 1, ...body }),
   })
 }
 
@@ -204,7 +204,7 @@ export function buildArticlePrompt(recentTopics) {
     ].join(' '),
     user: [
       'Write a practical, SEO-optimised blog article for UK local business owners.',
-      'The article must be 1,200 to 1,500 words.',
+      'The article must be 1,200 to 1,400 words, with a hard target not to exceed 1,500 words.',
       'It must have a clear, useful title, a strong practical introduction, H2 and H3 headings, short paragraphs, actionable bullet points, concrete examples, and end with a practical checklist.',
       'Do not use em dashes anywhere in the article.',
       topicsList,
@@ -306,8 +306,8 @@ export function validateArticle(article) {
   }
 
   const totalWords = article.body.reduce((sum, b) => sum + countWords(b.text), 0)
-  if (totalWords < 1100 || totalWords > 1600) {
-    return { ok: false, error: `Article body word count (${totalWords}) is outside the acceptable range of 1,100-1,600` }
+  if (totalWords < 1100 || totalWords > 1650) {
+    return { ok: false, error: `Article body word count (${totalWords}) is outside the acceptable range of 1,100-1,650` }
   }
 
   return { ok: true }

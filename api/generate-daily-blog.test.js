@@ -5,6 +5,7 @@ import {
   getLondonDate,
   getLondonHour,
   getRecentTopics,
+  generateImage,
   countWords,
   validateArticle,
   buildImagePrompt,
@@ -208,7 +209,7 @@ describe('validateArticle', () => {
     assert.match(r.error, /outside the acceptable range/)
   })
 
-  test('rejects body with word count above 1600', () => {
+  test('rejects body with word count above 1650', () => {
     const body = Array.from({ length: 10 }, () => ({
       style: 'normal',
       listItem: null,
@@ -234,14 +235,28 @@ describe('validateArticle', () => {
     assert.equal(r.ok, true)
   })
 
-  test('accepts body at exactly 1600 words', () => {
-    const body = Array.from({ length: 8 }, () => ({
+  test('accepts body at exactly 1650 words', () => {
+    const body = Array.from({ length: 10 }, () => ({
       style: 'normal',
       listItem: null,
-      text: 'word '.repeat(200),
+      text: 'word '.repeat(165),
     }))
     const r = validateArticle(validArticle({ body }))
     assert.equal(r.ok, true)
+  })
+
+  test('rejects body at 1651 words', () => {
+    const body = [
+      ...Array.from({ length: 10 }, () => ({
+        style: 'normal',
+        listItem: null,
+        text: 'word '.repeat(165),
+      })),
+      { style: 'normal', listItem: null, text: 'word' },
+    ]
+    const r = validateArticle(validArticle({ body }))
+    assert.equal(r.ok, false)
+    assert.match(r.error, /outside the acceptable range/)
   })
 
   test('rejects blocks with missing text', () => {
@@ -424,6 +439,46 @@ describe('getRecentTopics', () => {
       'Post A,Post B'
     )
     assert.equal(result.categories.join(','), 'Website Tips,Google & SEO')
+  })
+})
+
+describe('generateImage', () => {
+  test('image request does not send response_format and still parses b64_json', async () => {
+    const origFetch = globalThis.fetch
+    let capturedBody = null
+    globalThis.fetch = async (url, opts) => {
+      if (url.includes('/images/generations')) {
+        capturedBody = JSON.parse(opts.body)
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            data: [{ b64_json: Buffer.from('fake-image-data').toString('base64') }],
+          }),
+        }
+      }
+      return { ok: true, status: 200, json: async () => ({}) }
+    }
+
+    try {
+      const result = await generateImage({
+        apiKey: 'test-image-key',
+        model: 'gpt-image-1',
+        prompt: 'A friendly local shop',
+      })
+
+      assert.ok(capturedBody, 'image fetch should have been called')
+      assert.equal(capturedBody.model, 'gpt-image-1')
+      assert.equal(capturedBody.n, 1)
+      assert.equal('response_format' in capturedBody, false)
+      assert.equal(
+        result,
+        Buffer.from('fake-image-data').toString('base64'),
+        'b64_json should be returned unchanged'
+      )
+    } finally {
+      globalThis.fetch = origFetch
+    }
   })
 })
 
