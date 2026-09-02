@@ -174,3 +174,94 @@ broken by content edits.
 **Offline / unconfigured fallback:** if Sanity is unreachable, missing, or CORS
 isn't configured, the homepage keeps its original hard-coded copy and the blog
 shows a graceful empty/"not found" state — nothing breaks.
+
+---
+
+## 9. Blog draft endpoint — `POST /api/create-blog-draft`
+
+A protected Vercel serverless function that lets you (or an automated caller)
+create a **blog post as a draft** for manual review. It **never publishes** —
+a human reviews and publishes it in Sanity Studio.
+
+> ⚠️ The endpoint only creates **drafts**. It does not call any Sanity publish
+> operation and it will never overwrite an existing draft or published article.
+
+### Required Vercel environment variables
+
+Set these in **Vercel → Project → Settings → Environment Variables** (and add to
+your local `.env` for local testing). None of them are `NEXT_PUBLIC_`:
+
+| Variable | Purpose |
+|----------|---------|
+| `SANITY_WRITE_TOKEN` | Sanity API token with **Editor** role — used to create draft documents |
+| `BLOG_DRAFT_API_SECRET` | Secret the caller sends as `Authorization: Bearer <...>` to authenticate |
+
+Public vars already required (also set in Vercel):
+
+| Variable | Value |
+|----------|-------|
+| `NEXT_PUBLIC_SANITY_PROJECT_ID` | `p0mpfgmr` |
+| `NEXT_PUBLIC_SANITY_DATASET` | `production` |
+
+### How to generate a secure `BLOG_DRAFT_API_SECRET`
+
+```bash
+openssl rand -hex 32
+```
+
+Add the output as `BLOG_DRAFT_API_SECRET` in Vercel. Store a copy somewhere
+safe (e.g. your password manager) — the caller needs the same value.
+
+### How to create the `SANITY_WRITE_TOKEN`
+
+1. Open **sanity.io/manage → p0mpfgmr → API → Tokens**.
+2. **Add API token**, give it a name (e.g. `Blog draft endpoint`).
+3. Set the role to **Editor** (needed to `create` documents; less than
+   Administrator).
+4. Copy the token (shown only once) and set it as `SANITY_WRITE_TOKEN` in Vercel.
+
+> Never put this token in a `NEXT_PUBLIC_` variable and never commit it.
+
+### Sample request (placeholder credentials)
+
+Replace `<BLOG_DRAFT_API_SECRET>` with your real secret before running:
+
+```bash
+curl -X POST https://www.execora.work/api/create-blog-draft \
+  -H "Authorization: Bearer <BLOG_DRAFT_API_SECRET>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "10 Website Tips for Local Businesses",
+    "category": "Website Tips",
+    "excerpt": "A short summary of the post.",
+    "seoTitle": "10 Website Tips for Local Businesses",
+    "seoDescription": "Practical website tips for local businesses.",
+    "body": [
+      { "style": "normal", "text": "Introductory paragraph." },
+      { "style": "h2", "text": "Main section heading" },
+      { "style": "normal", "text": "Section content." },
+      { "style": "normal", "listItem": "bullet", "text": "Practical action." }
+    ]
+  }'
+```
+
+Supported payload fields:
+
+- `title` (required), `slug` (optional, generated from title), `category`
+  (required — one of `Website Tips`, `Local Business`, `Google & SEO`,
+  `Customer Experience`, `Business Growth`), `excerpt` (required)
+- `seoTitle` (required), `seoDescription` (required)
+- `publishedDate` (optional, defaults to now), `readingTime` (optional,
+  auto-calculated at ~220 wpm)
+- `body` (required — array of Portable-Text-style blocks supporting `normal`,
+  `h2`, `h3`, `blockquote`, bullet and numbered lists)
+- `imageAssetId` (optional — reference to an existing Sanity image asset),
+  `imageAlt` (optional alt text)
+
+### Reviewing & publishing the draft
+
+1. The endpoint creates a document with id `drafts.blogPost-<slug>`.
+2. Open Sanity Studio (the `/admin` redirect or your `*.sanity.studio` URL).
+3. Under **Blog posts** you'll see the draft (badged "Draft").
+4. Edit / add images as needed, then click **Publish** to make it live on the
+   site.
