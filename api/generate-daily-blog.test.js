@@ -4,6 +4,7 @@ import assert from 'node:assert/strict'
 import {
   getLondonDate,
   getLondonHour,
+  getRecentTopics,
   countWords,
   validateArticle,
   buildImagePrompt,
@@ -394,6 +395,35 @@ describe('buildDraftDocument', () => {
     assert.equal(doc.seoDescription, article.seoDescription)
     assert.equal(doc.excerpt, article.excerpt)
     assert.equal(doc.category, article.category)
+  })
+})
+
+describe('getRecentTopics', () => {
+  test('sends the exact GROQ query to client.fetch', async () => {
+    let capturedQuery = null
+    const capturedParams = {}
+    const client = {
+      fetch: async (query, params) => {
+        capturedQuery = query
+        capturedParams.params = params
+        return [
+          { title: 'Post A', category: 'Website Tips' },
+          { title: 'Post B', category: 'Google & SEO' },
+        ]
+      },
+    }
+
+    const result = await getRecentTopics(client)
+
+    assert.equal(
+      capturedQuery,
+      `*[_type == "blogPost"] | order(publishedDate desc)[0...60]{title, category}`
+    )
+    assert.equal(
+      result.titles.join(','),
+      'Post A,Post B'
+    )
+    assert.equal(result.categories.join(','), 'Website Tips,Google & SEO')
   })
 })
 

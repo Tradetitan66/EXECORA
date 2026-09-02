@@ -146,8 +146,9 @@ export function countWords(text) {
 // ---------------------------------------------------------------------------
 
 export async function getRecentTopics(client) {
-  const query = `order(publishedDate desc)[0...60]{title, category}`
-  const posts = await client.fetch(`*[_type == "blogPost"]${query}`)
+  const posts = await client.fetch(
+    `*[_type == "blogPost"] | order(publishedDate desc)[0...60]{title, category}`
+  )
   return {
     titles: posts.map((p) => p.title).filter(Boolean),
     categories: posts.map((p) => p.category).filter(Boolean),
