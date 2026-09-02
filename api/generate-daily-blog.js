@@ -111,6 +111,19 @@ export function getLondonDate(now = new Date()) {
   return `${y}-${m}-${d}`
 }
 
+/**
+ * Test-run mode only activates for an authenticated POST request whose URL
+ * contains ?test=true. GET requests (including Vercel Cron) and any non-POST
+ * method never enable test mode, even if ?test=true is supplied.
+ */
+export function getTestMode(req) {
+  if (req.method !== 'POST') return false
+  const url = typeof req.url === 'string' ? req.url : ''
+  const query = url.split('?')[1] || ''
+  const params = new URLSearchParams(query)
+  return params.get('test') === 'true'
+}
+
 let _londonHourOverride = null
 
 /**
@@ -503,6 +516,9 @@ export default async function handler(req, res) {
     })
   }
 
+  // Test mode: POST ?test=true only. Never activated by GET/Cron.
+  const testMode = getTestMode(req)
+
   const openaiKey = process.env.OPENAI_API_KEY
   const writeToken = process.env.SANITY_WRITE_TOKEN
   const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'p0mpfgmr'
@@ -518,18 +534,20 @@ export default async function handler(req, res) {
   const date = getLondonDate()
   const client = _clientFactory({ projectId, dataset, token: writeToken })
 
-  // --- Idempotency ---
-  try {
-    const exists = await checkDuplicate(client, date)
-    if (exists) {
-      return res.status(200).json({
-        skipped: true,
-        reason: 'A daily blog post already exists for this date',
-      })
+  // --- Idempotency (skipped in test mode) ---
+  if (!testMode) {
+    try {
+      const exists = await checkDuplicate(client, date)
+      if (exists) {
+        return res.status(200).json({
+          skipped: true,
+          reason: 'A daily blog post already exists for this date',
+        })
+      }
+    } catch (err) {
+      console.error('[generate-daily-blog] stage=idempotency_check error:', err.message)
+      return res.status(500).json({ error: 'Could not check for existing posts' })
     }
-  } catch (err) {
-    console.error('[generate-daily-blog] stage=idempotency_check error:', err.message)
-    return res.status(500).json({ error: 'Could not check for existing posts' })
   }
 
   // --- Recent topics ---
@@ -595,7 +613,19 @@ export default async function handler(req, res) {
   }
 
   // --- Create draft ---
-  const doc = buildDraftDocument({ article, imageAssetId, date })
+  let doc
+  if (testMode) {
+    const timestamp = Date.now()
+    const testId = `drafts.blogPost-test-${date}-${timestamp}`
+    const base = buildDraftDocument({ article, imageAssetId, date })
+    doc = {
+      ...base,
+      _id: testId,
+      title: `[TEST] ${article.title}`,
+    }
+  } else {
+    doc = buildDraftDocument({ article, imageAssetId, date })
+  }
 
   try {
     await client.create(doc)
@@ -604,11 +634,16 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Could not create blog draft' })
   }
 
-  return res.status(200).json({
+  const response = {
     ok: true,
     draftId: doc._id,
     slug: article.slug,
     date,
     note: 'Draft created. It is not published and requires review in Sanity Studio.',
-  })
+  }
+  if (testMode) {
+    response.testRun = true
+    response.docType = 'draft'
+  }
+  return res.status(200).json(response)
 }

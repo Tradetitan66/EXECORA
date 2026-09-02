@@ -519,9 +519,10 @@ describe('generateImage', () => {
 // Handler tests — auth, env, idempotency, happy path
 // ---------------------------------------------------------------------------
 
-function makeReq({ method = 'POST', token } = {}) {
+function makeReq({ method = 'POST', token, url = '/api/generate-daily-blog' } = {}) {
   return {
     method,
+    url,
     headers: token ? { authorization: `Bearer ${token}` } : {},
   }
 }
@@ -882,6 +883,146 @@ describe('POST /api/generate-daily-blog happy path', () => {
     await handler(makeReq({ token: 'test-blog-secret' }), res)
     assert.ok(createdDoc)
     assert.ok(!createdDoc.hasOwnProperty('publishedAt'))
+  })
+})
+
+describe('POST /api/generate-daily-blog test mode (?test=true)', () => {
+  const sampleArticle = {
+    title: 'How to Get More Google Reviews for Your Local Business',
+    slug: 'get-more-google-reviews-local-business',
+    category: 'Google & SEO',
+    excerpt: 'Practical steps to earn more Google reviews for your UK local business.',
+    seoTitle: 'Get More Google Reviews',
+    seoDescription: SEO_DESC,
+    imagePrompt: 'A friendly local shop with customers',
+    imageAlt: 'Friendly local shop with customers',
+    body: Array.from({ length: 12 }, () => ({
+      style: 'normal',
+      listItem: null,
+      text: 'word '.repeat(120),
+    })),
+  }
+
+  let createdDoc
+  let duplicatePresent
+  let checkDuplicateCalled
+
+  beforeEach(() => {
+    setEnv()
+    createdDoc = null
+    duplicatePresent = false
+    checkDuplicateCalled = false
+
+    setClientFactory(({ projectId, dataset, token }) => ({
+      fetch: async (query, params) => {
+        if (params && params.id) {
+          checkDuplicateCalled = true
+          return duplicatePresent ? { _id: params.id } : null
+        }
+        if (query.includes('_type == "blogPost"')) return []
+        return null
+      },
+      create: async (doc) => { createdDoc = doc; return doc },
+      assets: {
+        upload: async () => ({ _id: 'image-uploaded-123' }),
+      },
+    }))
+
+    setOpenaiFetch(async () => ({
+      ok: true,
+      json: async () => ({
+        output: [{ type: 'message', content: [{ text: JSON.stringify(sampleArticle) }] }],
+      }),
+    }))
+
+    setImageFetch(async () => ({
+      ok: true,
+      json: async () => ({
+        data: [{ b64_json: Buffer.from('fake-image-data').toString('base64') }],
+      }),
+    }))
+  })
+
+  afterEach(() => {
+    clearEnv()
+    setClientFactory(null)
+    setOpenaiFetch(null)
+    setImageFetch(null)
+    setLondonHourOverride(null)
+  })
+
+  test('unauthenticated test request returns 401', async () => {
+    const res = makeRes()
+    await handler(makeReq({ method: 'POST', url: '/api/generate-daily-blog?test=true' }), res)
+    assert.equal(res._status, 401)
+  })
+
+  test('GET ?test=true does not bypass normal behaviour', async () => {
+    setLondonHourOverride(14) // outside the 8 AM window
+    const res = makeRes()
+    await handler(
+      makeReq({ method: 'GET', token: 'test-blog-secret', url: '/api/generate-daily-blog?test=true' }),
+      res
+    )
+    // Should behave exactly like a normal GET outside the window: skipped, no draft.
+    assert.equal(res._status, 200)
+    assert.equal(res._json.skipped, true)
+    assert.equal(createdDoc, null)
+    assert.equal(res._json.testRun, undefined)
+  })
+
+  test('POST ?test=true bypasses only the daily duplicate check', async () => {
+    duplicatePresent = true // a daily post already exists
+    const res = makeRes()
+    await handler(
+      makeReq({ token: 'test-blog-secret', url: '/api/generate-daily-blog?test=true' }),
+      res
+    )
+    // Duplicate check is skipped in test mode, so generation proceeds despite duplicatePresent.
+    assert.equal(res._status, 200)
+    assert.equal(res._json.ok, true)
+    assert.ok(createdDoc)
+  })
+
+  test('test document IDs are unique and start with drafts.blogPost-test-', async () => {
+    const res = makeRes()
+    await handler(
+      makeReq({ token: 'test-blog-secret', url: '/api/generate-daily-blog?test=true' }),
+      res
+    )
+    assert.ok(createdDoc._id.startsWith('drafts.blogPost-test-'))
+    assert.ok(createdDoc._id.includes('-2026-')) // YYYY-MM-DD segment
+    assert.ok(createdDoc._id !== `drafts.blogPost-auto-${getLondonDate()}`)
+  })
+
+  test('test titles start with [TEST]', async () => {
+    const res = makeRes()
+    await handler(
+      makeReq({ token: 'test-blog-secret', url: '/api/generate-daily-blog?test=true' }),
+      res
+    )
+    assert.ok(createdDoc.title.startsWith('[TEST] '))
+    assert.ok(createdDoc.title.includes(sampleArticle.title))
+  })
+
+  test('test documents remain drafts and are not published', async () => {
+    const res = makeRes()
+    await handler(
+      makeReq({ token: 'test-blog-secret', url: '/api/generate-daily-blog?test=true' }),
+      res
+    )
+    assert.ok(createdDoc._id.startsWith('drafts.'))
+    assert.ok(!createdDoc.hasOwnProperty('publishedAt'))
+  })
+
+  test('returns testRun true and keeps normal behaviour supplemental', async () => {
+    const res = makeRes()
+    await handler(
+      makeReq({ token: 'test-blog-secret', url: '/api/generate-daily-blog?test=true' }),
+      res
+    )
+    assert.equal(res._json.testRun, true)
+    assert.equal(res._json.ok, true)
   })
 })
 
