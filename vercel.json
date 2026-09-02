@@ -1,4 +1,14 @@
 {
+  "crons": [
+    {
+      "path": "/api/daily-blog-0700",
+      "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/daily-blog-0800",
+      "schedule": "0 8 * * *"
+    }
+  ],
   "redirects": [
     {
       "source": "/(.*)",

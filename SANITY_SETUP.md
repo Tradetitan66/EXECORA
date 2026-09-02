@@ -265,3 +265,150 @@ Supported payload fields:
 3. Under **Blog posts** you'll see the draft (badged "Draft").
 4. Edit / add images as needed, then click **Publish** to make it live on the
    site.
+
+---
+
+## 10. Daily blog automation — `/api/generate-daily-blog`
+
+A protected Vercel serverless function scheduled by **native Vercel Cron**. It
+runs every day at **8:00 AM Europe/London**, generates a full SEO-optimised
+blog article plus a featured image using OpenAI, uploads the image to Sanity,
+and creates the article as an **unpublished draft** for human review. It
+**never publishes** automatically.
+
+> ⚠️ This endpoint is protected by a bearer token (`CRON_SECRET`). Vercel Cron
+> authenticates with it automatically; a manual `POST` with the same token lets
+> you trigger a generation for testing. Do not expose the endpoint without the
+> token.
+
+### Workflow
+
+1. Vercel Cron calls `/api/daily-blog-0700` and `/api/daily-blog-0800` via GET.
+2. Each wrapper delegates to the shared `/api/generate-daily-blog` handler.
+3. For GET requests, the handler first checks the current **Europe/London** hour.
+   If it is not **8 AM**, it returns HTTP 200 `{ skipped: true }` **without**
+   calling OpenAI — so the extra 07:00 UTC trigger (used to keep a single cron
+   path) never generates or charges.
+4. The handler checks for an existing post for **today's date** (Europe/London)
+   — both `drafts.blogPost-auto-YYYY-MM-DD` and `blogPost-auto-YYYY-MM-DD` — and
+   skips with HTTP 200 if one exists, so retries never duplicate or double-charge.
+5. It reads the latest 60 Sanity blog posts (titles + categories) to avoid
+   repeating topics.
+6. It calls the OpenAI Responses API (Structured Outputs) for a 1,200–1,500 word
+   UK-local-business article, then OpenAI image generation for a branded
+   featured image.
+7. It uploads the image to Sanity and creates a draft document with id
+   `drafts.blogPost-auto-YYYY-MM-DD`.
+8. You review and publish the draft in Sanity Studio.
+
+### Required Vercel environment variables
+
+Set these in **Vercel → Project → Settings → Environment Variables**. None of
+the secrets should ever be prefixed with `NEXT_PUBLIC_`.
+
+| Variable | Purpose | Required |
+|----------|---------|----------|
+| `OPENAI_API_KEY` | OpenAI API key (text + image generation) | Yes |
+| `OPENAI_TEXT_MODEL` | Article model (default `gpt-5.4-mini`) | No |
+| `OPENAI_IMAGE_MODEL` | Image model (default `gpt-image-1-mini`) | No |
+| `SANITY_WRITE_TOKEN` | Sanity Editor token (creates draft documents) | Yes |
+| `NEXT_PUBLIC_SANITY_PROJECT_ID` | Sanity project ID (`p0mpfgmr`) | Yes |
+| `NEXT_PUBLIC_SANITY_DATASET` | Sanity dataset (`production`) | Yes |
+| `CRON_SECRET` | Secret for `Authorization: Bearer` auth (GET + POST) | Yes |
+
+### Generate a secure `CRON_SECRET`
+
+```bash
+openssl rand -hex 32
+```
+
+Store the output as `CRON_SECRET` in Vercel. Vercel Cron uses it automatically
+to authenticate its GET calls; you use the same value for manual POST tests.
+Store a copy somewhere safe.
+
+### Vercel Cron setup
+
+Two cron schedules are declared in `vercel.json` so a single path can host two
+UTC times (Vercel allows one schedule per path):
+
+```json
+{
+  "crons": [
+    { "path": "/api/daily-blog-0700", "schedule": "0 7 * * *" },
+    { "path": "/api/daily-blog-0800", "schedule": "0 8 * * *" }
+  ]
+}
+```
+
+Both are **UTC** schedules:
+
+- `0 7 * * *` (07:00 UTC) → **08:00 London** during British Summer Time
+- `0 8 * * *` (08:00 UTC) → **08:00 London** during Greenwich Mean Time (winter)
+
+**Europe/London daylight-saving guard:** the handler independently checks the
+current hour in `Europe/London` and returns 200 `{ skipped: true }` unless it is
+exactly 8 AM there. This means whichever UTC trigger fires, the real generation
+happens only at 8 AM local UK time, and the other trigger is a harmless no-op —
+so only **one** OpenAI generation can occur per day.
+
+### Confirm Cron Jobs in the Vercel dashboard
+
+1. Deploy the changes (git push).
+2. In **Vercel → Project → Settings → Cron Jobs**, you should see two entries:
+   - `/api/daily-blog-0700` — `0 7 * * *`
+   - `/api/daily-blog-0800` — `0 8 * * *`
+3. If the list is empty or shows a warning, redeploy or check that the `crons`
+   field is present in `vercel.json` and that the project plan supports Cron
+   Jobs (some projects require the Cron Jobs feature enabled).
+
+### Response behaviour
+
+| Case | HTTP | Body |
+|------|------|------|
+| Success | 200 | `{ ok, draftId, slug, date }` |
+| Already exists (draft or published) for today | 200 | `{ skipped: true, reason }` |
+| GET outside Europe/London 8 AM window | 200 | `{ skipped: true, reason }` |
+| Invalid/missing token | 401 | `{ error }` |
+| Wrong method | 405 | `{ error }` |
+| Not configured / internal failure | 5xx | `{ error }` (safe, no secrets) |
+
+### Safe manual POST test (bypasses the time-window check)
+
+A manual `POST` with a valid `CRON_SECRET` runs the full generation regardless
+of the local hour, so you can verify the endpoint at any time. Replace
+`<CRON_SECRET>` with your real secret (never commit it):
+
+```bash
+# Manual full generation (bypasses 8 AM window, still idempotent per day)
+curl -X POST https://www.execora.work/api/generate-daily-blog \
+  -H "Authorization: Bearer <CRON_SECRET>"
+```
+
+This generates only if no post exists for today; running it again the same day
+returns `{ "skipped": true }` with no extra cost.
+
+To test auth/validation/date guards without incurring OpenAI charges:
+
+```bash
+# Wrong token -> 401
+curl -X POST https://www.execora.work/api/generate-daily-blog \
+  -H "Authorization: Bearer wrong"
+```
+
+### Reviewing & publishing the generated draft
+
+1. The function creates a document with id `drafts.blogPost-auto-YYYY-MM-DD`.
+2. Open Sanity Studio (the `/admin` redirect or your `*.sanity.studio` URL).
+3. Under **Blog posts** you'll see the new draft (badged "Draft").
+4. Review the article, edit as needed, then click **Publish**.
+
+The endpoint never calls any publish operation and never overwrites a manual
+post or an existing draft for the same date.
+
+### Local / automated testing
+
+Run the unit tests (these mock OpenAI and Sanity — no real API calls, no cost):
+
+```bash
+npm test
+```
