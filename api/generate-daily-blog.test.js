@@ -278,29 +278,40 @@ describe('validateArticle', () => {
 describe('buildImagePrompt', () => {
   test('prepends Execora visual identity prefix', () => {
     const result = buildImagePrompt('A modern shop front')
-    assert.ok(result.startsWith('Premium handcrafted 3D crayon-and-clay editorial illustration'))
+    assert.ok(result.startsWith('Premium hand-drawn crayon editorial illustration with subtle embossed 3D depth'))
     assert.ok(result.endsWith('A modern shop front'))
   })
 
   test('includes all identity keywords', () => {
     const result = buildImagePrompt('test')
-    assert.ok(result.includes('3D crayon-and-clay'))
-    assert.ok(result.includes('wax, paper and clay'))
-    assert.ok(result.includes('cream'))
+    assert.ok(result.includes('crayon editorial illustration'))
+    assert.ok(result.includes('wax-pencil grain'))
+    assert.ok(result.includes('embossed 3D depth'))
+    assert.ok(result.includes('ivory'))
     assert.ok(result.toLowerCase().includes('near-black'))
-    assert.ok(result.includes('muted-gold'))
-    assert.ok(result.includes('negative space'))
-    assert.ok(result.includes('UK local-business setting'))
-    assert.ok(result.includes('No written text'))
-    assert.ok(result.includes('No generic robots'))
-    assert.ok(result.includes('neon colours'))
-    assert.ok(result.includes('purple AI gradients'))
-    assert.ok(result.includes('professional'))
+    assert.ok(result.includes('charcoal'))
+    assert.ok(result.includes('muted antique gold'))
+    assert.ok(result.includes('UK local-business environment'))
+    assert.ok(result.includes('neighbourhood high streets'))
+    assert.ok(result.includes('not like a children\'s book'))
+    assert.ok(result.includes('No text'))
+    assert.ok(result.includes('logos'))
+    assert.ok(result.toLowerCase().includes('no bright'))
+    assert.ok(result.toLowerCase().includes('rainbow'))
   })
 
   test('does not contain text or logo artifacts', () => {
     const result = buildImagePrompt('test')
-    assert.ok(result.includes('No written text, letters, numbers, logos, brands or watermarks'))
+    assert.ok(result.includes('No text, letters, numbers, logos, brand names or watermarks inside the image'))
+  })
+
+  test('includes the Execora palette and acceptable colours', () => {
+    const result = buildImagePrompt('test')
+    assert.ok(result.includes('warm off-white or ivory background'))
+    assert.ok(result.includes('near-black and deep charcoal'))
+    assert.ok(result.includes('muted antique gold'))
+    assert.ok(result.includes('75% ivory'))
+    assert.ok(result.includes('No bright green, red, orange, yellow, blue or rainbow colours'))
   })
 
   test('preserves the article-specific image prompt', () => {
