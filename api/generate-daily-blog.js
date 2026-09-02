@@ -191,7 +191,7 @@ export async function uploadImage(client, slug, b64Data) {
 // Prompt builder
 // ---------------------------------------------------------------------------
 
-export function buildArticlePrompt(recentTopics) {
+export function buildArticlePrompt(recentTopics, settings = null) {
   const topicsList = recentTopics.titles.length
     ? `\n\nRecent blog posts (DO NOT repeat, rewrite or closely overlap these topics):\n${recentTopics.titles.map((t, i) => `${i + 1}. ${t}`).join('\n')}`
     : ''
@@ -199,6 +199,25 @@ export function buildArticlePrompt(recentTopics) {
   const categoryHint = recentTopics.categories.length
     ? `\n\nRecent category distribution (rotate naturally, do not over-use any single category):\n${recentTopics.categories.join(', ')}`
     : ''
+
+  // Owner-supplied guidance supplements (never replaces) the hard-coded rules.
+  const guidance = []
+  if (settings && settings.articleContentPrompt) {
+    guidance.push(`EDITORIAL FOCUS:\n${settings.articleContentPrompt}`)
+  }
+  if (settings && settings.articleTonePrompt) {
+    guidance.push(`WRITING STYLE:\n${settings.articleTonePrompt}`)
+  }
+  if (settings && settings.articleAvoidPrompt) {
+    guidance.push(`AVOID:\n${settings.articleAvoidPrompt}`)
+  }
+  if (settings && settings.articleCtaPrompt) {
+    guidance.push(`CALL TO ACTION:\n${settings.articleCtaPrompt}`)
+  }
+  if (settings && settings.nextArticleTopic) {
+    guidance.push(`NEXT ARTICLE TOPIC:\n${settings.nextArticleTopic}`)
+  }
+  const guidanceBlock = guidance.length ? `\n\nOwner guidance (supplement the rules above):\n${guidance.join('\n\n')}` : ''
 
   return {
     system: [
@@ -225,6 +244,7 @@ export function buildArticlePrompt(recentTopics) {
       'Useful topics include: website conversion, local SEO, Google Business Profile, customer reviews, lead generation, booking and enquiry processes, trust signals, mobile experience, customer retention, email or WhatsApp follow-up, pricing communication, simple business systems, useful no-code automation.',
       'For the imagePrompt field, describe one clear visual concept representing the article\'s main problem or solution within a specific local-business setting relevant to the topic (for example a UK high-street shop, café, salon, trades business, clinic, restaurant or professional service). Include relevant objects such as a smartphone, website screen, booking calendar, review card, map pin, storefront, tools or a customer enquiry. Add a subtle British local touch through architecture, pavement, shopfront design, weather, streetscape or the business environment, and specify the exact composition, main subject and supporting objects. The generated image must contain no written words. Avoid generic instructions such as "an AI business image" or "a business owner using technology".',
       'Avoid: generic motivational advice, unsupported statistics, invented studies, fake quotes or case studies, keyword stuffing, excessive promotion of Execora, repetitive listicles, US-specific legal, tax or business advice, claims that require a professional adviser.',
+      guidanceBlock,
     ].join('\n'),
   }
 }
@@ -334,16 +354,82 @@ export function validateArticle(article) {
 const IMAGE_PREFIX =
   'Premium hand-drawn crayon editorial illustration with subtle embossed 3D depth for an Execora business article. Use rounded dimensional forms, visible wax-pencil grain, soft paper texture, imperfect handcrafted edges and gentle grounded shadows. Colour palette: dominant warm off-white or ivory background, near-black and deep charcoal for main objects, muted antique gold for highlights, important symbols and small accents, and optional soft warm-grey or muted beige for secondary details. Aim for roughly 75% ivory, 20% near-black or charcoal and 5% muted gold. No bright green, red, orange, yellow, blue or rainbow colours. Show one simple visual metaphor that communicates the article topic, such as a damaged website screen losing a customer, a smartphone connecting a customer to a shop, an enquiry moving through a simple follow-up journey, a local shop becoming easier to find, a booking calendar filling with appointments, or reviews helping customers trust a business. Set it within a subtle UK local-business environment with independent shopfronts, cafés, salons, tradespeople, clinics, brick buildings, pavements or neighbourhood high streets, without tourist clichés. Sophisticated and editorial, not like a children\'s book. Avoid exaggerated cartoon faces unless the expression is necessary to communicate the article problem. No text, letters, numbers, logos, brand names or watermarks inside the image. No generic robots, futuristic dashboards, purple gradients, neon colours, glossy plastic materials or visual clutter. '
 
+const MAX_STYLE_PROMPT_LENGTH = 4000
+const MAX_NEGATIVE_PROMPT_LENGTH = 2000
+const MAX_ARTICLE_GUIDANCE_LENGTH = 3000
+const MAX_ARTICLE_TOPIC_LENGTH = 500
+
+/**
+ * Builds the fallback image prompt from the hard-coded style prefix and the
+ * article-specific visual concept. Used when no published settings exist.
+ */
 export function buildImagePrompt(articleImagePrompt) {
   return IMAGE_PREFIX + articleImagePrompt
+}
+
+function clamp(text, max) {
+  if (typeof text !== 'string') return ''
+  const trimmed = text.trim()
+  if (trimmed.length <= max) return trimmed
+  return trimmed.slice(0, max).trim()
+}
+
+/**
+ * Fetches the published automation settings singleton. Returns an object with
+ * the image and article guidance fields, or null if the document is missing,
+ * unpublished, empty or cannot be fetched. Never throws.
+ */
+export async function getAutomationSettings(client) {
+  try {
+    const doc = await client.fetch(
+      `*[_type == "blogAutomationSettings" && _id == "blogAutomationSettings"][0]{
+        imageStylePrompt,
+        imageNegativePrompt,
+        articleContentPrompt,
+        articleTonePrompt,
+        articleAvoidPrompt,
+        articleCtaPrompt,
+        nextArticleTopic
+      }`
+    )
+    if (!doc) return null
+    return {
+      imageStylePrompt: clamp(doc.imageStylePrompt, MAX_STYLE_PROMPT_LENGTH),
+      imageNegativePrompt: clamp(doc.imageNegativePrompt, MAX_NEGATIVE_PROMPT_LENGTH),
+      articleContentPrompt: clamp(doc.articleContentPrompt, MAX_ARTICLE_GUIDANCE_LENGTH),
+      articleTonePrompt: clamp(doc.articleTonePrompt, MAX_ARTICLE_GUIDANCE_LENGTH),
+      articleAvoidPrompt: clamp(doc.articleAvoidPrompt, MAX_ARTICLE_GUIDANCE_LENGTH),
+      articleCtaPrompt: clamp(doc.articleCtaPrompt, MAX_ARTICLE_GUIDANCE_LENGTH),
+      nextArticleTopic: clamp(doc.nextArticleTopic, MAX_ARTICLE_TOPIC_LENGTH),
+    }
+  } catch (err) {
+    console.error('[generate-daily-blog] stage=automation_settings error:', err.message)
+    return null
+  }
+}
+
+/**
+ * Composes the final image prompt in the order:
+ *   settings imageStylePrompt (or IMAGE_PREFIX fallback)
+ *   -> article-specific imagePrompt
+ *   -> settings imageNegativePrompt
+ */
+export function composeImagePrompt({ articlePrompt = '', settings = null } = {}) {
+  const stylePrompt =
+    settings && settings.imageStylePrompt ? settings.imageStylePrompt : IMAGE_PREFIX.trim()
+  const parts = [stylePrompt, articlePrompt.trim()]
+  if (settings && settings.imageNegativePrompt) {
+    parts.push(settings.imageNegativePrompt)
+  }
+  return parts.filter(Boolean).join(' ')
 }
 
 // ---------------------------------------------------------------------------
 // Article generation
 // ---------------------------------------------------------------------------
 
-export async function generateArticle({ apiKey, model, recentTopics, extraGuidance = '' }) {
-  const { system, user } = buildArticlePrompt(recentTopics)
+export async function generateArticle({ apiKey, model, recentTopics, extraGuidance = '', settings = null }) {
+  const { system, user } = buildArticlePrompt(recentTopics, settings)
 
   const input = [
     { role: 'system', content: system },
@@ -412,7 +498,7 @@ export async function generateImage({ apiKey, model, prompt }) {
     model,
     body: {
       model,
-      prompt: buildImagePrompt(prompt),
+      prompt,
       size: '1536x1024',
       quality: 'medium',
     },
@@ -534,6 +620,15 @@ export default async function handler(req, res) {
   const date = getLondonDate()
   const client = _clientFactory({ projectId, dataset, token: writeToken })
 
+  // Fetch the published automation settings once and reuse them for both
+  // article and image generation. Failures fall back to the hard-coded prompts.
+  let settings = null
+  try {
+    settings = await getAutomationSettings(client)
+  } catch (err) {
+    console.error('[generate-daily-blog] stage=automation_settings error:', err.message)
+  }
+
   // --- Idempotency (skipped in test mode) ---
   if (!testMode) {
     try {
@@ -562,7 +657,7 @@ export default async function handler(req, res) {
   // --- Generate article ---
   let article
   try {
-    article = await generateArticle({ apiKey: openaiKey, model: textModel, recentTopics })
+    article = await generateArticle({ apiKey: openaiKey, model: textModel, recentTopics, settings })
   } catch (err) {
     console.error('[generate-daily-blog] stage=text_generation error:', err.message)
     return res.status(502).json({ error: 'Article generation failed' })
@@ -577,6 +672,7 @@ export default async function handler(req, res) {
         model: textModel,
         recentTopics,
         extraGuidance: validation.error,
+        settings,
       })
       validation = validateArticle(article)
     } catch (err) {
@@ -593,10 +689,12 @@ export default async function handler(req, res) {
   // --- Generate image ---
   let imageB64
   try {
+    // Published automation settings override the style; failures fall back to IMAGE_PREFIX.
+    const imagePrompt = composeImagePrompt({ articlePrompt: article.imagePrompt, settings })
     imageB64 = await generateImage({
       apiKey: openaiKey,
       model: imageModel,
-      prompt: article.imagePrompt,
+      prompt: imagePrompt,
     })
   } catch (err) {
     console.error('[generate-daily-blog] stage=image_generation error:', err.message)
@@ -632,6 +730,19 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error('[generate-daily-blog] stage=create_draft error:', err.message)
     return res.status(500).json({ error: 'Could not create blog draft' })
+  }
+
+  // Clear the one-time nextArticleTopic only after a successful *normal* (non-test)
+  // daily draft is created. Do not clear on failure or during a test run.
+  if (!testMode && settings && settings.nextArticleTopic) {
+    try {
+      await client
+        .patch('blogAutomationSettings')
+        .set({ nextArticleTopic: '' })
+        .commit()
+    } catch (err) {
+      console.error('[generate-daily-blog] stage=clear_next_topic error:', err.message)
+    }
   }
 
   const response = {

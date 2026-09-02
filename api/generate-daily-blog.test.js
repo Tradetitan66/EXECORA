@@ -5,6 +5,8 @@ import {
   getLondonDate,
   getLondonHour,
   getRecentTopics,
+  getAutomationSettings,
+  composeImagePrompt,
   generateImage,
   countWords,
   validateArticle,
@@ -321,6 +323,94 @@ describe('buildImagePrompt', () => {
   })
 })
 
+describe('composeImagePrompt', () => {
+  test('uses published custom style, keeps article concept and adds negatives', () => {
+    const settings = {
+      imageStylePrompt: 'Custom 3D crayon editorial style from settings.',
+      imageNegativePrompt: 'No red, no blue.',
+    }
+    const result = composeImagePrompt({ articlePrompt: 'A UK café with a review card', settings })
+    assert.ok(result.startsWith('Custom 3D crayon editorial style from settings.'))
+    assert.ok(result.includes('A UK café with a review card'))
+    assert.ok(result.endsWith('No red, no blue.'))
+  })
+
+  test('falls back to IMAGE_PREFIX when settings are missing', () => {
+    const result = composeImagePrompt({ articlePrompt: 'A UK café', settings: null })
+    assert.ok(result.startsWith('Premium hand-drawn crayon editorial illustration'))
+    assert.ok(result.includes('A UK café'))
+  })
+
+  test('falls back to IMAGE_PREFIX when style is empty', () => {
+    const result = composeImagePrompt({
+      articlePrompt: 'A UK café',
+      settings: { imageStylePrompt: '', imageNegativePrompt: '' },
+    })
+    assert.ok(result.startsWith('Premium hand-drawn crayon editorial illustration'))
+  })
+
+  test('appends negative prompt only when present', () => {
+    const result = composeImagePrompt({
+      articlePrompt: 'A UK café',
+      settings: { imageStylePrompt: 'Style.', imageNegativePrompt: 'No red.' },
+    })
+    assert.equal(result, 'Style. A UK café No red.')
+  })
+})
+
+describe('getAutomationSettings', () => {
+  test('returns the published settings document', async () => {
+    const client = {
+      fetch: async () => ({ imageStylePrompt: 'Style', imageNegativePrompt: 'No red' }),
+    }
+    const result = await getAutomationSettings(client)
+    assert.equal(result.imageStylePrompt, 'Style')
+    assert.equal(result.imageNegativePrompt, 'No red')
+  })
+
+  test('sends the expected GROQ for the singleton', async () => {
+    let captured = null
+    const client = {
+      fetch: async (query) => { captured = query; return null },
+    }
+    await getAutomationSettings(client)
+    assert.equal(
+      captured,
+      `*[_type == "blogAutomationSettings" && _id == "blogAutomationSettings"][0]{
+        imageStylePrompt,
+        imageNegativePrompt,
+        articleContentPrompt,
+        articleTonePrompt,
+        articleAvoidPrompt,
+        articleCtaPrompt,
+        nextArticleTopic
+      }`
+    )
+  })
+
+  test('returns null when the document is missing or unpublished', async () => {
+    const client = { fetch: async () => null }
+    const result = await getAutomationSettings(client)
+    assert.equal(result, null)
+  })
+
+  test('limits very long prompt fields', async () => {
+    const long = 'x'.repeat(6000)
+    const client = {
+      fetch: async () => ({ imageStylePrompt: long, imageNegativePrompt: long }),
+    }
+    const result = await getAutomationSettings(client)
+    assert.ok(result.imageStylePrompt.length <= 4000)
+    assert.ok(result.imageNegativePrompt.length <= 2000)
+  })
+
+  test('does not throw when the settings fetch fails', async () => {
+    const client = { fetch: async () => { throw new Error('network down') } }
+    const result = await getAutomationSettings(client)
+    assert.equal(result, null)
+  })
+})
+
 // ---------------------------------------------------------------------------
 // buildArticlePrompt
 // ---------------------------------------------------------------------------
@@ -357,6 +447,59 @@ describe('buildArticlePrompt', () => {
     assert.ok(prompt.system.includes('Execora'))
     assert.ok(prompt.system.includes('British English'))
     assert.ok(prompt.system.includes('em dash'))
+  })
+
+  test('includes custom content and tone guidance when provided', () => {
+    const settings = {
+      articleContentPrompt: 'Focus on local SEO for salons.',
+      articleTonePrompt: 'Write in a warm, accessible tone.',
+    }
+    const prompt = buildArticlePrompt({ titles: [], categories: [] }, settings)
+    assert.ok(prompt.user.includes('EDITORIAL FOCUS:'))
+    assert.ok(prompt.user.includes('Focus on local SEO for salons.'))
+    assert.ok(prompt.user.includes('WRITING STYLE:'))
+    assert.ok(prompt.user.includes('Write in a warm, accessible tone.'))
+  })
+
+  test('includes avoid and call-to-action guidance when provided', () => {
+    const settings = {
+      articleAvoidPrompt: 'No exaggerated claims.',
+      articleCtaPrompt: 'Encourage readers to request a free review.',
+    }
+    const prompt = buildArticlePrompt({ titles: [], categories: [] }, settings)
+    assert.ok(prompt.user.includes('AVOID:'))
+    assert.ok(prompt.user.includes('No exaggerated claims.'))
+    assert.ok(prompt.user.includes('CALL TO ACTION:'))
+    assert.ok(prompt.user.includes('Encourage readers to request a free review.'))
+  })
+
+  test('keeps core technical rules present alongside guidance', () => {
+    const settings = {
+      articleContentPrompt: 'Focus on local SEO.',
+      articleTonePrompt: 'Warm tone.',
+    }
+    const prompt = buildArticlePrompt({ titles: [], categories: [] }, settings)
+    assert.ok(prompt.user.includes('1,200 to 1,400 words'))
+    assert.ok(prompt.user.includes('SEO-optimised'))
+    assert.ok(prompt.user.includes('no written words'))
+    assert.ok(prompt.system.includes('British English'))
+    assert.ok(prompt.system.includes('Never invent statistics'))
+  })
+
+  test('empty settings use existing defaults without guidance sections', () => {
+    const promptWithDefaults = buildArticlePrompt({ titles: [], categories: [] }, null)
+    const promptWithEmpty = buildArticlePrompt({ titles: [], categories: [] }, {})
+    assert.equal(promptWithDefaults.user, promptWithEmpty.user)
+    assert.ok(!promptWithEmpty.user.includes('EDITORIAL FOCUS:'))
+    assert.ok(!promptWithEmpty.user.includes('WRITING STYLE:'))
+    assert.ok(promptWithEmpty.user.includes('1,200 to 1,400 words'))
+  })
+
+  test('includes nextArticleTopic guidance when provided', () => {
+    const settings = { nextArticleTopic: 'How local salons can win more mobile bookings' }
+    const prompt = buildArticlePrompt({ titles: [], categories: [] }, settings)
+    assert.ok(prompt.user.includes('NEXT ARTICLE TOPIC:'))
+    assert.ok(prompt.user.includes('How local salons can win more mobile bookings'))
   })
 })
 
@@ -883,6 +1026,276 @@ describe('POST /api/generate-daily-blog happy path', () => {
     await handler(makeReq({ token: 'test-blog-secret' }), res)
     assert.ok(createdDoc)
     assert.ok(!createdDoc.hasOwnProperty('publishedAt'))
+  })
+})
+
+describe('POST /api/generate-daily-blog automation settings integration', () => {
+  const sampleArticle = {
+    title: 'How to Get More Google Reviews for Your Local Business',
+    slug: 'get-more-google-reviews-local-business',
+    category: 'Google & SEO',
+    excerpt: 'Practical steps to earn more Google reviews for your UK local business.',
+    seoTitle: 'Get More Google Reviews',
+    seoDescription: SEO_DESC,
+    imagePrompt: 'A friendly local shop with customers',
+    imageAlt: 'Friendly local shop with customers',
+    body: Array.from({ length: 12 }, () => ({
+      style: 'normal',
+      listItem: null,
+      text: 'word '.repeat(120),
+    })),
+  }
+
+  let createdDoc
+  let capturedImagePrompt
+  let settingsDoc
+
+  beforeEach(() => {
+    setEnv()
+    createdDoc = null
+    capturedImagePrompt = null
+    settingsDoc = null
+
+    setClientFactory(({ projectId, dataset, token }) => ({
+      fetch: async (query, params) => {
+        if (params && params.id) return null
+        if (query.includes('_type == "blogPost"')) return []
+        if (query.includes('blogAutomationSettings')) {
+          if (settingsDoc instanceof Error) throw settingsDoc
+          return settingsDoc
+        }
+        return null
+      },
+      create: async (doc) => { createdDoc = doc; return doc },
+      assets: {
+        upload: async () => ({ _id: 'image-uploaded-123' }),
+      },
+    }))
+
+    setOpenaiFetch(async () => ({
+      ok: true,
+      json: async () => ({
+        output: [{ type: 'message', content: [{ text: JSON.stringify(sampleArticle) }] }],
+      }),
+    }))
+
+    setImageFetch(async ({ body }) => {
+      capturedImagePrompt = body.prompt
+      return {
+        ok: true,
+        json: async () => ({
+          data: [{ b64_json: Buffer.from('fake-image-data').toString('base64') }],
+        }),
+      }
+    })
+  })
+
+  afterEach(() => {
+    clearEnv()
+    setClientFactory(null)
+    setOpenaiFetch(null)
+    setImageFetch(null)
+    setLondonHourOverride(null)
+  })
+
+  test('published custom image settings are used and article concept retained', async () => {
+    settingsDoc = {
+      imageStylePrompt: 'Custom 3D crayon editorial style.',
+      imageNegativePrompt: 'No red, no blue.',
+    }
+    const res = makeRes()
+    await handler(makeReq({ token: 'test-blog-secret' }), res)
+    assert.equal(res._status, 200)
+    assert.ok(capturedImagePrompt.startsWith('Custom 3D crayon editorial style.'))
+    assert.ok(capturedImagePrompt.includes('A friendly local shop with customers'))
+    assert.ok(capturedImagePrompt.endsWith('No red, no blue.'))
+    assert.ok(createdDoc)
+  })
+
+  test('missing settings fall back to IMAGE_PREFIX and still create a draft', async () => {
+    settingsDoc = null
+    const res = makeRes()
+    await handler(makeReq({ token: 'test-blog-secret' }), res)
+    assert.equal(res._status, 200)
+    assert.ok(capturedImagePrompt.startsWith('Premium hand-drawn crayon editorial illustration'))
+    assert.ok(capturedImagePrompt.includes('A friendly local shop with customers'))
+    assert.ok(createdDoc)
+  })
+
+  test('a settings fetch failure does not stop draft generation', async () => {
+    settingsDoc = new Error('boom')
+    const res = makeRes()
+    await handler(makeReq({ token: 'test-blog-secret' }), res)
+    assert.equal(res._status, 200)
+    assert.ok(createdDoc)
+    assert.ok(capturedImagePrompt.startsWith('Premium hand-drawn crayon editorial illustration'))
+  })
+})
+
+describe('POST /api/generate-daily-blog article guidance integration', () => {
+  const sampleArticle = {
+    title: 'How to Get More Google Reviews for Your Local Business',
+    slug: 'get-more-google-reviews-local-business',
+    category: 'Google & SEO',
+    excerpt: 'Practical steps to earn more Google reviews for your UK local business.',
+    seoTitle: 'Get More Google Reviews',
+    seoDescription: SEO_DESC,
+    imagePrompt: 'A friendly local shop with customers',
+    imageAlt: 'Friendly local shop with customers',
+    body: Array.from({ length: 12 }, () => ({
+      style: 'normal',
+      listItem: null,
+      text: 'word '.repeat(120),
+    })),
+  }
+
+  let createdDoc
+  let capturedArticleUser
+  let settingsDoc
+  let clearedTopic
+  let settingsFetchFailure
+
+  beforeEach(() => {
+    setEnv()
+    createdDoc = null
+    capturedArticleUser = null
+    clearedTopic = null
+    settingsFetchFailure = false
+
+    setClientFactory(({ projectId, dataset, token }) => ({
+      fetch: async (query, params) => {
+        if (params && params.id) return null
+        if (query.includes('_type == "blogPost"')) return []
+        if (query.includes('blogAutomationSettings')) {
+          if (settingsFetchFailure) throw new Error('boom')
+          return settingsDoc
+        }
+        return null
+      },
+      create: async (doc) => { createdDoc = doc; return doc },
+      patch: (docId) => ({
+        set: (fields) => {
+          clearedTopic = { docId, fields }
+          return { commit: async () => ({ ok: true }) }
+        },
+      }),
+      assets: {
+        upload: async () => ({ _id: 'image-uploaded-123' }),
+      },
+    }))
+
+    setOpenaiFetch(async ({ body }) => {
+      const userMsg = body.input.find((m) => m.role === 'user')
+      capturedArticleUser = userMsg.content
+      return {
+        ok: true,
+        json: async () => ({
+          output: [{ type: 'message', content: [{ text: JSON.stringify(sampleArticle) }] }],
+        }),
+      }
+    })
+
+    setImageFetch(async () => ({
+      ok: true,
+      json: async () => ({
+        data: [{ b64_json: Buffer.from('fake-image-data').toString('base64') }],
+      }),
+    }))
+  })
+
+  afterEach(() => {
+    clearEnv()
+    setClientFactory(null)
+    setOpenaiFetch(null)
+    setImageFetch(null)
+    setLondonHourOverride(null)
+  })
+
+  test('custom content, tone, avoid, cta and topic guidance reach the article prompt', async () => {
+    settingsDoc = {
+      articleContentPrompt: 'Focus on booking workflows.',
+      articleTonePrompt: 'Use a confident, practical tone.',
+      articleAvoidPrompt: 'Avoid hype.',
+      articleCtaPrompt: 'Encourage a free website review.',
+      nextArticleTopic: 'How salons win more bookings',
+    }
+    const res = makeRes()
+    await handler(makeReq({ token: 'test-blog-secret' }), res)
+    assert.equal(res._status, 200)
+    assert.ok(capturedArticleUser.includes('EDITORIAL FOCUS:'))
+    assert.ok(capturedArticleUser.includes('Focus on booking workflows.'))
+    assert.ok(capturedArticleUser.includes('WRITING STYLE:'))
+    assert.ok(capturedArticleUser.includes('Use a confident, practical tone.'))
+    assert.ok(capturedArticleUser.includes('AVOID:'))
+    assert.ok(capturedArticleUser.includes('Avoid hype.'))
+    assert.ok(capturedArticleUser.includes('CALL TO ACTION:'))
+    assert.ok(capturedArticleUser.includes('Encourage a free website review.'))
+    assert.ok(capturedArticleUser.includes('NEXT ARTICLE TOPIC:'))
+    assert.ok(capturedArticleUser.includes('How salons win more bookings'))
+  })
+
+  test('core rules remain present alongside guidance', async () => {
+    settingsDoc = { articleContentPrompt: 'Focus on booking workflows.' }
+    const res = makeRes()
+    await handler(makeReq({ token: 'test-blog-secret' }), res)
+    assert.ok(capturedArticleUser.includes('1,200 to 1,400 words'))
+    assert.ok(capturedArticleUser.includes('SEO-optimised'))
+  })
+
+  test('empty settings use existing defaults', async () => {
+    settingsDoc = {}
+    const res = makeRes()
+    await handler(makeReq({ token: 'test-blog-secret' }), res)
+    assert.equal(res._status, 200)
+    assert.ok(capturedArticleUser.includes('1,200 to 1,400 words'))
+    assert.ok(!capturedArticleUser.includes('EDITORIAL FOCUS:'))
+    assert.ok(createdDoc)
+  })
+
+  test('settings fetch failure does not stop generation and uses defaults', async () => {
+    settingsFetchFailure = true
+    settingsDoc = { articleContentPrompt: 'Should not appear.' }
+    const res = makeRes()
+    await handler(makeReq({ token: 'test-blog-secret' }), res)
+    assert.equal(res._status, 200)
+    assert.ok(createdDoc)
+    assert.ok(capturedArticleUser.includes('1,200 to 1,400 words'))
+    assert.ok(!capturedArticleUser.includes('Should not appear.'))
+  })
+
+  test('nextArticleTopic clears after a successful normal draft', async () => {
+    settingsDoc = { nextArticleTopic: 'How salons win more bookings' }
+    const res = makeRes()
+    await handler(makeReq({ token: 'test-blog-secret' }), res)
+    assert.equal(res._status, 200)
+    assert.ok(createdDoc)
+    assert.ok(clearedTopic, 'expected a patch to clear the topic')
+    assert.equal(clearedTopic.docId, 'blogAutomationSettings')
+    assert.equal(clearedTopic.fields.nextArticleTopic, '')
+  })
+
+  test('test runs do not clear nextArticleTopic', async () => {
+    settingsDoc = { nextArticleTopic: 'How salons win more bookings' }
+    const res = makeRes()
+    await handler(
+      makeReq({ token: 'test-blog-secret', url: '/api/generate-daily-blog?test=true' }),
+      res
+    )
+    assert.equal(res._status, 200)
+    assert.ok(createdDoc)
+    assert.ok(createdDoc._id.startsWith('drafts.blogPost-test-'))
+    assert.equal(clearedTopic, null)
+  })
+
+  test('failed runs do not clear nextArticleTopic', async () => {
+    settingsDoc = { nextArticleTopic: 'How salons win more bookings' }
+    // Force image generation to fail so the draft is never created.
+    setImageFetch(async () => ({ ok: false, status: 500 }))
+    const res = makeRes()
+    await handler(makeReq({ token: 'test-blog-secret' }), res)
+    assert.equal(res._status, 502)
+    assert.equal(createdDoc, null)
+    assert.equal(clearedTopic, null)
   })
 })
 

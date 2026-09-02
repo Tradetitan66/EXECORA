@@ -19,9 +19,10 @@ standalone Sanity Studio and shown live on the site (client-side, real-time).
 | `studio/package.json` | Studio dependencies + scripts (`sanity dev`, `sanity deploy`) |
 | `studio/sanity.config.ts` | Studio config (project `p0mpfgmr`, dataset `production`) |
 | `studio/sanity.cli.ts` | CLI config |
-| `studio/structure.ts` | Simple client-friendly sidebar (Blog posts + Site settings) |
+| `studio/structure.ts` | Simple client-friendly sidebar (Blog posts + Settings) |
 | `studio/schemaTypes/blogPost.ts` | Blog schema (**one featured image per post**) |
 | `studio/schemaTypes/siteSettings.ts` | Editable homepage/footer strings (singleton) |
+| `studio/schemaTypes/blogAutomationSettings.ts` | Editable automatic-blog image style (singleton) |
 | `src/sanity/client.js` | Sanity client + image URL builder (client-side) |
 | `src/sanity/queries.js` | GROQ queries for settings + blog |
 | `src/sanity/site.js` | Homepage text hydration (falls back to hard-coded copy) |
@@ -404,6 +405,79 @@ curl -X POST https://www.execora.work/api/generate-daily-blog \
 
 The endpoint never calls any publish operation and never overwrites a manual
 post or an existing draft for the same date.
+
+### Featured-image style — `blogAutomationSettings` (singleton)
+
+A single document named **Blog Automation Settings** controls the visual style
+used for automatic blog images. It sits in the Studio sidebar and contains two
+fields:
+
+| Field | Purpose |
+| --- | --- |
+| `imageStylePrompt` | Styles the generated image (large multi-line input). |
+| `imageNegativePrompt` | Visual elements, colours and styles to avoid. |
+
+Only the **published** document affects automatic generation. Unpublished edits
+are ignored by production. If the document is missing, unpublished, empty or
+cannot be fetched, the automation silently falls back to the hard-coded
+`IMAGE_PREFIX` style — it never fails the whole run.
+
+Recommended starting value for `imageStylePrompt` (paste into the text field):
+
+> Premium hand-drawn crayon editorial illustration with subtle embossed 3D depth for an Execora business article. Use rounded dimensional forms, visible wax-pencil grain, soft paper texture, imperfect handcrafted edges and gentle grounded shadows. Colour palette: dominant warm off-white or ivory background, near-black and deep charcoal for main objects, muted antique gold for highlights, important symbols and small accents, and optional soft warm-grey or muted beige for secondary details. Aim for roughly 75% ivory, 20% near-black or charcoal and 5% muted gold. No bright green, red, orange, yellow, blue or rainbow colours. Show one simple visual metaphor that communicates the article topic, such as a damaged website screen losing a customer, a smartphone connecting a customer to a shop, an enquiry moving through a simple follow-up journey, a local shop becoming easier to find, a booking calendar filling with appointments, or reviews helping customers trust a business. Set it within a subtle UK local-business environment with independent shopfronts, cafés, salons, tradespeople, clinics, brick buildings, pavements or neighbourhood high streets, without tourist clichés. Sophisticated and editorial, not like a children's book. Avoid exaggerated cartoon faces unless the expression is necessary to communicate the article problem. No text, letters, numbers, logos, brand names or watermarks inside the image. No generic robots, futuristic dashboards, purple gradients, neon colours, glossy plastic materials or visual clutter.
+
+Recommended starting value for `imageNegativePrompt` (optional):
+
+> No text, letters, numbers, logos, brand names or watermarks inside the image. No generic robots, futuristic dashboards, purple gradients, neon colours, glossy plastic materials or visual clutter.
+
+The final prompt sent to OpenAI is composed as:
+
+1. Sanity `imageStylePrompt` (or `IMAGE_PREFIX` if unavailable)
+2. The article-specific `imagePrompt`
+3. Sanity `imageNegativePrompt` (if present)
+
+### Article guidance — `blogAutomationSettings` (singleton)
+
+The same **Blog Automation Settings** document also controls the **article
+content** the automation writes. It contains five additional fields:
+
+| Field | Purpose |
+| --- | --- |
+| `articleContentPrompt` | Focus/editorial direction for the article. |
+| `articleTonePrompt` | Writing style and tone. |
+| `articleAvoidPrompt` | Subjects, claims, phrases and styles to avoid. |
+| `articleCtaPrompt` | How Execora is mentioned and the call to action. |
+| `nextArticleTopic` | **One-time** topic for the next normal daily article. Leave empty to let the automation choose. |
+
+When a field is filled in, it is appended to the article-generation prompt as a
+labelled section, in this order:
+
+1. `EDITORIAL FOCUS:`
+2. `WRITING STYLE:`
+3. `AVOID:`
+4. `CALL TO ACTION:`
+5. `NEXT ARTICLE TOPIC:`
+
+These are **supplements only**. The hard-coded rules (British English, UK
+local-business audience, practical/accurate advice, no fabricated stats,
+SEO title/description limits, category validation, structured JSON schema,
+1,200–1,500 word target, Portable Text conversion, draft-only workflow,
+duplicate protection, auth/cron) can **never** be overridden.
+
+**`nextArticleTopic` behaviour:**
+
+- Used on the **next normal daily article only**; OpenAI derives the SEO title
+  from it.
+- Cleared from the settings automatically **after a successful normal (non-test)
+  draft is created**.
+- Not cleared on failure and not cleared during a `?test=true` test run.
+
+If the field is empty (or the settings document is missing/unpublished/empty/
+unfetchable), the automation continues with its existing hard-coded prompts and
+never fails the run.
+
+As with the image fields, only the **published** document affects automatic
+generation.
 
 ### Local / automated testing
 
