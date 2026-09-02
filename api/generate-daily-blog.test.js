@@ -278,22 +278,35 @@ describe('validateArticle', () => {
 describe('buildImagePrompt', () => {
   test('prepends Execora visual identity prefix', () => {
     const result = buildImagePrompt('A modern shop front')
-    assert.ok(result.startsWith('Premium minimalist editorial visual'))
+    assert.ok(result.startsWith('Premium handcrafted 3D crayon-and-clay editorial illustration'))
     assert.ok(result.endsWith('A modern shop front'))
   })
 
   test('includes all identity keywords', () => {
     const result = buildImagePrompt('test')
+    assert.ok(result.includes('3D crayon-and-clay'))
+    assert.ok(result.includes('wax, paper and clay'))
     assert.ok(result.includes('cream'))
-    assert.ok(result.includes('Near-black'))
+    assert.ok(result.toLowerCase().includes('near-black'))
     assert.ok(result.includes('muted-gold'))
     assert.ok(result.includes('negative space'))
-    assert.ok(result.includes('No text inside the image'))
-    assert.ok(result.includes('No logos'))
-    assert.ok(result.includes('No purple AI gradients'))
-    assert.ok(result.includes('No neon colours'))
-    assert.ok(result.includes('No childish cartoons'))
-    assert.ok(result.includes('No watermarks'))
+    assert.ok(result.includes('UK local-business setting'))
+    assert.ok(result.includes('No written text'))
+    assert.ok(result.includes('No generic robots'))
+    assert.ok(result.includes('neon colours'))
+    assert.ok(result.includes('purple AI gradients'))
+    assert.ok(result.includes('professional'))
+  })
+
+  test('does not contain text or logo artifacts', () => {
+    const result = buildImagePrompt('test')
+    assert.ok(result.includes('No written text, letters, numbers, logos, brands or watermarks'))
+  })
+
+  test('preserves the article-specific image prompt', () => {
+    const specific = 'A friendly café with a review card and booking calendar'
+    const result = buildImagePrompt(specific)
+    assert.ok(result.includes(specific))
   })
 })
 
@@ -310,6 +323,15 @@ describe('buildArticlePrompt', () => {
     const prompt = buildArticlePrompt(topics)
     assert.ok(prompt.user.includes('10 Website Tips'))
     assert.ok(prompt.user.includes('How to Get Google Reviews'))
+  })
+
+  test('instructs a topic-specific imagePrompt for the featured image', () => {
+    const prompt = buildArticlePrompt({ titles: [], categories: [] })
+    const user = prompt.user
+    assert.ok(user.includes('imagePrompt'))
+    assert.ok(user.includes('one clear visual concept'))
+    assert.ok(user.includes('local-business setting'))
+    assert.ok(user.includes('no written words'))
   })
 
   test('handles empty recent topics gracefully', () => {

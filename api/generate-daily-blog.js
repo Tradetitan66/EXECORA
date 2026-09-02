@@ -210,6 +210,7 @@ export function buildArticlePrompt(recentTopics) {
       topicsList,
       categoryHint,
       'Useful topics include: website conversion, local SEO, Google Business Profile, customer reviews, lead generation, booking and enquiry processes, trust signals, mobile experience, customer retention, email or WhatsApp follow-up, pricing communication, simple business systems, useful no-code automation.',
+      'For the imagePrompt field, describe one clear visual concept representing the article\'s main problem or solution within a specific local-business setting relevant to the topic (for example a UK high-street shop, café, salon, trades business, clinic, restaurant or professional service). Include relevant objects such as a smartphone, website screen, booking calendar, review card, map pin, storefront, tools or a customer enquiry. Add a subtle British local touch through architecture, pavement, shopfront design, weather, streetscape or the business environment, and specify the exact composition, main subject and supporting objects. The generated image must contain no written words. Avoid generic instructions such as "an AI business image" or "a business owner using technology".',
       'Avoid: generic motivational advice, unsupported statistics, invented studies, fake quotes or case studies, keyword stuffing, excessive promotion of Execora, repetitive listicles, US-specific legal, tax or business advice, claims that require a professional adviser.',
     ].join('\n'),
   }
@@ -318,7 +319,7 @@ export function validateArticle(article) {
 // ---------------------------------------------------------------------------
 
 const IMAGE_PREFIX =
-  'Premium minimalist editorial visual. Warm off-white or cream background palette. Near-black text and line details. Restrained muted-gold accents. Sophisticated UK local-business context. Generous negative space. Realistic or refined editorial illustration style. No text inside the image. No logos. No purple AI gradients. No neon colours. No childish cartoons. No watermarks. No misleading before-and-after claims. '
+  'Premium handcrafted 3D crayon-and-clay editorial illustration for an Execora business article. Create tactile sculpted forms with subtle wax, paper and clay textures. Use a warm off-white or cream background, near-black details and restrained muted-gold accents. Use soft natural lighting, realistic dimensional shadows and generous negative space. Show one clear visual idea directly connected to the article topic within a recognisable UK local-business setting. Include subtle British high-street or neighbourhood details without using tourist clichés. Sophisticated, minimal and professional, never childish or toy-like. No written text, letters, numbers, logos, brands or watermarks. No generic robots, futuristic dashboards, neon colours, purple AI gradients or visual clutter. '
 
 export function buildImagePrompt(articleImagePrompt) {
   return IMAGE_PREFIX + articleImagePrompt
