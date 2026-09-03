@@ -1625,3 +1625,72 @@ body.modal-open { overflow: hidden; }
   .hero-sub { margin-bottom: 1.4rem; }
   .blob { opacity: 0.45; }
 }
+
+/* ============================================================
+   Cookie-consent banner (Google Analytics)
+   ============================================================ */
+.consent-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 90; /* above content, below the checkout modal (z-index 200) */
+  padding: max(1rem, env(safe-area-inset-bottom)) 1.25rem 1rem;
+  background: var(--paper);
+  border-top: 1px solid var(--stone-100);
+  box-shadow: 0 -12px 40px -20px rgba(41, 37, 36, 0.35);
+}
+.consent-banner-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.5rem;
+}
+.consent-banner-title {
+  font-family: var(--font-head);
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--ink);
+  margin: 0;
+}
+.consent-banner-text {
+  flex: 1 1 30ch;
+  margin: 0;
+  color: var(--muted);
+  font-weight: 300;
+  font-size: 0.925rem;
+  line-height: 1.5;
+}
+.consent-banner-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.consent-btn {
+  font-family: var(--font-head);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.6rem 1.2rem;
+  border-radius: 999px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform 0.25s var(--ease-slow), background 0.25s var(--ease-slow);
+}
+.consent-btn:hover { transform: translateY(-2px); }
+.consent-accept {
+  color: var(--ink);
+  background: var(--coral);
+}
+.consent-reject {
+  color: var(--ink);
+  background: #fff;
+  border-color: var(--stone-100);
+}
+.consent-reject:hover { background: var(--stone-50); }
+
+@media (min-width: 760px) {
+  .consent-banner-text { max-width: 60ch; }
+}
+

@@ -3,6 +3,7 @@ import './blog.css'
 import { client, imageUrlFor, formatDate, sanityProjectId, sanityDataset } from './sanity/client.js'
 import { blogPostsQuery, blogPostBySlugQuery, blogCategoriesQuery } from './sanity/queries.js'
 import { portableTextToHtml } from './sanity/portable.js'
+import { initAnalytics } from './analytics.js'
 
 /* ============================================================
    Blog — index + article views, rendered from Sanity (real-time)
@@ -319,6 +320,10 @@ function initPrivacy() {
 
 /* ---------- boot ---------- */
 function boot() {
+  // Initialise GA4 with a single page_view for the current blog route
+  // (/blog for the index, /blog/<slug> for an article).
+  initAnalytics({ path: window.location.pathname.replace(/\/+$/, '') || '/' })
+
   initMenu()
   initHeaderGlass()
   initPrivacy()

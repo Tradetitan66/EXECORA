@@ -8,6 +8,10 @@
  */
 
 import { getHeldData, clearHeldData } from './checkout.js'
+import { initAnalytics, trackEvent } from './analytics.js'
+
+// Initialise GA4 with a single page_view for the thank-you page.
+initAnalytics({ path: '/thank-you' })
 
 function initHeaderGlass() {
   const header = document.querySelector('.nav-bar')
@@ -72,6 +76,7 @@ function initWhatsApp(data) {
 
   btn.addEventListener('click', (e) => {
     e.preventDefault()
+    trackEvent('whatsapp_click', { location: 'thank_you' })
     const message = buildWhatsAppMessage(data, paymentIntent)
     window.open(
       `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`,

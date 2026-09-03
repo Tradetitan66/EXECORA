@@ -8,6 +8,8 @@
  * ?session_id=...) and written to the sheet server-side via webhook.
  */
 
+import { trackEvent } from './analytics.js'
+
 const STORAGE_KEY = 'execora_proto_data'
 
 /* ---------- helpers ---------- */
@@ -90,6 +92,10 @@ async function onSubmit(e) {
     form.reportValidity()
     return
   }
+
+  // User started the £5 prototype checkout (not a completed purchase).
+  // No personal data is sent.
+  trackEvent('prototype_checkout_click')
 
   const data = Object.fromEntries(new FormData(form).entries())
 

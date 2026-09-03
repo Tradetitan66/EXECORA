@@ -1,6 +1,10 @@
 import './style.css'
 import { hydrateHomepage } from './sanity/site.js'
 import { initCheckout } from './checkout.js'
+import { initAnalytics, trackEvent } from './analytics.js'
+
+// Initialise GA4 (single page_view for the homepage).
+initAnalytics({ path: '/' })
 
 // Fetch editable homepage copy from Sanity (falls back to hard-coded copy).
 hydrateHomepage()
@@ -230,9 +234,13 @@ form.addEventListener('submit', async (e) => {
   formWrap.hidden = true
   successTitle.textContent = `Got it, ${data.name || 'friend'}. Your details are saved.`
   successPanel.hidden = false
+
+  // Fire as a confirmation/conversion once — no personal data is sent.
+  trackEvent('generate_lead')
 })
 
 successWaBtn.addEventListener('click', () => {
+  trackEvent('whatsapp_click', { location: 'enquiry_success' })
   if (savedData) openWhatsApp(savedData)
 })
 
@@ -269,6 +277,7 @@ const QUICK_WA_MESSAGE = [
 const quickWaBtn = document.getElementById('quick-wa-btn')
 if (quickWaBtn) {
   quickWaBtn.addEventListener('click', () => {
+    trackEvent('whatsapp_click', { location: 'homepage_quick_contact' })
     window.open(
       `${'https://wa.me/'}${WHATSAPP_NUMBER}?text=${encodeURIComponent(QUICK_WA_MESSAGE)}`,
       '_blank',
