@@ -448,6 +448,19 @@ content** the automation writes. It contains five additional fields:
 | `articleAvoidPrompt` | Subjects, claims, phrases and styles to avoid. |
 | `articleCtaPrompt` | How Execora is mentioned and the call to action. |
 | `nextArticleTopic` | **One-time** topic for the next normal daily article. Leave empty to let the automation choose. |
+| `textModel` | OpenAI **article** model. Leave empty for the default. |
+| `imageModel` | OpenAI **image** model. Leave empty for the default. |
+
+**Model selection:** `textModel` and `imageModel` let the owner change which
+OpenAI models the automation uses, from the dashboard. Only allowlisted values
+are accepted; anything invalid/empty falls back to the `OPENAI_TEXT_MODEL` /
+`OPENAI_IMAGE_MODEL` env vars (or their hard-coded defaults), so an unknown
+model can never break generation.
+
+Allowlisted article models: `gpt-5-mini`, `gpt-5.4`, `gpt-5.4-mini` (default),
+`gpt-4o-mini`.
+
+Allowlisted image models: `gpt-image-1-mini` (default), `gpt-image-1`.
 
 When a field is filled in, it is appended to the article-generation prompt as a
 labelled section, in this order:
@@ -486,3 +499,69 @@ Run the unit tests (these mock OpenAI and Sanity — no real API calls, no cost)
 ```bash
 npm test
 ```
+
+---
+
+## 11. Google Analytics 4
+
+The site uses **GA4 via `gtag.js`** (Google Tag Manager is **not** used). It's a
+vanilla Vite multi-page site, so analytics live in one shared module
+(`src/analytics.js`) imported by every entry point (`src/main.js`, `src/blog.js`,
+`src/thank-you.js`) — each reports a single, correct `page_view`.
+
+### How it works
+
+- **Consent-first (UK-friendly):** all storage (`analytics_storage`,
+  `ad_storage`, `ad_user_data`, `ad_personalization`) is denied **before**
+  analytics loads. A banner lets the visitor **Accept analytics** or **Reject**.
+  Accepting grants **only** `analytics_storage`; advertising consent always stays
+  denied because Execora isn't running ad tracking.
+- The banner shows only until the visitor makes a choice (stored in
+  `localStorage` under `execora_ga_consent`) and is never shown again after a
+  choice.
+- **No personal data is ever sent.** Event params are allow-listed (`location`,
+  `page_location`). Names, emails, phone/WhatsApp numbers and form messages stay
+  on the site and are never passed to Google Analytics.
+- Events tracked: standard `page_view` for `/`, `/blog`, `/blog/<slug>` and
+  `/thank-you`; plus `generate_lead` (once, after the enquiry form succeeds),
+  `whatsapp_click` (with a `location` such as `homepage_quick_contact`,
+  `enquiry_success` or `thank_you`), and `prototype_checkout_click` (when a user
+  starts the £5 prototype checkout — **not** a completed purchase).
+- If GA is blocked, the ID is missing/invalid, the script fails, or the visitor
+  rejects, the site keeps working normally (events silently no-op).
+
+### Setup
+
+1. Create a GA4 property in the Google Analytics admin console and copy its
+   **Measurement ID** (format `G-XXXXXXXXXX`).
+2. Add it to your local `.env`:
+
+   ```
+   VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX
+   ```
+
+3. Add the same public-var to **Vercel → Project → Settings → Environment
+   Variables** (`VITE_GA_MEASUREMENT_ID`).
+4. **Local development:** analytics is disabled unless you also set
+   `VITE_GA_ENABLE_DEV=true` in your `.env`.
+5. Leave `VITE_GA_MEASUREMENT_ID` empty/absent to disable GA4 entirely
+   (production included).
+
+### Verification
+
+1. **Production:**
+   - Open Google Analytics → **Reports → Realtime** (or the **DebugView**).
+   - Visit `https://www.execora.work/`, `/blog`, `/blog/<some-article>`, and
+     `/thank-you` — each should appear as a single `page_view` on its own path.
+   - Accept the consent banner, then submit the enquiry form → `generate_lead`;
+     click a WhatsApp button → `whatsapp_click`; start the £5 checkout →
+     `prototype_checkout_click`.
+   - Reload a page after choosing “Reject” — the banner must **not** reappear
+     and no events should send.
+
+2. **Local:** set `VITE_GA_MEASUREMENT_ID` and `VITE_GA_ENABLE_DEV=true` in your
+   `.env`, run `npm run dev`, and confirm the same events in GA4 **DebugView**
+   (enable the DebugView extension/ga_debug in the browser).
+
+> Only TS/JS files under `src/` are involved. The Sanity CMS, Stripe checkout,
+> contact form, Vercel Cron and daily blog automation are untouched by analytics.

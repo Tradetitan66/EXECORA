@@ -64,5 +64,19 @@ export const blogAutomationSettings = defineType({
       description:
         'Optional one-time topic for the next normal daily article. Leave empty to let the automation select a topic.',
     }),
+    defineField({
+      name: 'textModel',
+      title: 'Article Model',
+      type: 'string',
+      description:
+        'OpenAI model used for article generation. Leave empty to use the default (gpt-5.4-mini).',
+    }),
+    defineField({
+      name: 'imageModel',
+      title: 'Image Model',
+      type: 'string',
+      description:
+        'OpenAI model used for featured-image generation. Leave empty to use the default (gpt-image-1-mini).',
+    }),
   ],
 })

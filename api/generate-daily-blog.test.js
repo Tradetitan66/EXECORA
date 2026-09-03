@@ -7,6 +7,8 @@ import {
   getRecentTopics,
   getAutomationSettings,
   composeImagePrompt,
+  resolveTextModel,
+  resolveImageModel,
   generateImage,
   countWords,
   validateArticle,
@@ -383,7 +385,9 @@ describe('getAutomationSettings', () => {
         articleTonePrompt,
         articleAvoidPrompt,
         articleCtaPrompt,
-        nextArticleTopic
+        nextArticleTopic,
+        textModel,
+        imageModel
       }`
     )
   })
@@ -408,6 +412,55 @@ describe('getAutomationSettings', () => {
     const client = { fetch: async () => { throw new Error('network down') } }
     const result = await getAutomationSettings(client)
     assert.equal(result, null)
+  })
+
+  test('fetches the model fields from the singleton', async () => {
+    const client = {
+      fetch: async () => ({ textModel: 'gpt-5.4', imageModel: 'gpt-image-1' }),
+    }
+    const result = await getAutomationSettings(client)
+    assert.equal(result.textModel, 'gpt-5.4')
+    assert.equal(result.imageModel, 'gpt-image-1')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// resolveTextModel / resolveImageModel
+// ---------------------------------------------------------------------------
+
+describe('resolveTextModel', () => {
+  test('uses an allowlisted Sanity model when provided', () => {
+    assert.equal(resolveTextModel('gpt-5.4', 'gpt-5.4-mini'), 'gpt-5.4')
+  })
+
+  test('falls back to the env default for an empty settings value', () => {
+    assert.equal(resolveTextModel('', 'gpt-5.4-mini'), 'gpt-5.4-mini')
+  })
+
+  test('falls back to the env default for a non-allowlisted model', () => {
+    assert.equal(resolveTextModel('gpt-999-unknown', 'gpt-5.4-mini'), 'gpt-5.4-mini')
+  })
+
+  test('falls back for missing (null) settings value', () => {
+    assert.equal(resolveTextModel(null, 'gpt-5.4-mini'), 'gpt-5.4-mini')
+  })
+
+  test('falls back to the default when env is missing', () => {
+    assert.equal(resolveTextModel('', ''), '')
+  })
+})
+
+describe('resolveImageModel', () => {
+  test('uses an allowlisted Sanity image model when provided', () => {
+    assert.equal(resolveImageModel('gpt-image-1', 'gpt-image-1-mini'), 'gpt-image-1')
+  })
+
+  test('falls back to the env default for an empty settings value', () => {
+    assert.equal(resolveImageModel('', 'gpt-image-1-mini'), 'gpt-image-1-mini')
+  })
+
+  test('falls back to the env default for a non-allowlisted image model', () => {
+    assert.equal(resolveImageModel('dall-e-3', 'gpt-image-1-mini'), 'gpt-image-1-mini')
   })
 })
 
@@ -1151,6 +1204,8 @@ describe('POST /api/generate-daily-blog article guidance integration', () => {
 
   let createdDoc
   let capturedArticleUser
+  let capturedTextModel
+  let capturedImageModel
   let settingsDoc
   let clearedTopic
   let settingsFetchFailure
@@ -1159,6 +1214,8 @@ describe('POST /api/generate-daily-blog article guidance integration', () => {
     setEnv()
     createdDoc = null
     capturedArticleUser = null
+    capturedTextModel = null
+    capturedImageModel = null
     clearedTopic = null
     settingsFetchFailure = false
 
@@ -1184,7 +1241,8 @@ describe('POST /api/generate-daily-blog article guidance integration', () => {
       },
     }))
 
-    setOpenaiFetch(async ({ body }) => {
+    setOpenaiFetch(async ({ model, body }) => {
+      capturedTextModel = model
       const userMsg = body.input.find((m) => m.role === 'user')
       capturedArticleUser = userMsg.content
       return {
@@ -1195,12 +1253,15 @@ describe('POST /api/generate-daily-blog article guidance integration', () => {
       }
     })
 
-    setImageFetch(async () => ({
-      ok: true,
-      json: async () => ({
-        data: [{ b64_json: Buffer.from('fake-image-data').toString('base64') }],
-      }),
-    }))
+    setImageFetch(async ({ model }) => {
+      capturedImageModel = model
+      return {
+        ok: true,
+        json: async () => ({
+          data: [{ b64_json: Buffer.from('fake-image-data').toString('base64') }],
+        }),
+      }
+    })
   })
 
   afterEach(() => {
@@ -1296,6 +1357,33 @@ describe('POST /api/generate-daily-blog article guidance integration', () => {
     assert.equal(res._status, 502)
     assert.equal(createdDoc, null)
     assert.equal(clearedTopic, null)
+  })
+
+  test('allowlisted Sanity models override the env defaults', async () => {
+    settingsDoc = { textModel: 'gpt-5.4', imageModel: 'gpt-image-1' }
+    const res = makeRes()
+    await handler(makeReq({ token: 'test-blog-secret' }), res)
+    assert.equal(res._status, 200)
+    assert.equal(capturedTextModel, 'gpt-5.4')
+    assert.equal(capturedImageModel, 'gpt-image-1')
+  })
+
+  test('non-allowlisted Sanity models fall back to env defaults', async () => {
+    settingsDoc = { textModel: 'gpt-999-unknown', imageModel: 'dall-e-3' }
+    const res = makeRes()
+    await handler(makeReq({ token: 'test-blog-secret' }), res)
+    assert.equal(res._status, 200)
+    assert.equal(capturedTextModel, 'gpt-5.4-mini')
+    assert.equal(capturedImageModel, 'gpt-image-1-mini')
+  })
+
+  test('empty Sanity model fields use the env defaults', async () => {
+    settingsDoc = { textModel: '', imageModel: '' }
+    const res = makeRes()
+    await handler(makeReq({ token: 'test-blog-secret' }), res)
+    assert.equal(res._status, 200)
+    assert.equal(capturedTextModel, 'gpt-5.4-mini')
+    assert.equal(capturedImageModel, 'gpt-image-1-mini')
   })
 })
 

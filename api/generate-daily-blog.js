@@ -358,6 +358,35 @@ const MAX_STYLE_PROMPT_LENGTH = 4000
 const MAX_NEGATIVE_PROMPT_LENGTH = 2000
 const MAX_ARTICLE_GUIDANCE_LENGTH = 3000
 const MAX_ARTICLE_TOPIC_LENGTH = 500
+const MAX_MODEL_LENGTH = 100
+
+// Allowlisted OpenAI models the owner may select from the Sanity dashboard.
+// Only these values are accepted from the singleton; anything else falls back
+// to the env-var default so an invalid model can never break generation.
+const ALLOWED_TEXT_MODELS = ['gpt-5-mini', 'gpt-5.4', 'gpt-5.4-mini', 'gpt-4o-mini']
+const ALLOWED_IMAGE_MODELS = ['gpt-image-1-mini', 'gpt-image-1']
+
+/**
+ * Resolves the article model: prefer an allowlisted Sanity value, else the
+ * env-var/default fallback.
+ */
+export function resolveTextModel(settingsModel, fallback) {
+  if (typeof settingsModel === 'string' && ALLOWED_TEXT_MODELS.includes(settingsModel.trim())) {
+    return settingsModel.trim()
+  }
+  return fallback
+}
+
+/**
+ * Resolves the image model: prefer an allowlisted Sanity value, else the
+ * env-var/default fallback.
+ */
+export function resolveImageModel(settingsModel, fallback) {
+  if (typeof settingsModel === 'string' && ALLOWED_IMAGE_MODELS.includes(settingsModel.trim())) {
+    return settingsModel.trim()
+  }
+  return fallback
+}
 
 /**
  * Builds the fallback image prompt from the hard-coded style prefix and the
@@ -389,7 +418,9 @@ export async function getAutomationSettings(client) {
         articleTonePrompt,
         articleAvoidPrompt,
         articleCtaPrompt,
-        nextArticleTopic
+        nextArticleTopic,
+        textModel,
+        imageModel
       }`
     )
     if (!doc) return null
@@ -401,6 +432,8 @@ export async function getAutomationSettings(client) {
       articleAvoidPrompt: clamp(doc.articleAvoidPrompt, MAX_ARTICLE_GUIDANCE_LENGTH),
       articleCtaPrompt: clamp(doc.articleCtaPrompt, MAX_ARTICLE_GUIDANCE_LENGTH),
       nextArticleTopic: clamp(doc.nextArticleTopic, MAX_ARTICLE_TOPIC_LENGTH),
+      textModel: clamp(doc.textModel, MAX_MODEL_LENGTH),
+      imageModel: clamp(doc.imageModel, MAX_MODEL_LENGTH),
     }
   } catch (err) {
     console.error('[generate-daily-blog] stage=automation_settings error:', err.message)
@@ -629,6 +662,11 @@ export default async function handler(req, res) {
     console.error('[generate-daily-blog] stage=automation_settings error:', err.message)
   }
 
+  // Resolve models from the published singleton when allowlisted, otherwise
+  // fall back to the env-var defaults. Never throws on invalid/empty values.
+  const usedTextModel = resolveTextModel(settings && settings.textModel, textModel)
+  const usedImageModel = resolveImageModel(settings && settings.imageModel, imageModel)
+
   // --- Idempotency (skipped in test mode) ---
   if (!testMode) {
     try {
@@ -657,7 +695,7 @@ export default async function handler(req, res) {
   // --- Generate article ---
   let article
   try {
-    article = await generateArticle({ apiKey: openaiKey, model: textModel, recentTopics, settings })
+    article = await generateArticle({ apiKey: openaiKey, model: usedTextModel, recentTopics, settings })
   } catch (err) {
     console.error('[generate-daily-blog] stage=text_generation error:', err.message)
     return res.status(502).json({ error: 'Article generation failed' })
@@ -669,7 +707,7 @@ export default async function handler(req, res) {
     try {
       article = await generateArticle({
         apiKey: openaiKey,
-        model: textModel,
+        model: usedTextModel,
         recentTopics,
         extraGuidance: validation.error,
         settings,
@@ -693,7 +731,7 @@ export default async function handler(req, res) {
     const imagePrompt = composeImagePrompt({ articlePrompt: article.imagePrompt, settings })
     imageB64 = await generateImage({
       apiKey: openaiKey,
-      model: imageModel,
+      model: usedImageModel,
       prompt: imagePrompt,
     })
   } catch (err) {
