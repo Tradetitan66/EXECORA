@@ -31,7 +31,17 @@ export default defineConfig({
   ],
   server: {
     open: false,
-    port: 5173
+    port: 5173,
+    // In dev we route Sanity API calls through the Vite dev server so they are
+    // same-origin, avoiding CORS blocks on whichever localhost port is in use.
+    // src/sanity/client.js rewrites the API host to /sanity-api in DEV.
+    proxy: {
+      '/sanity-api': {
+        target: 'https://p0mpfgmr.api.sanity.io',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/sanity-api/, '')
+      }
+    }
   },
   build: {
     outDir: 'dist',

@@ -1,5 +1,5 @@
 /**
- * Execora — Google Analytics 4 (gtag.js) shared module.
+ * Execora - Google Analytics 4 (gtag.js) shared module.
  * ------------------------------------------------------------------
  * Single source of truth for GA4 on the vanilla Vite multi-page site
  * (homepage, blog, thank-you). Imported by every entry point so each
@@ -10,7 +10,7 @@
  *  - No analytics at all in local dev unless VITE_GA_ENABLE_DEV=true.
  *  - All storage is denied BEFORE gtag initialises (UK-friendly consent).
  *  - A cookie-consent banner lets the visitor grant ONLY analytics_storage.
- *    Advertising consent stays denied — Execora does not use ad tracking.
+ *    Advertising consent stays denied - Execora does not use ad tracking.
  *  - Events only ever send allow-listed, non-personal params. Names, emails,
  *    phone/WhatsApp numbers and form messages are NEVER sent.
  */
@@ -57,7 +57,7 @@ function writeStorage(key, value) {
   try {
     window.localStorage.setItem(key, value)
   } catch {
-    /* ignore — analytics still works for the session */
+    /* ignore - analytics still works for the session */
   }
 }
 
@@ -144,7 +144,7 @@ function loadScript() {
   script.async = true
   script.src = SCRIPT_URL(MEASUREMENT_ID)
   script.onerror = () => {
-    // Analytics blocked/failed — site must keep working (events no-op).
+    // Analytics blocked/failed - site must keep working (events no-op).
     loaderFailed = true
   }
   document.head.appendChild(script)
@@ -156,7 +156,7 @@ const ALLOWED_PARAMS = new Set(['location', 'page_location'])
 /**
  * Fire a GA4 event. No-ops safely when analytics is off/blocked/not
  * consented. Only sends params whose values are plain allow-listed
- * scalar strings — no names, emails, phones or free-form messages.
+ * scalar strings - no names, emails, phones or free-form messages.
  */
 export function trackEvent(name, params = {}) {
   if (!initialised || loaderFailed) return

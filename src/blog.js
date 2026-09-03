@@ -6,7 +6,7 @@ import { portableTextToHtml } from './sanity/portable.js'
 import { initAnalytics } from './analytics.js'
 
 /* ============================================================
-   Blog — index + article views, rendered from Sanity (real-time)
+   Blog - index + article views, rendered from Sanity (real-time)
    Routes:
      /blog            → index
      /blog/<slug>     → single article
@@ -115,7 +115,7 @@ function cardHtml(post) {
         ${post.excerpt ? `<p class="blog-card-excerpt">${escapeHtml(post.excerpt)}</p>` : ''}
         <div class="blog-card-foot">
           ${post.readingTime ? `<span class="blog-card-read">${post.readingTime} min read</span>` : ''}
-          <span class="blog-card-link">Read article <span aria-hidden="true">→</span></span>
+          <span class="blog-card-link">Read tips <span aria-hidden="true">→</span></span>
         </div>
       </div>
     </a>
@@ -146,8 +146,8 @@ async function renderIndex() {
   indexEl.innerHTML = `
     <section class="blog-index">
       <header class="blog-head reveal is-visible">
-        <span class="eyebrow">Execora journal</span>
-        <h1 class="blog-title">Insights for local businesses</h1>
+        <span class="eyebrow">Local business tips</span>
+        <h1 class="blog-title">Local business tips</h1>
         <p class="blog-lead">
           Practical ideas to help local businesses improve their website, build trust online
           and turn more visitors into enquiries.
@@ -180,9 +180,9 @@ function categoryFilters(categories) {
 function emptyState() {
   return `
     <div class="blog-empty">
-      <p class="blog-empty-title">No articles yet</p>
+      <p class="blog-empty-title">No tips yet</p>
       <p class="blog-empty-body">
-        Check back soon — we’re writing practical guides for local businesses.
+        Check back soon - we’re writing practical guides for local businesses.
       </p>
     </div>
   `
@@ -242,8 +242,8 @@ async function renderArticle(slug) {
   articleEl.innerHTML = `
     <article class="blog-article-inner">
       <header class="article-head reveal is-visible">
-        <a class="article-back" href="/blog">← All articles</a>
-        <span class="blog-card-cat">${post.category || 'Article'}</span>
+        <a class="article-back" href="/blog">← All tips</a>
+        <span class="blog-card-cat">${post.category || 'Tip'}</span>
         <h1 class="article-title">${escapeHtml(post.title || '')}</h1>
         <div class="article-meta">
           ${date ? `<span>${date}</span>` : ''}
@@ -278,10 +278,10 @@ function renderNotFound() {
   indexEl.innerHTML = `
     <section class="blog-index">
       <header class="blog-head reveal is-visible">
-        <span class="eyebrow">Execora journal</span>
-        <h1 class="blog-title">Article not found</h1>
-        <p class="blog-lead">The article you’re looking for doesn’t exist or isn’t published yet.</p>
-        <a class="btn btn-coral" href="/blog">Back to the blog</a>
+        <span class="eyebrow">Local business tips</span>
+        <h1 class="blog-title">Tip not found</h1>
+        <p class="blog-lead">The tip you’re looking for doesn’t exist or isn’t published yet.</p>
+        <a class="btn btn-coral" href="/blog">Back to tips</a>
       </header>
     </section>
   `

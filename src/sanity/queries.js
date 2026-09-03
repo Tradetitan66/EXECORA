@@ -1,5 +1,5 @@
 /**
- * Execora — GROQ queries.
+ * Execora - GROQ queries.
  */
 
 // Single site-settings singleton (id: "siteSettings").
@@ -22,7 +22,7 @@ export const siteSettingsQuery = `
   }
 `
 
-// Blog index — published posts, newest first.
+// Blog index - published posts, newest first.
 export const blogPostsQuery = `
   *[_type == "blogPost" && defined(slug.current) && publishedDate <= now()]
   | order(publishedDate desc)

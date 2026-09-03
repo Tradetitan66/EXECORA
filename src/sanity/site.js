@@ -2,16 +2,16 @@ import { client } from './client'
 import { siteSettingsQuery } from './queries'
 
 /**
- * Execora — homepage content hydration.
+ * Execora - homepage content hydration.
  *
  * Fetches the `siteSettings` singleton from Sanity on load and updates
  * highlighted text slots in place. Design, layout, animations and child
  * elements (e.g. the ".cursive" hero accent, the rotating word) are left
- * untouched — only text nodes are replaced, so the site keeps its exact
+ * untouched - only text nodes are replaced, so the site keeps its exact
  * look and behaviour even when Sanity content changes.
  *
  * If Sanity is unreachable, misconfigured, or returns no value for a field,
- * the existing hard-coded copy remains — the site never shows empty content.
+ * the existing hard-coded copy remains - the site never shows empty content.
  */
 
 // Replace textContent of an element WITHOUT removing internal styled spans
@@ -29,7 +29,7 @@ function setPrefixText(el, value) {
       }
       node = node.nextSibling
     }
-    // No leading text node found — insert one before the accent.
+    // No leading text node found - insert one before the accent.
     accent.before(document.createTextNode(value + ' '))
   } else {
     el.textContent = value
@@ -40,17 +40,15 @@ function applyIf(el, value) {
   if (el && value) el.textContent = value
 }
 
-// Rebuild a plan price line as "£X one-time setup <small>+ £Y/month for 12 months</small>".
-// Only applied when BOTH the setup and monthly fee are present; otherwise the
-// hard-coded copy in the HTML is kept.
+// Update the plan pricing cells in the comparison table.
+// Only applied when BOTH the setup and monthly fee are present from Sanity;
+// otherwise the hard-coded copy in the HTML is kept.
 function applyPlanPrice(planKey, setupFee, monthlyFee) {
   if (typeof setupFee !== 'number' || typeof monthlyFee !== 'number') return
-  const el = document.querySelector(`.plan-card[data-plan-card="${planKey}"] .plan-price`)
-  if (!el) return
-  el.textContent = `£${setupFee} one-time setup `
-  const small = document.createElement('small')
-  small.textContent = `+ £${monthlyFee}/month for 12 months`
-  el.appendChild(small)
+  const priceEl = document.querySelector(`[data-plan-price="${planKey}"]`)
+  const monthlyEl = document.querySelector(`[data-plan-monthly="${planKey}"]`)
+  if (priceEl) priceEl.textContent = `£${setupFee}`
+  if (monthlyEl) monthlyEl.textContent = `+£${monthlyFee}/month`
 }
 
 export async function hydrateHomepage() {
@@ -58,7 +56,7 @@ export async function hydrateHomepage() {
   try {
     settings = await client.fetch(siteSettingsQuery)
   } catch (err) {
-    console.warn('[Execora] Sanity unavailable — keeping hard-coded copy.', err)
+    console.warn('[Execora] Sanity unavailable - keeping hard-coded copy.', err)
     return
   }
   if (!settings) return
@@ -72,7 +70,10 @@ export async function hydrateHomepage() {
   if (settings.heroEyebrow) applyIf(heroEyebrow, settings.heroEyebrow)
   if (settings.heroTitle) setPrefixText(heroTitle, settings.heroTitle)
   if (settings.heroSub) applyIf(heroSub, settings.heroSub)
-  if (settings.primaryCta) applyIf(heroCta, settings.primaryCta)
+
+  // The primary CTA label is standardised site-wide and must not be overridden
+  // by CMS content, so all home-page CTAs read "Get my £5 prototype".
+  if (heroCta) heroCta.textContent = 'Get my £5 prototype'
 
   // Contact
   const contactTitle = document.querySelector('.contact .contact-title')

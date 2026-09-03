@@ -1,5 +1,5 @@
 /**
- * Execora — £5 prototype checkout flow
+ * Execora - £5 prototype checkout flow
  * ------------------------------------------------------------------
  * Opens a modal to collect business details, holds the data locally
  * (sessionStorage), calls the create-checkout serverless function, and

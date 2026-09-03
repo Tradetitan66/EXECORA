@@ -59,7 +59,7 @@ const io = new IntersectionObserver(
   { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
 )
 
-const STAGGER_GRIDS = ['.step-grid', '.offer-grid', '.card-grid', '.pricing-grid']
+const STAGGER_GRIDS = ['.step-grid', '.which-list']
 const revealEls = new Set(document.querySelectorAll('.reveal'))
 
 document.querySelectorAll('main > section > *').forEach((block) => {
@@ -83,7 +83,7 @@ revealEls.forEach((el) => {
 })
 
 /* ============================================================
-   Hero — rotating word (found · trusted · chosen · contacted)
+   Hero - rotating word (found · trusted · chosen · contacted)
    ============================================================ */
 function initHeroRotator() {
   const word = document.querySelector('.hero-word')
@@ -122,7 +122,7 @@ function initHeroRotator() {
       word.textContent = words[i].slice(0, charIndex)
       timer = setTimeout(() => type(i, charIndex + 1), TYPE_MS)
     } else {
-      // word complete — hold, then delete
+      // word complete - hold, then delete
       timer = setTimeout(() => erase(i, words[i].length), HOLD_MS)
     }
   }
@@ -235,7 +235,7 @@ form.addEventListener('submit', async (e) => {
   successTitle.textContent = `Got it, ${data.name || 'friend'}. Your details are saved.`
   successPanel.hidden = false
 
-  // Fire as a confirmation/conversion once — no personal data is sent.
+  // Fire as a confirmation/conversion once - no personal data is sent.
   trackEvent('generate_lead')
 })
 
@@ -295,7 +295,7 @@ privacyLink.addEventListener('click', (e) => {
 })
 
 /* ============================================================
-   Showcase + Reviews — auto-scrolling horizontal sliders
+   Showcase + Reviews - auto-scrolling horizontal sliders
    ============================================================ */
 function initAutoScrollTrack({ trackSel, prevSel, nextSel, autoMs = 4000 }) {
   const track = document.querySelector(trackSel)
@@ -367,7 +367,7 @@ initAutoScrollTrack({ trackSel: '[data-showcase-track]', prevSel: '[data-showcas
 initAutoScrollTrack({ trackSel: '[data-reviews-track]', prevSel: '[data-reviews-prev]', nextSel: '[data-reviews-next]' })
 
 /* ============================================================
-   Reviews — subtle 3D tilt on each card as the pointer moves
+   Reviews - subtle 3D tilt on each card as the pointer moves
    ============================================================ */
 function initCardTilt() {
   const cards = document.querySelectorAll('.review-card')
@@ -395,11 +395,11 @@ function initCardTilt() {
 initCardTilt()
 
 /* ============================================================
-   Pricing — keep matching <details> sections in sync across all
+   Pricing - keep matching <details> sections in sync across all
    plan cards so the same section opens side-by-side for comparison
    ============================================================ */
 const planSectionDetails = Array.from(
-  document.querySelectorAll('.pricing-grid details[data-plan-section]')
+  document.querySelectorAll('.plan-full-body details[data-plan-section]')
 )
 if (planSectionDetails.length) {
   let syncing = false

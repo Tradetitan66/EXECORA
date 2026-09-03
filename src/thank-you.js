@@ -1,5 +1,5 @@
 /**
- * Execora — thank-you (post-payment confirmation) page.
+ * Execora - thank-you (post-payment confirmation) page.
  *
  * The business details are collected BEFORE payment (homepage modal) and
  * written to the Google Sheet server-side by the Stripe webhook, so nothing
@@ -34,7 +34,7 @@ function personalise() {
   const sub = document.getElementById('thanks-sub')
   const data = getHeldData()
   if (sub && data && data.name) {
-    sub.textContent = `Thank you, ${data.name}. Your £5 prototype payment went through and we’ve got your business details — we’re ready to begin crafting your website prototype.`
+    sub.textContent = `Thank you, ${data.name}. Your £5 prototype payment went through and we’ve got your business details - we’re ready to begin crafting your website prototype.`
   }
   return data
 }
