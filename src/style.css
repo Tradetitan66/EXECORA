@@ -86,7 +86,7 @@ section {
 }
 .eyebrow {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
   font-size: 0.8rem;
   font-weight: 500;
@@ -98,6 +98,7 @@ section {
 .eyebrow-dot {
   width: 8px;
   height: 8px;
+  margin-top: 0.45em;
   border-radius: 50%;
   background: var(--coral);
   box-shadow: 0 0 0 4px rgba(255, 183, 178, 0.3);
@@ -699,6 +700,8 @@ section {
   margin-inline: auto;
   margin-bottom: 2.6rem;
 }
+/* Plan tabs for "See full details" - only used below 1024px */
+.plan-full-tabs { display: none; }
 .plan-full-details {
   background: #fff;
   border: 1px solid var(--stone-100);
@@ -1603,6 +1606,35 @@ body.modal-open { overflow: hidden; }
   .plan-card-mobile .plan-card-mobile-price small { display: block; font-size: 0.78rem; color: var(--muted); margin-top: 0.3rem; }
   .plan-card-mobile-bestfor { color: var(--ink); font-size: 0.95rem; font-weight: 400; line-height: 1.55; }
   .plan-card-mobile .plan-cta { margin-top: auto; }
+
+  /* See full details - Essential/Growth tabs on mobile */
+  .plan-full-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    padding: 1.25rem 1.25rem 0;
+  }
+  .plan-tab {
+    appearance: none;
+    border: 1px solid var(--stone-200);
+    background: #fff;
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 0.7rem 1rem;
+    border-radius: 999px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.3s var(--ease-slow), color 0.3s var(--ease-slow), border-color 0.3s var(--ease-slow);
+  }
+  .plan-tab.is-active {
+    background: var(--ink);
+    color: #fff;
+    border-color: var(--ink);
+  }
+  .plan-details { display: none; }
+  .plan-details.is-active { display: block; }
+  .plan-full-body .plan-full-name { display: none; }
 }
 
 /* ============ TABLET portrait (iPad) & below ============ */

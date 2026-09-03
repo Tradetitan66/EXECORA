@@ -345,8 +345,12 @@
         <div class="plan-full reveal">
           <details class="plan-full-details">
             <summary>See full details</summary>
+            <div class="plan-full-tabs" role="tablist" aria-label="Choose a plan">
+              <button class="plan-tab is-active" type="button" role="tab" aria-selected="true" data-plan-tab="essential">Essential</button>
+              <button class="plan-tab" type="button" role="tab" aria-selected="false" data-plan-tab="growth">Growth</button>
+            </div>
             <div class="plan-full-body">
-              <div class="plan-details">
+              <div class="plan-details is-active" data-plan-panel="essential" role="tabpanel">
                 <h4 class="plan-full-name">Essential</h4>
                 <details data-plan-section="who">
                   <summary>Who it’s for</summary>
@@ -376,7 +380,7 @@
                 </details>
               </div>
 
-              <div class="plan-details">
+              <div class="plan-details" data-plan-panel="growth" role="tabpanel">
                 <h4 class="plan-full-name">Growth</h4>
                 <details data-plan-section="who">
                   <summary>Who it’s for</summary>

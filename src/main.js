@@ -414,3 +414,21 @@ if (planSectionDetails.length) {
   }
   planSectionDetails.forEach((d) => d.addEventListener('toggle', () => sync(d)))
 }
+
+/* ============================================================
+   See full details - Essential/Growth tab switcher (mobile)
+   ============================================================ */
+const planTabs = Array.from(document.querySelectorAll('.plan-full-tabs [data-plan-tab]'))
+const planPanels = Array.from(document.querySelectorAll('.plan-full-body .plan-details[data-plan-panel]'))
+if (planTabs.length && planPanels.length) {
+  const selectTab = (tab) => {
+    const key = tab.dataset.planTab
+    planTabs.forEach((t) => {
+      const active = t === tab
+      t.classList.toggle('is-active', active)
+      t.setAttribute('aria-selected', active ? 'true' : 'false')
+    })
+    planPanels.forEach((p) => p.classList.toggle('is-active', p.dataset.planPanel === key))
+  }
+  planTabs.forEach((tab) => tab.addEventListener('click', () => selectTab(tab)))
+}
