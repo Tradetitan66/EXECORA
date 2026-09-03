@@ -45,10 +45,10 @@ function applyIf(el, value) {
 // otherwise the hard-coded copy in the HTML is kept.
 function applyPlanPrice(planKey, setupFee, monthlyFee) {
   if (typeof setupFee !== 'number' || typeof monthlyFee !== 'number') return
-  const priceEl = document.querySelector(`[data-plan-price="${planKey}"]`)
-  const monthlyEl = document.querySelector(`[data-plan-monthly="${planKey}"]`)
-  if (priceEl) priceEl.textContent = `+£${setupFee}`
-  if (monthlyEl) monthlyEl.textContent = `£${monthlyFee}/month`
+  document.querySelectorAll(`[data-plan-price="${planKey}"]`)
+    .forEach((el) => { el.textContent = `+£${setupFee}` })
+  document.querySelectorAll(`[data-plan-monthly="${planKey}"]`)
+    .forEach((el) => { el.textContent = `£${monthlyFee}/month` })
 }
 
 export async function hydrateHomepage() {
