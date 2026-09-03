@@ -13,6 +13,7 @@ export const siteSettings = defineType({
     { name: 'brand', title: 'Brand & hero' },
     { name: 'contact', title: 'Contact' },
     { name: 'footer', title: 'Footer' },
+    { name: 'pricing', title: 'Pricing' },
   ],
   fields: [
     // ---- Brand & hero ----
@@ -82,6 +83,35 @@ export const siteSettings = defineType({
       title: 'Footer tagline',
       type: 'string',
       group: 'footer',
+    }),
+    // ---- Pricing ----
+    defineField({
+      name: 'essentialSetupFee',
+      title: 'Essential — one-time setup fee (£)',
+      type: 'number',
+      group: 'pricing',
+      description: 'Setup fee shown on the Essential plan. Leave empty to use the hard-coded £299.',
+    }),
+    defineField({
+      name: 'essentialMonthlyFee',
+      title: 'Essential — monthly fee (£)',
+      type: 'number',
+      group: 'pricing',
+      description: 'Monthly fee shown on the Essential plan. Leave empty to use the hard-coded £49.',
+    }),
+    defineField({
+      name: 'growthSetupFee',
+      title: 'Growth — one-time setup fee (£)',
+      type: 'number',
+      group: 'pricing',
+      description: 'Setup fee shown on the Growth plan. Leave empty to use the hard-coded £499.',
+    }),
+    defineField({
+      name: 'growthMonthlyFee',
+      title: 'Growth — monthly fee (£)',
+      type: 'number',
+      group: 'pricing',
+      description: 'Monthly fee shown on the Growth plan. Leave empty to use the hard-coded £79.',
     }),
   ],
 })

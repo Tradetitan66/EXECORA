@@ -14,7 +14,11 @@ export const siteSettingsQuery = `
     whatsappNumber,
     contactHeading,
     contactSub,
-    footerTagline
+    footerTagline,
+    essentialSetupFee,
+    essentialMonthlyFee,
+    growthSetupFee,
+    growthMonthlyFee
   }
 `
 
