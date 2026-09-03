@@ -251,13 +251,13 @@
               <tr>
                 <th scope="row">Price</th>
                 <td>
-                  <span class="plan-table-price" data-plan-price="essential">£299</span>
-                  <small><strong data-plan-monthly="essential">+£49/month</strong> · 12-month agreement</small>
+                  <small><strong data-plan-monthly="essential">£49/month</strong> · 12-month agreement</small>
+                  <span class="plan-table-price" data-plan-price="essential">+£299</span> <small class="plan-ot-setup">One-time setup</small>
                   <small>Hosting &amp; SSL included</small>
                 </td>
                 <td class="is-featured">
-                  <span class="plan-table-price" data-plan-price="growth">£499</span>
-                  <small><strong data-plan-monthly="growth">+£79/month</strong> · 12-month agreement</small>
+                  <small><strong data-plan-monthly="growth">£79/month</strong> · 12-month agreement</small>
+                  <span class="plan-table-price" data-plan-price="growth">+£499</span> <small class="plan-ot-setup">One-time setup</small>
                   <small>Hosting &amp; SSL included</small>
                 </td>
               </tr>
@@ -299,6 +299,47 @@
               </tr>
             </tbody>
           </table>
+
+          <!-- Mobile: two stacked plan cards (shown below 1024px) -->
+          <div class="plan-cards-mobile" aria-label="Execora plans">
+            <article class="plan-card-mobile">
+              <header class="plan-card-mobile-head">
+                <span class="plan-table-name">Essential</span>
+                <span class="plan-table-badge simple">Simple &amp; affordable</span>
+              </header>
+              <div class="plan-card-mobile-price">
+                <small><strong data-plan-monthly="essential">£49/month</strong> · 12-month agreement</small>
+                <span class="plan-table-price" data-plan-price="essential">+£299</span> <small class="plan-ot-setup">One-time setup</small>
+                <small>Hosting &amp; SSL included</small>
+              </div>
+              <p class="plan-card-mobile-bestfor">Small local services - plumbers, cleaners, handymen &amp; trades</p>
+              <ul class="plan-highlights">
+                <li>Mobile-responsive design</li>
+                <li>Contact form &amp; WhatsApp</li>
+                <li>Basic on-page SEO</li>
+              </ul>
+              <a class="btn btn-coral plan-cta" href="#contact" data-focus-form data-plan="Essential">Get my £5 prototype</a>
+            </article>
+
+            <article class="plan-card-mobile is-featured">
+              <header class="plan-card-mobile-head">
+                <span class="plan-table-name">Growth</span>
+                <span class="plan-table-badge">Most Popular</span>
+              </header>
+              <div class="plan-card-mobile-price">
+                <small><strong data-plan-monthly="growth">£79/month</strong> · 12-month agreement</small>
+                <span class="plan-table-price" data-plan-price="growth">+£499</span> <small class="plan-ot-setup">One-time setup</small>
+                <small>Hosting &amp; SSL included</small>
+              </div>
+              <p class="plan-card-mobile-bestfor">Growing local brands - salons, cafés, photographers &amp; consultants</p>
+              <ul class="plan-highlights">
+                <li>Full CMS access</li>
+                <li>Google Analytics &amp; Search Console</li>
+                <li>Enquiry &amp; conversion tracking</li>
+              </ul>
+              <a class="btn btn-coral plan-cta" href="#contact" data-focus-form data-plan="Growth">Get my £5 prototype</a>
+            </article>
+          </div>
         </div>
 
         <div class="plan-full reveal">

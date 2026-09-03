@@ -634,8 +634,8 @@ section {
 }
 .plan-table-price {
   display: inline-block;
-  font-weight: 700;
-  font-size: 1.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
   color: var(--ink);
   letter-spacing: -0.02em;
   line-height: 1.05;
@@ -645,6 +645,22 @@ section {
   margin-top: 0.3rem;
   font-size: 0.78rem;
   color: var(--muted);
+}
+[data-plan-monthly] {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.plan-table td .plan-ot-setup,
+.plan-card-mobile .plan-card-mobile-price small.plan-ot-setup {
+  display: inline-block;
+  vertical-align: baseline;
+  margin-left: 0.4rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  color: var(--gold-deep);
 }
 
 .plan-highlights {
@@ -673,6 +689,9 @@ section {
   box-shadow: 0 0 0 3px rgba(201, 164, 92, 0.22);
 }
 .plan-table .plan-cta { width: 100%; justify-content: center; display: inline-flex; }
+
+/* Mobile plan cards - only visible below 1024px (table hidden there) */
+.plan-cards-mobile { display: none; }
 
 /* See full details accordion under the comparison table */
 .plan-full {
@@ -1550,6 +1569,40 @@ body.modal-open { overflow: hidden; }
   .showcase-arrow.next { right: 2px; }
 
   .reviews-track { grid-auto-columns: minmax(230px, 78vw); }
+
+  /* Pricing: hide comparison table, show stacked plan cards */
+  .pricing-table-wrap .plan-table { display: none; }
+  .plan-cards-mobile {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    max-width: 620px;
+    margin-inline: auto;
+  }
+  .plan-card-mobile {
+    background: #fff;
+    border-radius: var(--radius-soft);
+    padding: 1.7rem 1.5rem 1.8rem;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      0 6px 0 -1px var(--tile-edge-gold),
+      0 18px 30px -20px rgba(0, 0, 0, 0.14);
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+  }
+  .plan-card-mobile.is-featured {
+    background: var(--gold-soft);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      inset 0 4px 0 -1px var(--tile-edge-gold),
+      0 6px 0 -1px var(--tile-edge-gold),
+      0 18px 30px -20px rgba(0, 0, 0, 0.16);
+  }
+  .plan-card-mobile .plan-card-mobile-head { display: flex; flex-direction: column; gap: 0.4rem; }
+  .plan-card-mobile .plan-card-mobile-price small { display: block; font-size: 0.78rem; color: var(--muted); margin-top: 0.3rem; }
+  .plan-card-mobile-bestfor { color: var(--ink); font-size: 0.95rem; font-weight: 400; line-height: 1.55; }
+  .plan-card-mobile .plan-cta { margin-top: auto; }
 }
 
 /* ============ TABLET portrait (iPad) & below ============ */

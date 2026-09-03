@@ -47,8 +47,8 @@ function applyPlanPrice(planKey, setupFee, monthlyFee) {
   if (typeof setupFee !== 'number' || typeof monthlyFee !== 'number') return
   const priceEl = document.querySelector(`[data-plan-price="${planKey}"]`)
   const monthlyEl = document.querySelector(`[data-plan-monthly="${planKey}"]`)
-  if (priceEl) priceEl.textContent = `£${setupFee}`
-  if (monthlyEl) monthlyEl.textContent = `+£${monthlyFee}/month`
+  if (priceEl) priceEl.textContent = `+£${setupFee}`
+  if (monthlyEl) monthlyEl.textContent = `£${monthlyFee}/month`
 }
 
 export async function hydrateHomepage() {
