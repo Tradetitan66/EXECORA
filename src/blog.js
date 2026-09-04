@@ -285,6 +285,51 @@ function initBlogSubscribe() {
   })
 }
 
+/* ---------- footer newsletter ---------- */
+function initFooterNewsletter() {
+  const form = document.getElementById('newsletter-form')
+  const note = document.getElementById('newsletter-note')
+  const success = document.getElementById('newsletter-success')
+  if (!form) return
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const emailField = form.querySelector('#nl-email')
+    if (!emailField.value || !emailField.checkValidity()) {
+      emailField.reportValidity()
+      return
+    }
+
+    const data = Object.fromEntries(new FormData(form).entries())
+    if (note) note.textContent = 'Saving your details…'
+
+    if (CONTACT_SCRIPT_URL) {
+      const body = new URLSearchParams(data)
+      try {
+        const res = await fetch(CONTACT_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString()
+        })
+        if (!res.ok) {
+          console.error(`[Execora] Newsletter save rejected (HTTP ${res.status}).`)
+          if (note) note.textContent = 'Something went wrong — please try again.'
+          return
+        }
+      } catch (err) {
+        console.error('[Execora] Newsletter save failed:', err)
+        if (note) note.textContent = 'Something went wrong — please try again.'
+        return
+      }
+    }
+
+    form.hidden = true
+    if (success) success.hidden = false
+    trackEvent('newsletter_subscribe')
+  })
+}
+
 /* ---------- render: article ---------- */
 async function renderArticle(slug) {
   const articleEl = document.getElementById('blog-article')
@@ -409,6 +454,7 @@ function boot() {
   initMenu()
   initHeaderGlass()
   initPrivacy()
+  initFooterNewsletter()
 
   const slug = currentSlug()
   if (slug) {
