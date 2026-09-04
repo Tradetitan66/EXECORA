@@ -42,7 +42,7 @@
         <nav class="nav-links" id="site-nav" aria-label="Primary">
           <a href="/">Home</a>
           <a href="/#pricing">Pricing</a>
-          <a class="nav-cta" href="/#contact">Get £5 prototype</a>
+          <button class="nav-cta" type="button" data-payment-cta>Get £5 prototype</button>
         </nav>
         <button
           class="menu-toggle"
@@ -140,6 +140,97 @@
         </div>
       </div>
     </footer>
+
+    <!-- ============ £5 PROTOTYPE CHECKOUT MODAL ============ -->
+    <div class="checkout-modal" id="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-title" hidden>
+      <div class="checkout-modal-backdrop"></div>
+      <div class="checkout-panel" role="document">
+        <button class="checkout-close" type="button" data-checkout-close aria-label="Close">&times;</button>
+
+        <div class="checkout-head">
+          <span class="eyebrow">£5 website prototype</span>
+          <h2 class="checkout-title" id="checkout-title">See your website before you <span class="cursive accent">commit.</span></h2>
+          <p class="checkout-sub">
+            Tell us a little about your business, then we’ll take you to payment. It takes under a minute.
+          </p>
+        </div>
+
+        <form class="checkout-form" novalidate>
+          <div class="form-row">
+            <div class="field">
+              <label for="c-name">Name <span class="req">*</span></label>
+              <input id="c-name" name="name" type="text" autocomplete="name" required />
+            </div>
+            <div class="field">
+              <label for="c-business">Business name <span class="req">*</span></label>
+              <input id="c-business" name="business" type="text" autocomplete="organization" required />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="c-email">Email <span class="req">*</span></label>
+              <input id="c-email" name="email" type="email" autocomplete="email" required />
+            </div>
+            <div class="field">
+              <label for="c-phone">WhatsApp number <span class="req">*</span></label>
+              <input id="c-phone" name="phone" type="tel" autocomplete="tel" required placeholder="e.g. +44 7912 345678" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="c-type">Business type</label>
+              <select id="c-type" name="type">
+                <option value="" selected>Please choose…</option>
+                <option value="tradespeople">Tradesperson</option>
+                <option value="salon">Salon / beauty</option>
+                <option value="cafe">Café / restaurant</option>
+                <option value="clinic">Clinic / health</option>
+                <option value="fitness">Fitness studio</option>
+                <option value="home-services">Home services</option>
+                <option value="specialist-shop">Specialist shop / retail</option>
+                <option value="other">Something else</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="c-location">Location</label>
+              <input id="c-location" name="location" type="text" placeholder="e.g. Edinburgh" autocomplete="address-level2" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="c-services">Services you offer <span class="req">*</span></label>
+            <textarea id="c-services" name="services" rows="2" placeholder="What do you offer your customers?" required></textarea>
+          </div>
+
+          <div class="field">
+            <label for="c-style">Preferred style</label>
+            <select id="c-style" name="style">
+              <option value="" selected>Please choose…</option>
+              <option value="warm-clean">Warm &amp; clean</option>
+              <option value="premium-dark">Premium &amp; refined</option>
+              <option value="bold-playful">Bold &amp; playful</option>
+              <option value="minimal-modern">Minimal &amp; modern</option>
+              <option value="not-sure">Not sure - you decide</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="c-social">Social links</label>
+            <input id="c-social" name="social" type="text" placeholder="Instagram, Facebook, Google - optional" />
+          </div>
+
+          <div class="field">
+            <label for="c-notes">Additional notes</label>
+            <textarea id="c-notes" name="notes" rows="3" placeholder="Anything else you’d like us to know…"></textarea>
+          </div>
+
+          <button class="btn-sub btn-block" type="submit">Pay £5 &amp; see my prototype</button>
+          <p class="form-note" data-checkout-note style="display:none"></p>
+        </form>
+      </div>
+    </div>
 
     <script type="module" src="/src/blog.js"></script>
   </body>

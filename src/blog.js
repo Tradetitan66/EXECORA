@@ -4,6 +4,7 @@ import { client, imageUrlFor, formatDate, sanityProjectId, sanityDataset } from 
 import { blogPostsQuery, blogPostBySlugQuery, blogCategoriesQuery } from './sanity/queries.js'
 import { portableTextToHtml } from './sanity/portable.js'
 import { initAnalytics, trackEvent } from './analytics.js'
+import { initCheckout } from './checkout.js'
 
 /* ============================================================
    Blog - index + article views, rendered from Sanity (real-time)
@@ -455,6 +456,7 @@ function boot() {
   initHeaderGlass()
   initPrivacy()
   initFooterNewsletter()
+  initCheckout()
 
   const slug = currentSlug()
   if (slug) {

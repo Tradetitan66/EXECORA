@@ -220,6 +220,12 @@ section {
   transition: transform 0.3s var(--ease-slow), box-shadow 0.3s var(--ease-slow);
 }
 .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 18px -6px rgba(255, 183, 178, 0.8); }
+button.nav-cta {
+  font-family: var(--font-head, inherit);
+  border: none;
+  cursor: pointer;
+  line-height: 1.2;
+}
 
 .menu-toggle {
   display: none;
