@@ -86,7 +86,7 @@ section {
 }
 .eyebrow {
   display: inline-flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.5rem;
   font-size: 0.8rem;
   font-weight: 500;
@@ -94,11 +94,11 @@ section {
   text-transform: uppercase;
   color: var(--muted);
   margin-bottom: 1.1rem;
+  line-height: 1.4;
 }
 .eyebrow-dot {
   width: 8px;
   height: 8px;
-  margin-top: 0.45em;
   border-radius: 50%;
   background: var(--coral);
   box-shadow: 0 0 0 4px rgba(255, 183, 178, 0.3);
@@ -127,7 +127,7 @@ section {
 }
 .cursive.accent { color: var(--coral-deep); }
 .hero-price { color: var(--coral-deep); font-weight: 700; font-size: 1.15em; }
-.eyebrow-highlight { text-decoration: underline wavy var(--coral); text-underline-offset: 4px; color: var(--coral); font-size: 1.2em; font-weight: 600; vertical-align: baseline; }
+.eyebrow-highlight { text-decoration: underline wavy var(--coral); text-underline-offset: 4px; color: var(--coral); font-size: 1.2em; font-weight: 600; }
 
 /* ============================================================
    Nav
