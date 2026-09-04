@@ -1560,11 +1560,16 @@ body.modal-open { overflow: hidden; }
 
   .btn { width: auto; }
 
-  .footer-newsletter { padding: 1.6rem 1.3rem; margin-bottom: 2.5rem; }
-  .newsletter-inner { flex-direction: column; align-items: stretch; gap: 1.2rem; }
+  .footer-newsletter { padding: 1.5rem 1.25rem; margin-bottom: 2.5rem; }
+  .newsletter-inner { flex-direction: column; align-items: stretch; gap: 1rem; }
+  .newsletter-text { flex: none; }
+  .newsletter-form { flex: none; }
+  .newsletter-title { font-size: 1.2rem; margin-bottom: 0.3rem; }
+  .newsletter-desc { font-size: 0.9rem; }
   .newsletter-form { min-width: 0; }
-  .newsletter-fields { flex-direction: column; }
-  .newsletter-btn { width: 100%; justify-content: center; }
+  .newsletter-fields { flex-direction: row; align-items: center; gap: 0.5rem; }
+  .newsletter-field input { padding: 0.65rem 0.85rem; font-size: 0.95rem; }
+  .newsletter-btn { width: auto; white-space: nowrap; padding: 0.65rem 1rem; }
 }
 
 /* ============ MOBILE & TABLET - collapsed menu ============ */
