@@ -127,7 +127,7 @@ section {
 }
 .cursive.accent { color: var(--coral-deep); }
 .hero-price { color: var(--coral-deep); font-weight: 700; font-size: 1.15em; }
-.eyebrow-highlight { text-decoration: underline wavy var(--coral); text-underline-offset: 4px; color: var(--coral); font-size: 1.2em; font-weight: 600; }
+.eyebrow-highlight { text-decoration: underline wavy var(--coral); text-underline-offset: 4px; color: var(--coral); font-size: 1.2em; font-weight: 600; vertical-align: baseline; }
 
 /* ============================================================
    Nav
