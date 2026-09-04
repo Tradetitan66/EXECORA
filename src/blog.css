@@ -432,11 +432,17 @@
 @media (max-width: 960px) {
   .blog-grid { grid-template-columns: repeat(2, 1fr); }
   .blog-subscribe-card { flex-direction: column; align-items: stretch; gap: 1.2rem; padding: 1.5rem; }
+  .blog-subscribe-text { flex: none; }
+  .blog-subscribe-form { flex: none; min-width: 0; }
 }
 @media (max-width: 640px) {
   .blog-grid { grid-template-columns: 1fr; }
   .blog-index { padding: 3rem 1.25rem 4rem; }
   .blog-article { padding: 2.5rem 1.25rem 4rem; }
-  .blog-subscribe-fields { flex-direction: column; }
-  .blog-subscribe-btn { width: 100%; }
+  .blog-subscribe-card { padding: 1.4rem 1.25rem; gap: 1rem; }
+  .blog-subscribe-fields { flex-direction: column; gap: 0.55rem; }
+  .blog-subscribe-field { flex: none; }
+  .blog-subscribe-field input { padding: 0.65rem 0.85rem; }
+  .blog-subscribe-btn { width: 100%; justify-content: center; }
+  .blog-subscribe-desc { font-size: 0.9rem; }
 }
