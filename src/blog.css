@@ -329,13 +329,114 @@
 }
 
 /* ============================================================
+   Blog Subscribe
+   ============================================================ */
+.blog-subscribe-wrap {
+  max-width: var(--maxw);
+  margin: 0 auto 2.4rem;
+}
+.blog-subscribe-card {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  background: #fff;
+  border: 1px solid var(--gold);
+  border-radius: var(--radius-soft);
+  padding: 1.8rem 2rem;
+  background: var(--gold-soft);
+}
+.blog-subscribe-text {
+  flex: 1;
+  min-width: 0;
+}
+.blog-subscribe-title {
+  font-weight: 600;
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0 0 0.35rem;
+}
+.blog-subscribe-desc {
+  color: var(--muted);
+  font-weight: 300;
+  font-size: 0.95rem;
+  margin: 0;
+}
+.blog-subscribe-form {
+  flex: 1.4;
+  min-width: 0;
+}
+.blog-subscribe-fields {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.blog-subscribe-field {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+.blog-subscribe-field input {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  border: 1px solid var(--stone-100);
+  border-radius: 0.5rem;
+  background: #fff;
+  color: var(--ink);
+  transition: border-color 0.3s var(--ease-slow);
+}
+.blog-subscribe-field input::placeholder { color: #a8a29e; }
+.blog-subscribe-field input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.15);
+}
+.blog-subscribe-btn {
+  flex: 0 0 auto;
+  align-self: stretch;
+}
+.blog-subscribe-note {
+  margin: 0.6rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+.blog-subscribe-success {
+  flex: 1.4;
+  min-width: 0;
+}
+.blog-subscribe-success-text {
+  font-weight: 500;
+  color: #166534;
+  font-size: 1rem;
+  margin: 0;
+  padding: 0.7rem 0;
+}
+
+/* screen-reader only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============================================================
    Responsive
    ============================================================ */
 @media (max-width: 960px) {
   .blog-grid { grid-template-columns: repeat(2, 1fr); }
+  .blog-subscribe-card { flex-direction: column; align-items: stretch; gap: 1.2rem; padding: 1.5rem; }
 }
 @media (max-width: 640px) {
   .blog-grid { grid-template-columns: 1fr; }
   .blog-index { padding: 3rem 1.25rem 4rem; }
   .blog-article { padding: 2.5rem 1.25rem 4rem; }
+  .blog-subscribe-fields { flex-direction: column; }
+  .blog-subscribe-btn { width: 100%; }
 }

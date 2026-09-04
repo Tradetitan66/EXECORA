@@ -21,6 +21,9 @@ var SHEET_NAME = 'Leads from website'
 // Sheet tab that receives post-payment (paid prototype) customer details.
 var PAID_SHEET_NAME = 'Paid prototype customers'
 
+// Sheet tab that receives blog subscriber sign-ups.
+var BLOG_SHEET_NAME = 'BLOG subscribers'
+
 // The target spreadsheet. Used as a fallback when this script is NOT bound
 // to the spreadsheet (i.e. it was created as a standalone Apps Script project,
 // where getActiveSpreadsheet() returns null).
@@ -39,11 +42,11 @@ function doPost(e) {
     }
   }
 
-  // Route based on which form sent the data. The paid-customer form always
-  // sends fields (type/location/style) the home enquiry form never does.
-  var paid = isPaidSubmission_(values)
-  var sheetName = paid ? PAID_SHEET_NAME : SHEET_NAME
-  var headers = getHeaders_(paid)
+  // Route based on which form sent the data.
+  var blogSub = isBlogSubscriber_(values)
+  var paid = !blogSub && isPaidSubmission_(values)
+  var sheetName = blogSub ? BLOG_SHEET_NAME : paid ? PAID_SHEET_NAME : SHEET_NAME
+  var headers = blogSub ? getBlogSubscriberHeaders_() : getHeaders_(paid)
 
   var sheet = getSheetByHeaders_(sheetName, headers)
 
@@ -60,8 +63,15 @@ function doPost(e) {
 }
 
 function isPaidSubmission_(values) {
+  // A blog subscriber always sends type='blog-subscriber' and never sends
+  // location/style, so it must never be treated as a paid submission.
+  if (values['type'] === 'blog-subscriber') return false
   // The home form never sends these keys; the paid-customer (thank-you) form does.
   return values['type'] !== undefined || values['location'] !== undefined || values['style'] !== undefined
+}
+
+function isBlogSubscriber_(values) {
+  return values['type'] === 'blog-subscriber'
 }
 
 function doGet(e) {
@@ -114,6 +124,15 @@ function getHeaders_(paid) {
     'phone',
     'plan',
     'message'
+  ]
+}
+
+function getBlogSubscriberHeaders_() {
+  return [
+    'timestamp',
+    'business name',
+    'email',
+    'phone number optional'
   ]
 }
 

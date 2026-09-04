@@ -3,7 +3,7 @@ import './blog.css'
 import { client, imageUrlFor, formatDate, sanityProjectId, sanityDataset } from './sanity/client.js'
 import { blogPostsQuery, blogPostBySlugQuery, blogCategoriesQuery } from './sanity/queries.js'
 import { portableTextToHtml } from './sanity/portable.js'
-import { initAnalytics } from './analytics.js'
+import { initAnalytics, trackEvent } from './analytics.js'
 
 /* ============================================================
    Blog - index + article views, rendered from Sanity (real-time)
@@ -11,6 +11,8 @@ import { initAnalytics } from './analytics.js'
      /blog            → index
      /blog/<slug>     → single article
    ============================================================ */
+
+const CONTACT_SCRIPT_URL = import.meta.env.NEXT_PUBLIC_CONTACT_SCRIPT_URL
 
 const PAGE_SIZE = 6
 
@@ -154,6 +156,37 @@ async function renderIndex() {
         </p>
       </header>
 
+      <div class="blog-subscribe-wrap reveal" id="blog-subscribe-wrap">
+        <div class="blog-subscribe-card">
+          <div class="blog-subscribe-text">
+            <h2 class="blog-subscribe-title">Get tips straight to your inbox</h2>
+            <p class="blog-subscribe-desc">Practical advice for local businesses — no spam, just useful ideas you can act on.</p>
+          </div>
+          <form class="blog-subscribe-form" id="blog-subscribe-form">
+            <input type="hidden" name="type" value="blog-subscriber" />
+            <div class="blog-subscribe-fields">
+              <div class="blog-subscribe-field">
+                <label for="bs-business" class="sr-only">Business name</label>
+                <input type="text" id="bs-business" name="business name" placeholder="Business name" required autocomplete="organization" />
+              </div>
+              <div class="blog-subscribe-field">
+                <label for="bs-email" class="sr-only">Email address</label>
+                <input type="email" id="bs-email" name="email" placeholder="Email address" required autocomplete="email" />
+              </div>
+              <div class="blog-subscribe-field">
+                <label for="bs-phone" class="sr-only">Phone (optional)</label>
+                <input type="tel" id="bs-phone" name="phone number optional" placeholder="Phone (optional)" autocomplete="tel" />
+              </div>
+              <button type="submit" class="btn btn-coral blog-subscribe-btn">Subscribe</button>
+            </div>
+            <p class="blog-subscribe-note" id="blog-subscribe-note"></p>
+          </form>
+          <div class="blog-subscribe-success" id="blog-subscribe-success" hidden>
+            <p class="blog-subscribe-success-text">You're subscribed! We'll send you useful tips for your business.</p>
+          </div>
+        </div>
+      </div>
+
       <div class="blog-filters">${categories.length ? categoryFilters(categories) : ''}</div>
 
       <div class="blog-grid" id="blog-grid">
@@ -166,6 +199,7 @@ async function renderIndex() {
   if (loadingEl) loadingEl.hidden = true
 
   initFilters(posts)
+  initBlogSubscribe()
   initReveal()
 }
 
@@ -200,6 +234,54 @@ function initFilters(posts) {
       const filtered = cat === 'all' ? posts : posts.filter((p) => p.category === cat)
       grid.innerHTML = filtered.length ? filtered.map(cardHtml).join('') : emptyState()
     })
+  })
+}
+
+/* ---------- blog subscribe form ---------- */
+function initBlogSubscribe() {
+  const form = document.getElementById('blog-subscribe-form')
+  const note = document.getElementById('blog-subscribe-note')
+  const wrap = document.getElementById('blog-subscribe-wrap')
+  const success = document.getElementById('blog-subscribe-success')
+  if (!form || !wrap) return
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    if (!form.checkValidity()) {
+      form.reportValidity()
+      return
+    }
+
+    const data = Object.fromEntries(new FormData(form).entries())
+    note.textContent = 'Saving your details…'
+    note.style.color = '#78716c'
+
+    if (CONTACT_SCRIPT_URL) {
+      const body = new URLSearchParams(data)
+      try {
+        const res = await fetch(CONTACT_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString()
+        })
+        if (!res.ok) {
+          console.error(`[Execora] Blog subscribe save rejected (HTTP ${res.status}).`)
+          note.textContent = 'Something went wrong — please try again.'
+          note.style.color = '#b91c1c'
+          return
+        }
+      } catch (err) {
+        console.error('[Execora] Blog subscribe save failed:', err)
+        note.textContent = 'Something went wrong — please try again.'
+        note.style.color = '#b91c1c'
+        return
+      }
+    }
+
+    form.hidden = true
+    success.hidden = false
+    trackEvent('blog_subscribe')
   })
 }
 
