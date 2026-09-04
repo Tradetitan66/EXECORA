@@ -148,7 +148,7 @@ async function renderIndex() {
   indexEl.innerHTML = `
     <section class="blog-index">
       <header class="blog-head reveal is-visible">
-        <span class="eyebrow">Local business tips</span>
+        <span class="eyebrow">Execora blog</span>
         <h1 class="blog-title">Local business tips</h1>
         <p class="blog-lead">
           Practical ideas to help local businesses improve their website, build trust online
