@@ -633,6 +633,29 @@
 
     <!-- ============ FOOTER ============ -->
     <footer class="site-footer">
+      <div class="footer-newsletter">
+        <div class="newsletter-inner">
+          <div class="newsletter-text">
+            <h3 class="newsletter-title">Practical tips for your local business</h3>
+            <p class="newsletter-desc">Join the Execora newsletter for simple, useful ideas on websites, Google &amp; getting found. No spam — ever.</p>
+          </div>
+          <form class="newsletter-form" id="newsletter-form" novalidate>
+            <input type="hidden" name="type" value="blog-subscriber" />
+            <div class="newsletter-fields">
+              <div class="newsletter-field newsletter-field--email">
+                <label for="nl-email" class="footer-sr-only">Email address</label>
+                <input type="email" id="nl-email" name="email" placeholder="Your email address" autocomplete="email" required />
+              </div>
+              <button class="btn btn-coral newsletter-btn" type="submit">Subscribe</button>
+            </div>
+            <p class="newsletter-note" id="newsletter-note" role="status"></p>
+          </form>
+          <p class="newsletter-success" id="newsletter-success" hidden>
+            You’re subscribed! We’ll send you useful tips for your local business.
+          </p>
+        </div>
+      </div>
+
       <div class="footer-inner">
         <div class="footer-brand">
           <a class="nav-logo" href="#top" aria-label="Execora home">

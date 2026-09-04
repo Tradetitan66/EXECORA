@@ -416,6 +416,52 @@ if (planSectionDetails.length) {
 }
 
 /* ============================================================
+   Newsletter - footer email subscription (writes to BLOG subscribers)
+   ============================================================ */
+const newsletterForm = document.getElementById('newsletter-form')
+const newsletterNote = document.getElementById('newsletter-note')
+const newsletterSuccess = document.getElementById('newsletter-success')
+
+if (newsletterForm) {
+  newsletterForm.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const emailField = newsletterForm.querySelector('#nl-email')
+    if (!emailField.value || !emailField.checkValidity()) {
+      emailField.reportValidity()
+      return
+    }
+
+    const data = Object.fromEntries(new FormData(newsletterForm).entries())
+    newsletterNote.textContent = 'Saving your details…'
+
+    if (CONTACT_SCRIPT_URL) {
+      const body = new URLSearchParams(data)
+      try {
+        const res = await fetch(CONTACT_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString()
+        })
+        if (!res.ok) {
+          console.error(`[Execora] Newsletter save rejected (HTTP ${res.status}).`)
+          newsletterNote.textContent = 'Something went wrong — please try again.'
+          return
+        }
+      } catch (err) {
+        console.error('[Execora] Newsletter save failed:', err)
+        newsletterNote.textContent = 'Something went wrong — please try again.'
+        return
+      }
+    }
+
+    newsletterForm.hidden = true
+    if (newsletterSuccess) newsletterSuccess.hidden = false
+    trackEvent('newsletter_subscribe')
+  })
+}
+
+/* ============================================================
    See full details - Essential/Growth tab switcher (mobile)
    ============================================================ */
 const planTabs = Array.from(document.querySelectorAll('.plan-full-tabs [data-plan-tab]'))
