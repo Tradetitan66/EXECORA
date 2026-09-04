@@ -126,7 +126,7 @@ section {
   display: inline-block;
 }
 .cursive.accent { color: var(--coral-deep); }
-.hero-title .cursive.accent { font-weight: 700; font-size: 1.5em !important; }
+.hero-price { color: var(--coral-deep); font-weight: 700; font-size: 1.15em; }
 
 /* ============================================================
    Nav
