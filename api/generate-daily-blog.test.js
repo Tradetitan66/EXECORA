@@ -282,26 +282,26 @@ describe('validateArticle', () => {
 describe('buildImagePrompt', () => {
   test('prepends Execora visual identity prefix', () => {
     const result = buildImagePrompt('A modern shop front')
-    assert.ok(result.startsWith('Premium hand-drawn crayon editorial illustration with subtle embossed 3D depth'))
+    assert.ok(result.startsWith('Premium 3D clay illustration in a soft, rounded, matte-plastic style'))
     assert.ok(result.endsWith('A modern shop front'))
   })
 
   test('includes all identity keywords', () => {
     const result = buildImagePrompt('test')
-    assert.ok(result.includes('crayon editorial illustration'))
-    assert.ok(result.includes('wax-pencil grain'))
-    assert.ok(result.includes('embossed 3D depth'))
+    assert.ok(result.includes('3D clay illustration'))
+    assert.ok(result.includes('matte-plastic style'))
+    assert.ok(result.includes('pillowy 3D forms'))
     assert.ok(result.includes('ivory'))
-    assert.ok(result.toLowerCase().includes('near-black'))
-    assert.ok(result.includes('charcoal'))
-    assert.ok(result.includes('muted antique gold'))
+    assert.ok(result.includes('#F3EBD8'))
+    assert.ok(result.includes('#292524'))
+    assert.ok(result.includes('#C9A45C'))
+    assert.ok(result.includes('#FFB7B2'))
+    assert.ok(result.includes('#78716C'))
     assert.ok(result.includes('UK local-business environment'))
     assert.ok(result.includes('neighbourhood high streets'))
-    assert.ok(result.includes('not like a children\'s book'))
     assert.ok(result.includes('No text'))
     assert.ok(result.includes('logos'))
-    assert.ok(result.toLowerCase().includes('no bright'))
-    assert.ok(result.toLowerCase().includes('rainbow'))
+    assert.ok(result.toLowerCase().includes('matte surface'))
   })
 
   test('does not contain text or logo artifacts', () => {
@@ -311,11 +311,11 @@ describe('buildImagePrompt', () => {
 
   test('includes the Execora palette and acceptable colours', () => {
     const result = buildImagePrompt('test')
-    assert.ok(result.includes('warm off-white or ivory background'))
-    assert.ok(result.includes('near-black and deep charcoal'))
-    assert.ok(result.includes('muted antique gold'))
-    assert.ok(result.includes('75% ivory'))
-    assert.ok(result.includes('No bright green, red, orange, yellow, blue or rainbow colours'))
+    assert.ok(result.includes('warm ivory (#F3EBD8) background'))
+    assert.ok(result.includes('near-black (#292524)'))
+    assert.ok(result.includes('muted antique gold (#C9A45C)'))
+    assert.ok(result.includes('soft coral (#FFB7B2)'))
+    assert.ok(result.includes('warm grey (#78716C)'))
   })
 
   test('preserves the article-specific image prompt', () => {
@@ -339,7 +339,7 @@ describe('composeImagePrompt', () => {
 
   test('falls back to IMAGE_PREFIX when settings are missing', () => {
     const result = composeImagePrompt({ articlePrompt: 'A UK café', settings: null })
-    assert.ok(result.startsWith('Premium hand-drawn crayon editorial illustration'))
+    assert.ok(result.startsWith('Premium 3D clay illustration in a soft, rounded, matte-plastic style'))
     assert.ok(result.includes('A UK café'))
   })
 
@@ -348,7 +348,7 @@ describe('composeImagePrompt', () => {
       articlePrompt: 'A UK café',
       settings: { imageStylePrompt: '', imageNegativePrompt: '' },
     })
-    assert.ok(result.startsWith('Premium hand-drawn crayon editorial illustration'))
+    assert.ok(result.startsWith('Premium 3D clay illustration in a soft, rounded, matte-plastic style'))
   })
 
   test('appends negative prompt only when present', () => {
@@ -1170,7 +1170,7 @@ describe('POST /api/generate-daily-blog automation settings integration', () => 
     const res = makeRes()
     await handler(makeReq({ token: 'test-blog-secret' }), res)
     assert.equal(res._status, 200)
-    assert.ok(capturedImagePrompt.startsWith('Premium hand-drawn crayon editorial illustration'))
+    assert.ok(capturedImagePrompt.startsWith('Premium 3D clay illustration in a soft, rounded, matte-plastic style'))
     assert.ok(capturedImagePrompt.includes('A friendly local shop with customers'))
     assert.ok(createdDoc)
   })
@@ -1181,7 +1181,7 @@ describe('POST /api/generate-daily-blog automation settings integration', () => 
     await handler(makeReq({ token: 'test-blog-secret' }), res)
     assert.equal(res._status, 200)
     assert.ok(createdDoc)
-    assert.ok(capturedImagePrompt.startsWith('Premium hand-drawn crayon editorial illustration'))
+    assert.ok(capturedImagePrompt.startsWith('Premium 3D clay illustration in a soft, rounded, matte-plastic style'))
   })
 })
 
