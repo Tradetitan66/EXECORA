@@ -1401,6 +1401,8 @@ body.modal-open { overflow: hidden; }
 }
 .footer-tagline { margin-top: 1rem; max-width: 30ch; color: var(--muted); font-size: 0.95rem; font-weight: 300; }
 .footer-location { margin-top: 0.5rem; color: var(--muted); font-size: 0.9rem; font-weight: 300; }
+.footer-email { margin-top: 1rem; display: inline-flex; color: var(--ink); font-size: 0.95rem; font-weight: 500; text-decoration: none; transition: color 0.3s var(--ease-slow); }
+.footer-email:hover { color: var(--coral); text-decoration: underline; }
 .footer-links { display: flex; flex-wrap: wrap; gap: 3rem; }
 .footer-col { display: flex; flex-direction: column; gap: 0.6rem; }
 .footer-heading {
