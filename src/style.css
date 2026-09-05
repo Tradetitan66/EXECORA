@@ -508,6 +508,15 @@ button.nav-cta {
 }
 .step-title { font-weight: 600; font-size: 1.15rem; color: var(--ink); margin-bottom: 0.5rem; }
 .step-body { color: var(--muted); font-size: 0.95rem; font-weight: 300; }
+.steps-note {
+  max-width: 640px;
+  margin-inline: auto;
+  margin-bottom: 2.2rem;
+  text-align: center;
+  color: var(--ink);
+  font-size: 1.02rem;
+  font-weight: 500;
+}
 .steps-cta { text-align: center; }
 
 /* ============================================================
