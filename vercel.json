@@ -2,11 +2,11 @@
   "crons": [
     {
       "path": "/api/daily-blog-0700",
-      "schedule": "0 7 * * *"
+      "schedule": "0 7 * * 1,3,5"
     },
     {
       "path": "/api/daily-blog-0800",
-      "schedule": "0 8 * * *"
+      "schedule": "0 8 * * 1,3,5"
     }
   ],
   "redirects": [

@@ -276,8 +276,9 @@ Supported payload fields:
 ## 10. Daily blog automation — `/api/generate-daily-blog`
 
 A protected Vercel serverless function scheduled by **native Vercel Cron**. It
-runs every day at **8:00 AM Europe/London**, generates a full SEO-optimised
-blog article plus a featured image using OpenAI, uploads the image to Sanity,
+runs at **8:00 AM Europe/London on Mondays, Wednesdays and Fridays** (2-3 quality
+posts a week rather than 7 weak ones), generates a full SEO-optimised blog
+article plus a featured image using OpenAI, uploads the image to Sanity,
 and creates the article as an **unpublished draft** for human review. It
 **never publishes** automatically.
 
@@ -299,12 +300,15 @@ and creates the article as an **unpublished draft** for human review. It
    skips with HTTP 200 if one exists, so retries never duplicate or double-charge.
 5. It reads the latest 60 Sanity blog posts (titles + categories) to avoid
    repeating topics.
-6. It calls the OpenAI Responses API (Structured Outputs) for a 1,200–1,500 word
-   UK-local-business article, then OpenAI image generation for a branded
-   featured image.
+6. It calls the OpenAI Responses API (Structured Outputs) for a 900-1,500 word
+   UK-local-business article (length varies by search intent, never filler),
+   then OpenAI image generation for a branded featured image.
 7. It uploads the image to Sanity and creates a draft document with id
    `drafts.blogPost-auto-YYYY-MM-DD`.
-8. You review and publish the draft in Sanity Studio.
+8. Each draft also stores structured SEO metadata (primary keyword, secondary
+   keywords, search intent, content cluster, target location, author,
+   related links, external sources) that the public article page renders.
+9. You review and publish the draft in Sanity Studio.
 
 ### Required Vercel environment variables
 
@@ -334,13 +338,15 @@ Store a copy somewhere safe.
 ### Vercel Cron setup
 
 Two cron schedules are declared in `vercel.json` so a single path can host two
-UTC times (Vercel allows one schedule per path):
+UTC times (Vercel allows one schedule per path). Both fire on Mondays,
+Wednesdays and Fridays (`1,3,5`) — the cadence chosen for 2-3 quality posts a
+week:
 
 ```json
 {
   "crons": [
-    { "path": "/api/daily-blog-0700", "schedule": "0 7 * * *" },
-    { "path": "/api/daily-blog-0800", "schedule": "0 8 * * *" }
+    { "path": "/api/daily-blog-0700", "schedule": "0 7 * * 1,3,5" },
+    { "path": "/api/daily-blog-0800", "schedule": "0 8 * * 1,3,5" }
   ]
 }
 ```
@@ -360,8 +366,8 @@ so only **one** OpenAI generation can occur per day.
 
 1. Deploy the changes (git push).
 2. In **Vercel → Project → Settings → Cron Jobs**, you should see two entries:
-   - `/api/daily-blog-0700` — `0 7 * * *`
-   - `/api/daily-blog-0800` — `0 8 * * *`
+   - `/api/daily-blog-0700` — `0 7 * * 1,3,5`
+   - `/api/daily-blog-0800` — `0 8 * * 1,3,5`
 3. If the list is empty or shows a warning, redeploy or check that the `crons`
    field is present in `vercel.json` and that the project plan supports Cron
    Jobs (some projects require the Cron Jobs feature enabled).
@@ -443,7 +449,7 @@ The final prompt sent to OpenAI is composed as:
 ### Article guidance — `blogAutomationSettings` (singleton)
 
 The same **Blog Automation Settings** document also controls the **article
-content** the automation writes. It contains five additional fields:
+content** the automation writes. It contains seven additional fields:
 
 | Field | Purpose |
 | --- | --- |
@@ -451,7 +457,8 @@ content** the automation writes. It contains five additional fields:
 | `articleTonePrompt` | Writing style and tone. |
 | `articleAvoidPrompt` | Subjects, claims, phrases and styles to avoid. |
 | `articleCtaPrompt` | How Execora is mentioned and the call to action. |
-| `nextArticleTopic` | **One-time** topic for the next normal daily article. Leave empty to let the automation choose. |
+| `nextArticleTopic` | **One-time** topic for the next article. Leave empty to let the automation choose. |
+| `keywordGuidance` | **Optional override** for the built-in keyword architecture. When set, future articles target these search topics instead of the hard-coded list in the code. Leave empty to use the built-in keywords. |
 | `textModel` | OpenAI **article** model. Leave empty for the default. |
 | `imageModel` | OpenAI **image** model. Leave empty for the default. |
 
@@ -474,12 +481,14 @@ labelled section, in this order:
 3. `AVOID:`
 4. `CALL TO ACTION:`
 5. `NEXT ARTICLE TOPIC:`
+6. `SEO SEARCH TARGETS (owner override)` — when `keywordGuidance` is published
 
 These are **supplements only**. The hard-coded rules (British English, UK
-local-business audience, practical/accurate advice, no fabricated stats,
-SEO title/description limits, category validation, structured JSON schema,
-1,200–1,500 word target, Portable Text conversion, draft-only workflow,
-duplicate protection, auth/cron) can **never** be overridden.
+local-business audience, practical/accurate advice, no fabricated stats, SEO
+title/description limits, search-intent + keyword strategy, category
+validation, structured JSON schema, 900–1,500 word target depending on intent,
+Portable Text conversion, draft-only workflow, duplicate protection, auth/cron)
+can **never** be overridden.
 
 **`nextArticleTopic` behaviour:**
 
@@ -495,6 +504,29 @@ never fails the run.
 
 As with the image fields, only the **published** document affects automatic
 generation.
+
+### Per-post structured SEO metadata
+
+Every automatic draft stores structured SEO metadata (edited in **Sanity →
+Blog post → SEO** tab and rendered on the live article page):
+
+- `primaryKeyword` — the single search query the article targets.
+- `secondaryKeywords` (tags) — 3-6 related terms used naturally.
+- `searchIntent` — informational / commercial investigation / local / transactional.
+- `contentCluster` — which topic cluster the article supports (e.g. Website
+  Design, Local SEO, Trades Websites).
+- `targetLocation` — location the article is relevant to (e.g. Edinburgh),
+  or empty for non-local topics.
+- `author` — defaults to **Execora Editorial Team**.
+- `relatedLinks` — 2-4 suggested internal/external links. Internal targets are
+  rendered as `/blog/...` links; external targets open in a new tab.
+- `externalSources` — authoritative UK/first-party sources (Google, GOV.UK,
+  Scottish Government, ONS, ICO).
+
+The article page also emits **Article JSON-LD** (`schema.org`) and a meta
+`keywords` tag built from the primary + secondary keywords. All fields are
+informational — a draft is created and published normally even if a metadata
+field is missing.
 
 ### Local / automated testing
 

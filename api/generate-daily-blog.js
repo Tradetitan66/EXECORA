@@ -10,9 +10,10 @@ export const config = { maxDuration: 120 }
  * Execora — Automatic daily blog post generator
  * ---------------------------------------------------------------
  * Vercel serverless function triggered by Vercel Cron (two UTC
- * schedules) at 8:00 AM Europe/London daily. Generates a blog article
- * and featured image via OpenAI, uploads the image to Sanity, and
- * creates an unpublished draft document for human review.
+ * schedules) at 8:00 AM Europe/London on Mondays, Wednesdays and
+ * Fridays. Generates a blog article and featured image via OpenAI,
+ * uploads the image to Sanity, and creates an unpublished draft
+ * document for human review.
  *
  * Vercel Cron calls it via GET (with Europe/London 8 AM + idempotency
  * guards). A manual POST also works for authenticated testing and
@@ -191,6 +192,57 @@ export async function uploadImage(client, slug, b64Data) {
 // Prompt builder
 // ---------------------------------------------------------------------------
 
+// SEO keyword architecture: the specific, commercially relevant search topics
+// Execora articles should own. The owner can replace this list entirely from the
+// Sanity dashboard by publishing a keywordGuidance value.
+export const KEYWORD_ARCHITECTURE = [
+  // Primary commercial
+  'website design for local businesses',
+  'small business website design',
+  'small business website UK',
+  'affordable website design UK',
+  'website design for trades',
+  'web design for tradesmen',
+  'website design Edinburgh',
+  'web design Edinburgh',
+  // Trades
+  'plumber website design',
+  'electrician website design',
+  'builder website design',
+  'handyman website design',
+  'painter decorator website',
+  'roofing website design',
+  'heating engineer website',
+  // Local SEO
+  'local SEO for small business',
+  'local SEO UK',
+  'Google Business Profile optimisation',
+  'Google Maps ranking',
+  'how to rank local business on Google',
+  'Google reviews local SEO',
+  // Lead generation / conversion
+  'get more website enquiries',
+  'website not generating leads',
+  'convert website visitors into customers',
+  'small business lead generation',
+  'online booking for local business',
+  'WhatsApp enquiries website',
+  'website conversion for small business',
+  // Informational decision-making
+  'does a small business need a website',
+  'how much does a small business website cost UK',
+  'what should a small business website include',
+  'how many pages should a small business website have',
+  'Google Business Profile vs website',
+  'Facebook page vs website for small business',
+  'how to improve local business website',
+]
+
+// Execora geography: Edinburgh is the primary market, with secondary local
+// areas for natural rotation when a location genuinely adds relevance.
+const GEOGRAPHY_PRIMARY = 'Edinburgh'
+const GEOGRAPHY_SECONDARY = 'Penicuik, Musselburgh, Dalkeith, Loanhead, Livingston, Midlothian, East Lothian and West Lothian'
+
 export function buildArticlePrompt(recentTopics, settings = null) {
   const topicsList = recentTopics.titles.length
     ? `\n\nRecent blog posts (DO NOT repeat, rewrite or closely overlap these topics):\n${recentTopics.titles.map((t, i) => `${i + 1}. ${t}`).join('\n')}`
@@ -217,7 +269,16 @@ export function buildArticlePrompt(recentTopics, settings = null) {
   if (settings && settings.nextArticleTopic) {
     guidance.push(`NEXT ARTICLE TOPIC:\n${settings.nextArticleTopic}`)
   }
+  // A published keywordGuidance overrides the built-in keyword architecture.
+  // Failures fall back to the hard-coded list below via the dataTemplate.
+  if (settings && settings.keywordGuidance) {
+    guidance.push(`SEO SEARCH TARGETS (owner override - work within these):\n${settings.keywordGuidance}`)
+  }
   const guidanceBlock = guidance.length ? `\n\nOwner guidance (supplement the rules above):\n${guidance.join('\n\n')}` : ''
+
+  const keywordList = settings && settings.keywordGuidance
+    ? null
+    : `\n\nPriority search topics (choose ONE primary keyword and 3-6 secondary terms from this list):\n${KEYWORD_ARCHITECTURE.map((k, i) => `${i + 1}. ${k}`).join('\n')}`
 
   return {
     system: [
@@ -233,17 +294,28 @@ export function buildArticlePrompt(recentTopics, settings = null) {
       'Include a natural, restrained mention of Execora near the end (one or two sentences maximum).',
       'The article should be genuinely helpful even if the reader never buys from Execora.',
       'Rotate naturally between these categories: Website Tips, Local Business, Google & SEO, Customer Experience, Business Growth.',
+      'Build credible topical authority for UK local businesses: favour specific, search-focussed topics that could only have been written for this audience over generic commodity advice.',
     ].join(' '),
     user: [
       'Write a practical, SEO-optimised blog article for UK local business owners.',
-      'The article must be 1,200 to 1,400 words, with a hard target not to exceed 1,500 words.',
+      'Aim for approximately 900 to 1,500 words depending on the search intent. Do not add sections merely to reach a word count; a simple question may be answered in 800-1,000 words, while a complex guide may use up to 1,500. Every section must contribute something useful.',
       'It must have a clear, useful title, a strong practical introduction, H2 and H3 headings, short paragraphs, actionable bullet points, concrete examples, and end with a practical checklist.',
       'Do not use em dashes anywhere in the article.',
       topicsList,
       categoryHint,
-      'Useful topics include: website conversion, local SEO, Google Business Profile, customer reviews, lead generation, booking and enquiry processes, trust signals, mobile experience, customer retention, email or WhatsApp follow-up, pricing communication, simple business systems, useful no-code automation.',
+      'SEO SEARCH INTENT:\nChoose ONE primary keyword and 3 to 6 closely related secondary terms, and record them in primaryKeyword and secondaryKeywords. Prefer specific, problem-based queries UK local business owners realistically search for. Record the dominant search intent in the searchIntent field using one of: informational, commercial investigation, local or transactional. Record the relevant topic cluster in contentCluster. Use keywords naturally and never force exact-match keywords.',
+      'TOPIC CLUSTERS:\nBuild topical authority rather than producing unrelated daily articles. Rotate naturally between these clusters: Website Design for Local Businesses, Local SEO, Google Business Profile, Website Conversion, Lead Generation, Trades Websites, Customer Experience, Business Systems. Support and reinforce existing clusters where possible.',
+      'GEOGRAPHY:\nExecora\'s primary local market is ' + GEOGRAPHY_PRIMARY + ', with secondary areas ' + GEOGRAPHY_SECONDARY + ', plus wider Scotland for informational topics. Use a location naturally only when it genuinely adds relevance; never stuff location keywords. Record any location in the targetLocation field.',
+      'ANSWER-FIRST WRITING:\nWhenever an H2 or H3 asks a question, answer it directly within the first 1 to 3 sentences before expanding. Write definitions, explanations and recommendations so they make sense when read independently and are quotable by search engines and AI systems. Do not deliberately break content into unnatural chunks for AI systems.',
+      'INTERNAL LINKS:\nSuggest 2 to 4 relevant internal links using the internalLinks array. Each entry needs anchor text, a target (Execora service page or related blog article, for example /website-design, /local-seo or /blog/slug) and type "internal". Use concise descriptive natural anchor text. Never use generic anchors such as "click here", "learn more" or "read more".',
+      'SOURCE QUALITY:\nWhen making a factual claim that benefits from authoritative evidence, use the externalSources array with a source label and URL, preferring trustworthy UK or first-party sources such as Google Search Central, Google Business Profile documentation, GOV.UK, the Scottish Government, ONS or ICO. Never invent citations or add links for their own sake.',
+      keywordList,
+      'EXECORA COMMERCIAL RELEVANCE:\nEducate first. Where genuinely relevant near the end, briefly explain how professional website design, local SEO or enquiry optimisation can help solve the problem. Mention Execora no more than twice, and never force Execora into a topic where it adds no value.',
+      'CONTENT MIX:\nRotate article types to cover education, problem/solution, and commercial investigation. Include decision-oriented topics where genuinely useful, such as how much a small business website costs in the UK, Wix vs a professional website, whether tradespeople still need a website if they have a Facebook page, Google Business Profile vs a website, or whether a small business should pay monthly for a website.',
+      'NICHE ROTATION:\nRotate across UK local-business niches, especially trades and service businesses such as plumbers, heating engineers, electricians, builders, painters and decorators, handymen, roofers, landscapers, cleaners, salons, barbers, cafés, restaurants, clinics and professional services. Prefer specific, commercially relevant niche topics (for example "Why plumbers get Google views but no website enquiries") over generic advice.',
+      'SEO META:\nKeep the seoTitle around 50-60 characters and the seoDescription 140-160 characters, describing genuine value without hype. Keep the slug short and keyword-focussed. Set author to "Execora Editorial Team".',
       'For the imagePrompt field, describe one clear visual concept representing the article\'s main problem or solution within a specific local-business setting relevant to the topic (for example a UK high-street shop, café, salon, trades business, clinic, restaurant or professional service). Include relevant objects such as a smartphone, website screen, booking calendar, review card, map pin, storefront, tools or a customer enquiry. Add a subtle British local touch through architecture, pavement, shopfront design, weather, streetscape or the business environment, and specify the exact composition, main subject and supporting objects. The generated image must contain no written words. Avoid generic instructions such as "an AI business image" or "a business owner using technology".',
-      'Avoid: generic motivational advice, unsupported statistics, invented studies, fake quotes or case studies, keyword stuffing, excessive promotion of Execora, repetitive listicles, US-specific legal, tax or business advice, claims that require a professional adviser.',
+      'Avoid: generic commodity topics that could have been written for any business anywhere, generic motivational advice, unsupported statistics, invented studies, fake quotes or case studies, keyword stuffing, excessive promotion of Execora, repetitive listicles, US-specific legal, tax or business advice, claims that require a professional adviser.',
       guidanceBlock,
     ].join('\n'),
   }
@@ -266,6 +338,46 @@ export function getArticleJSONSchema() {
       excerpt: { type: 'string', maxLength: 320 },
       seoTitle: { type: 'string', maxLength: 60 },
       seoDescription: { type: 'string', minLength: 140, maxLength: 160 },
+      primaryKeyword: { type: 'string', maxLength: 100 },
+      secondaryKeywords: {
+        type: 'array',
+        maxItems: 6,
+        items: { type: 'string', maxLength: 100 },
+      },
+      searchIntent: {
+        type: 'string',
+        enum: ['informational', 'commercial investigation', 'local', 'transactional'],
+      },
+      contentCluster: { type: 'string', maxLength: 60 },
+      targetLocation: { type: 'string', maxLength: 80 },
+      author: { type: 'string', maxLength: 120 },
+      internalLinks: {
+        type: 'array',
+        maxItems: 6,
+        items: {
+          type: 'object',
+          properties: {
+            anchor: { type: 'string', maxLength: 120 },
+            target: { type: 'string', maxLength: 160 },
+            type: { type: 'string', enum: ['internal', 'external'] },
+          },
+          required: ['anchor', 'target', 'type'],
+          additionalProperties: false,
+        },
+      },
+      externalSources: {
+        type: 'array',
+        maxItems: 6,
+        items: {
+          type: 'object',
+          properties: {
+            label: { type: 'string', maxLength: 120 },
+            url: { type: 'string', maxLength: 300 },
+          },
+          required: ['label', 'url'],
+          additionalProperties: false,
+        },
+      },
       imagePrompt: { type: 'string' },
       imageAlt: { type: 'string' },
       body: {
@@ -282,7 +394,12 @@ export function getArticleJSONSchema() {
         },
       },
     },
-    required: ['title', 'slug', 'category', 'excerpt', 'seoTitle', 'seoDescription', 'imagePrompt', 'imageAlt', 'body'],
+    required: [
+      'title', 'slug', 'category', 'excerpt', 'seoTitle', 'seoDescription',
+      'primaryKeyword', 'secondaryKeywords', 'searchIntent', 'contentCluster',
+      'targetLocation', 'author', 'internalLinks', 'externalSources',
+      'imagePrompt', 'imageAlt', 'body',
+    ],
     additionalProperties: false,
   }
 }
@@ -325,6 +442,66 @@ export function validateArticle(article) {
     return { ok: false, error: 'seoDescription must be 140-160 characters' }
   }
 
+  // SEO metadata fields are informational. When present they must have the
+  // correct shape (so drafts render cleanly), but a missing value never blocks
+  // generation - buildDraftDocument supplies sensible defaults.
+  if (article.primaryKeyword !== undefined && article.primaryKeyword !== null && typeof article.primaryKeyword !== 'string') {
+    return { ok: false, error: 'primaryKeyword must be a string' }
+  }
+  if (article.primaryKeyword !== undefined && typeof article.primaryKeyword === 'string' && article.primaryKeyword.length > 100) {
+    return { ok: false, error: 'primaryKeyword must be 100 characters or fewer' }
+  }
+
+  if (article.secondaryKeywords !== undefined && article.secondaryKeywords !== null) {
+    if (!Array.isArray(article.secondaryKeywords) || article.secondaryKeywords.some((k) => typeof k !== 'string')) {
+      return { ok: false, error: 'secondaryKeywords must be an array of strings' }
+    }
+    if (article.secondaryKeywords.length > 6) {
+      return { ok: false, error: 'secondaryKeywords must contain at most 6 terms' }
+    }
+  }
+
+  if (article.searchIntent !== undefined && article.searchIntent !== null && !ALLOWED_SEARCH_INTENTS.includes(article.searchIntent)) {
+    return { ok: false, error: `searchIntent must be one of: ${ALLOWED_SEARCH_INTENTS.join(', ')}` }
+  }
+
+  if (article.contentCluster !== undefined && article.contentCluster !== null && typeof article.contentCluster !== 'string') {
+    return { ok: false, error: 'contentCluster must be a string' }
+  }
+  if (article.contentCluster !== undefined && typeof article.contentCluster === 'string' && article.contentCluster.length > 60) {
+    return { ok: false, error: 'contentCluster must be 60 characters or fewer' }
+  }
+
+  if (article.targetLocation !== undefined && article.targetLocation !== null && typeof article.targetLocation !== 'string') {
+    return { ok: false, error: 'targetLocation must be a string' }
+  }
+
+  if (article.author !== undefined && article.author !== null && typeof article.author !== 'string') {
+    return { ok: false, error: 'author must be a string' }
+  }
+
+  if (article.internalLinks !== undefined && article.internalLinks !== null && !Array.isArray(article.internalLinks)) {
+    return { ok: false, error: 'internalLinks must be an array' }
+  }
+  if (article.internalLinks !== undefined && Array.isArray(article.internalLinks)) {
+    for (const link of article.internalLinks) {
+      if (!link || typeof link !== 'object' || typeof link.anchor !== 'string' || typeof link.target !== 'string' || !['internal', 'external'].includes(link.type)) {
+        return { ok: false, error: 'Each internalLinks entry needs a string anchor, target and type (internal|external)' }
+      }
+    }
+  }
+
+  if (article.externalSources !== undefined && article.externalSources !== null && !Array.isArray(article.externalSources)) {
+    return { ok: false, error: 'externalSources must be an array' }
+  }
+  if (article.externalSources !== undefined && Array.isArray(article.externalSources)) {
+    for (const source of article.externalSources) {
+      if (!source || typeof source !== 'object' || typeof source.label !== 'string' || typeof source.url !== 'string') {
+        return { ok: false, error: 'Each externalSources entry needs a string label and url' }
+      }
+    }
+  }
+
   if (!Array.isArray(article.body) || article.body.length === 0) {
     return { ok: false, error: 'body must be a non-empty array' }
   }
@@ -340,8 +517,8 @@ export function validateArticle(article) {
   }
 
   const totalWords = article.body.reduce((sum, b) => sum + countWords(b.text), 0)
-  if (totalWords < 1100 || totalWords > 1650) {
-    return { ok: false, error: `Article body word count (${totalWords}) is outside the acceptable range of 1,100-1,650` }
+  if (totalWords < MIN_ARTICLE_WORDS || totalWords > MAX_ARTICLE_WORDS) {
+    return { ok: false, error: `Article body word count (${totalWords}) is outside the acceptable range of ${MIN_ARTICLE_WORDS}-${MAX_ARTICLE_WORDS}` }
   }
 
   return { ok: true }
@@ -359,6 +536,16 @@ const MAX_NEGATIVE_PROMPT_LENGTH = 2000
 const MAX_ARTICLE_GUIDANCE_LENGTH = 3000
 const MAX_ARTICLE_TOPIC_LENGTH = 500
 const MAX_MODEL_LENGTH = 100
+const MAX_KEYWORD_GUIDANCE_LENGTH = 3000
+
+// Search-intent options for the article's primary keyword, stored per post.
+const ALLOWED_SEARCH_INTENTS = ['informational', 'commercial investigation', 'local', 'transactional']
+
+// Acceptable article length. The prompt asks for ~900-1,500 words by intent;
+// validation tolerates a small buffer on either side so a borderline draft
+// still gets created for human review instead of failing the run.
+const MIN_ARTICLE_WORDS = 800
+const MAX_ARTICLE_WORDS = 1600
 
 // Allowlisted OpenAI models the owner may select from the Sanity dashboard.
 // Only these values are accepted from the singleton; anything else falls back
@@ -419,6 +606,7 @@ export async function getAutomationSettings(client) {
         articleAvoidPrompt,
         articleCtaPrompt,
         nextArticleTopic,
+        keywordGuidance,
         textModel,
         imageModel
       }`
@@ -432,6 +620,7 @@ export async function getAutomationSettings(client) {
       articleAvoidPrompt: clamp(doc.articleAvoidPrompt, MAX_ARTICLE_GUIDANCE_LENGTH),
       articleCtaPrompt: clamp(doc.articleCtaPrompt, MAX_ARTICLE_GUIDANCE_LENGTH),
       nextArticleTopic: clamp(doc.nextArticleTopic, MAX_ARTICLE_TOPIC_LENGTH),
+      keywordGuidance: clamp(doc.keywordGuidance, MAX_KEYWORD_GUIDANCE_LENGTH),
       textModel: clamp(doc.textModel, MAX_MODEL_LENGTH),
       imageModel: clamp(doc.imageModel, MAX_MODEL_LENGTH),
     }
@@ -573,6 +762,31 @@ export function buildDraftDocument({ article, imageAssetId, date }) {
     publishedDate: `${date}T00:00:00.000Z`,
     readingTime,
     body: convertToPortableText(article.body),
+    // Structured SEO metadata. Defaults keep old drafts and partial model
+    // output renderable; fields are informational, never required to publish.
+    primaryKeyword: article.primaryKeyword || '',
+    secondaryKeywords: Array.isArray(article.secondaryKeywords)
+      ? article.secondaryKeywords.filter((k) => typeof k === 'string').slice(0, 6)
+      : [],
+    searchIntent: article.searchIntent || '',
+    contentCluster: article.contentCluster || '',
+    targetLocation: article.targetLocation || '',
+    author: article.author || 'Execora Editorial Team',
+    relatedLinks: Array.isArray(article.internalLinks)
+      ? article.internalLinks
+          .filter((l) => l && typeof l.anchor === 'string' && typeof l.target === 'string')
+          .slice(0, 6)
+          .map((l) => ({
+            anchor: l.anchor,
+            target: l.target,
+            type: l.type === 'external' ? 'external' : 'internal',
+          }))
+      : [],
+    externalSources: Array.isArray(article.externalSources)
+      ? article.externalSources
+          .filter((s) => s && typeof s.label === 'string' && typeof s.url === 'string')
+          .slice(0, 6)
+      : [],
   }
 
   if (imageAssetId) {

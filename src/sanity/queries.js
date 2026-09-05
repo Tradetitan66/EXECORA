@@ -58,7 +58,15 @@ export const blogPostBySlugQuery = `
       }
     },
     seoTitle,
-    seoDescription
+    seoDescription,
+    primaryKeyword,
+    secondaryKeywords,
+    searchIntent,
+    contentCluster,
+    targetLocation,
+    author,
+    relatedLinks,
+    externalSources
   }
 `
 

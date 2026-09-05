@@ -65,6 +65,14 @@ export const blogAutomationSettings = defineType({
         'Optional one-time topic for the next normal daily article. Leave empty to let the automation select a topic.',
     }),
     defineField({
+      name: 'keywordGuidance',
+      title: 'Keyword and Search Guidance',
+      type: 'text',
+      rows: 12,
+      description:
+        'Optional owner override for the built-in keyword architecture. When set, the automation targets these search topics instead of the hard-coded list in the code. Leave empty to use the built-in keyword list.',
+    }),
+    defineField({
       name: 'textModel',
       title: 'Article Model',
       type: 'string',

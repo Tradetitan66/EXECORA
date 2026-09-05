@@ -202,7 +202,7 @@ describe('validateArticle', () => {
     assert.match(r.error, /at least 8/)
   })
 
-  test('rejects body with word count below 1100', () => {
+  test('rejects body with word count below 800', () => {
     const body = Array.from({ length: 10 }, () => ({
       style: 'normal',
       listItem: null,
@@ -213,7 +213,7 @@ describe('validateArticle', () => {
     assert.match(r.error, /outside the acceptable range/)
   })
 
-  test('rejects body with word count above 1650', () => {
+  test('rejects body with word count above 1600', () => {
     const body = Array.from({ length: 10 }, () => ({
       style: 'normal',
       listItem: null,
@@ -224,37 +224,32 @@ describe('validateArticle', () => {
     assert.match(r.error, /outside the acceptable range/)
   })
 
-  test('accepts body at exactly 1100 words', () => {
-    const body = [
-      { style: 'normal', listItem: null, text: 'word '.repeat(138) },
-      { style: 'normal', listItem: null, text: 'word '.repeat(137) },
-      { style: 'normal', listItem: null, text: 'word '.repeat(138) },
-      { style: 'normal', listItem: null, text: 'word '.repeat(137) },
-      { style: 'normal', listItem: null, text: 'word '.repeat(138) },
-      { style: 'normal', listItem: null, text: 'word '.repeat(137) },
-      { style: 'normal', listItem: null, text: 'word '.repeat(138) },
-      { style: 'normal', listItem: null, text: 'word '.repeat(137) },
-    ]
-    const r = validateArticle(validArticle({ body }))
-    assert.equal(r.ok, true)
-  })
-
-  test('accepts body at exactly 1650 words', () => {
-    const body = Array.from({ length: 10 }, () => ({
+  test('accepts body at exactly 800 words', () => {
+    const body = Array.from({ length: 8 }, () => ({
       style: 'normal',
       listItem: null,
-      text: 'word '.repeat(165),
+      text: 'word '.repeat(100),
     }))
     const r = validateArticle(validArticle({ body }))
     assert.equal(r.ok, true)
   })
 
-  test('rejects body at 1651 words', () => {
+  test('accepts body at exactly 1600 words', () => {
+    const body = Array.from({ length: 10 }, () => ({
+      style: 'normal',
+      listItem: null,
+      text: 'word '.repeat(160),
+    }))
+    const r = validateArticle(validArticle({ body }))
+    assert.equal(r.ok, true)
+  })
+
+  test('rejects body at 1601 words', () => {
     const body = [
       ...Array.from({ length: 10 }, () => ({
         style: 'normal',
         listItem: null,
-        text: 'word '.repeat(165),
+        text: 'word '.repeat(160),
       })),
       { style: 'normal', listItem: null, text: 'word' },
     ]
@@ -272,6 +267,71 @@ describe('validateArticle', () => {
     const r = validateArticle(validArticle({ body }))
     assert.equal(r.ok, false)
     assert.match(r.error, /text string/)
+  })
+
+  test('accepts structured SEO metadata when present', () => {
+    const a = validArticle({
+      primaryKeyword: 'plumber website design',
+      secondaryKeywords: ['plumber websites', 'trades websites'],
+      searchIntent: 'commercial investigation',
+      contentCluster: 'Trades Websites',
+      targetLocation: 'Edinburgh',
+      author: 'Execora Editorial Team',
+      internalLinks: [
+        { anchor: 'Website design for local businesses', target: '/website-design', type: 'internal' },
+      ],
+      externalSources: [
+        { label: 'Google Business Profile', url: 'https://support.google.com/business' },
+      ],
+    })
+    assert.equal(validateArticle(a).ok, true)
+  })
+
+  test('rejects a non-string primaryKeyword', () => {
+    const r = validateArticle(validArticle({ primaryKeyword: 42 }))
+    assert.equal(r.ok, false)
+    assert.match(r.error, /primaryKeyword/)
+  })
+
+  test('rejects an overlong primaryKeyword', () => {
+    const r = validateArticle(validArticle({ primaryKeyword: 'x'.repeat(101) }))
+    assert.equal(r.ok, false)
+    assert.match(r.error, /primaryKeyword/)
+  })
+
+  test('rejects a non-array secondaryKeywords', () => {
+    const r = validateArticle(validArticle({ secondaryKeywords: 'not-an-array' }))
+    assert.equal(r.ok, false)
+    assert.match(r.error, /secondaryKeywords/)
+  })
+
+  test('rejects an invalid searchIntent', () => {
+    const r = validateArticle(validArticle({ searchIntent: 'for-the-lols' }))
+    assert.equal(r.ok, false)
+    assert.match(r.error, /searchIntent/)
+  })
+
+  test('accepts all valid searchIntents', () => {
+    for (const intent of ['informational', 'commercial investigation', 'local', 'transactional']) {
+      const r = validateArticle(validArticle({ searchIntent: intent }))
+      assert.equal(r.ok, true, `should accept ${intent}`)
+    }
+  })
+
+  test('rejects an internalLinks entry missing fields', () => {
+    const r = validateArticle(validArticle({
+      internalLinks: [{ anchor: 'Ahoy' }],
+    }))
+    assert.equal(r.ok, false)
+    assert.match(r.error, /internalLinks/)
+  })
+
+  test('rejects a malformed externalSources entry', () => {
+    const r = validateArticle(validArticle({
+      externalSources: [{ label: 7 }],
+    }))
+    assert.equal(r.ok, false)
+    assert.match(r.error, /externalSources/)
   })
 })
 
@@ -386,6 +446,7 @@ describe('getAutomationSettings', () => {
         articleAvoidPrompt,
         articleCtaPrompt,
         nextArticleTopic,
+        keywordGuidance,
         textModel,
         imageModel
       }`
@@ -532,11 +593,12 @@ describe('buildArticlePrompt', () => {
       articleTonePrompt: 'Warm tone.',
     }
     const prompt = buildArticlePrompt({ titles: [], categories: [] }, settings)
-    assert.ok(prompt.user.includes('1,200 to 1,400 words'))
+    assert.ok(prompt.user.includes('900 to 1,500 words'))
     assert.ok(prompt.user.includes('SEO-optimised'))
     assert.ok(prompt.user.includes('no written words'))
     assert.ok(prompt.system.includes('British English'))
     assert.ok(prompt.system.includes('Never invent statistics'))
+    assert.ok(prompt.system.includes('credible topical authority'))
   })
 
   test('empty settings use existing defaults without guidance sections', () => {
@@ -545,7 +607,56 @@ describe('buildArticlePrompt', () => {
     assert.equal(promptWithDefaults.user, promptWithEmpty.user)
     assert.ok(!promptWithEmpty.user.includes('EDITORIAL FOCUS:'))
     assert.ok(!promptWithEmpty.user.includes('WRITING STYLE:'))
-    assert.ok(promptWithEmpty.user.includes('1,200 to 1,400 words'))
+    assert.ok(promptWithEmpty.user.includes('900 to 1,500 words'))
+  })
+
+  test('includes the built-in keyword architecture for the owner list', () => {
+    const prompt = buildArticlePrompt({ titles: [], categories: [] }, {})
+    assert.ok(prompt.user.includes('SEO SEARCH INTENT:'))
+    assert.ok(prompt.user.includes('ONE primary keyword'))
+    assert.ok(prompt.user.includes('secondaryKeywords'))
+    assert.ok(prompt.user.includes('website design for local businesses'))
+    assert.ok(prompt.user.includes('how much does a small business website cost UK'))
+    assert.ok(prompt.user.includes('Priority search topics'))
+  })
+
+  test('owner keyword guidance overrides the built-in keyword list', () => {
+    const prompt = buildArticlePrompt(
+      { titles: [], categories: [] },
+      { keywordGuidance: 'Focus exclusively on salon booking systems.' }
+    )
+    assert.ok(prompt.user.includes('SEO SEARCH TARGETS (owner override'))
+    assert.ok(prompt.user.includes('Focus exclusively on salon booking systems.'))
+    assert.ok(!prompt.user.includes('Priority search topics'))
+    assert.ok(!prompt.user.includes('website design for local businesses'))
+  })
+
+  test('includes topic cluster, geography and answer-first strategy blocks', () => {
+    const prompt = buildArticlePrompt({ titles: [], categories: [] }, {})
+    assert.ok(prompt.user.includes('TOPIC CLUSTERS:'))
+    assert.ok(prompt.user.includes('Trades Websites'))
+    assert.ok(prompt.user.includes('GEOGRAPHY:'))
+    assert.ok(prompt.user.includes('Edinburgh'))
+    assert.ok(prompt.user.includes('Penicuik'))
+    assert.ok(prompt.user.includes('ANSWER-FIRST WRITING:'))
+    assert.ok(prompt.user.includes('first 1 to 3 sentences'))
+  })
+
+  test('includes internal link, source quality and commercial relevance blocks', () => {
+    const prompt = buildArticlePrompt({ titles: [], categories: [] }, {})
+    assert.ok(prompt.user.includes('INTERNAL LINKS:'))
+    assert.ok(prompt.user.includes('internalLinks'))
+    assert.ok(prompt.user.includes('SOURCE QUALITY:'))
+    assert.ok(prompt.user.includes('GOV.UK'))
+    assert.ok(prompt.user.includes('EXECORA COMMERCIAL RELEVANCE:'))
+    assert.ok(prompt.user.includes('no more than twice'))
+    assert.ok(prompt.user.includes('CONTENT MIX:'))
+    assert.ok(prompt.user.includes('NICHE ROTATION:'))
+  })
+
+  test('includes a crediting authors instruction', () => {
+    const prompt = buildArticlePrompt({ titles: [], categories: [] }, {})
+    assert.ok(prompt.user.includes('Execora Editorial Team'))
   })
 
   test('includes nextArticleTopic guidance when provided', () => {
@@ -972,6 +1083,19 @@ describe('POST /api/generate-daily-blog happy path', () => {
     excerpt: 'Practical steps to earn more Google reviews for your UK local business.',
     seoTitle: 'Get More Google Reviews',
     seoDescription: SEO_DESC,
+    primaryKeyword: 'google reviews for local business',
+    secondaryKeywords: ['google reviews', 'local seo uk', 'google business profile'],
+    searchIntent: 'commercial investigation',
+    contentCluster: 'Local SEO',
+    targetLocation: 'Edinburgh',
+    author: 'Execora Editorial Team',
+    internalLinks: [
+      { anchor: 'local SEO for small business', target: '/blog/local-seo-small-business', type: 'internal' },
+      { anchor: 'Google Business Profile guide', target: '/google-business-profile', type: 'internal' },
+    ],
+    externalSources: [
+      { label: 'Google Business Profile help', url: 'https://support.google.com/business' },
+    ],
     imagePrompt: 'A friendly local shop with customers',
     imageAlt: 'Friendly local shop with customers',
     body: Array.from({ length: 12 }, () => ({
@@ -1051,6 +1175,56 @@ describe('POST /api/generate-daily-blog happy path', () => {
     assert.equal(createdDoc.slug.current, sampleArticle.slug)
     assert.ok(createdDoc.readingTime >= 1)
     assert.ok(createdDoc.publishedDate.endsWith('T00:00:00.000Z'))
+  })
+
+  test('persists structured SEO metadata with defaults', async () => {
+    const res = makeRes()
+    await handler(makeReq({ token: 'test-blog-secret' }), res)
+    assert.equal(createdDoc.primaryKeyword, 'google reviews for local business')
+    assert.deepEqual(createdDoc.secondaryKeywords, ['google reviews', 'local seo uk', 'google business profile'])
+    assert.equal(createdDoc.searchIntent, 'commercial investigation')
+    assert.equal(createdDoc.contentCluster, 'Local SEO')
+    assert.equal(createdDoc.targetLocation, 'Edinburgh')
+    assert.equal(createdDoc.author, 'Execora Editorial Team')
+    assert.deepEqual(createdDoc.relatedLinks, [
+      { anchor: 'local SEO for small business', target: '/blog/local-seo-small-business', type: 'internal' },
+      { anchor: 'Google Business Profile guide', target: '/google-business-profile', type: 'internal' },
+    ])
+    assert.deepEqual(createdDoc.externalSources, [
+      { label: 'Google Business Profile help', url: 'https://support.google.com/business' },
+    ])
+  })
+
+  test('fills SEO metadata defaults when the model omits them', async () => {
+    const bareArticle = {
+      title: 'Bare Article',
+      slug: 'bare-article',
+      category: 'Website Tips',
+      excerpt: 'A bare article with no SEO metadata fields supplied.',
+      seoTitle: 'Bare Article',
+      seoDescription: SEO_DESC,
+      imagePrompt: 'A plain image concept',
+      imageAlt: 'Plain image',
+      body: Array.from({ length: 12 }, () => ({
+        style: 'normal',
+        listItem: null,
+        text: 'word '.repeat(120),
+      })),
+    }
+    setOpenaiFetch(async () => ({
+      ok: true,
+      json: async () => ({
+        output: [{ type: 'message', content: [{ text: JSON.stringify(bareArticle) }] }],
+      }),
+    }))
+    const res = makeRes()
+    await handler(makeReq({ token: 'test-blog-secret' }), res)
+    assert.equal(res._status, 200)
+    assert.equal(createdDoc.primaryKeyword, '')
+    assert.deepEqual(createdDoc.secondaryKeywords, [])
+    assert.equal(createdDoc.author, 'Execora Editorial Team')
+    assert.deepEqual(createdDoc.relatedLinks, [])
+    assert.deepEqual(createdDoc.externalSources, [])
   })
 
   test('image is attached with the uploaded asset reference', async () => {
@@ -1299,7 +1473,7 @@ describe('POST /api/generate-daily-blog article guidance integration', () => {
     settingsDoc = { articleContentPrompt: 'Focus on booking workflows.' }
     const res = makeRes()
     await handler(makeReq({ token: 'test-blog-secret' }), res)
-    assert.ok(capturedArticleUser.includes('1,200 to 1,400 words'))
+    assert.ok(capturedArticleUser.includes('900 to 1,500 words'))
     assert.ok(capturedArticleUser.includes('SEO-optimised'))
   })
 
@@ -1308,7 +1482,7 @@ describe('POST /api/generate-daily-blog article guidance integration', () => {
     const res = makeRes()
     await handler(makeReq({ token: 'test-blog-secret' }), res)
     assert.equal(res._status, 200)
-    assert.ok(capturedArticleUser.includes('1,200 to 1,400 words'))
+    assert.ok(capturedArticleUser.includes('900 to 1,500 words'))
     assert.ok(!capturedArticleUser.includes('EDITORIAL FOCUS:'))
     assert.ok(createdDoc)
   })
@@ -1320,7 +1494,7 @@ describe('POST /api/generate-daily-blog article guidance integration', () => {
     await handler(makeReq({ token: 'test-blog-secret' }), res)
     assert.equal(res._status, 200)
     assert.ok(createdDoc)
-    assert.ok(capturedArticleUser.includes('1,200 to 1,400 words'))
+    assert.ok(capturedArticleUser.includes('900 to 1,500 words'))
     assert.ok(!capturedArticleUser.includes('Should not appear.'))
   })
 

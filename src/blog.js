@@ -94,6 +94,70 @@ function setCanonical(url) {
   link.setAttribute('href', url)
 }
 
+function setArticleJsonLd({ post, pageUrl, date }) {
+  const script = document.querySelector('script[data-article-jsonld]')
+  const payload = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.title,
+    description: post.seoDescription || post.excerpt || '',
+    image: post.image ? imageUrlFor(post.image).width(1200).auto('format').url() : undefined,
+    datePublished: post.publishedDate || date,
+    dateModified: post.publishedDate || date,
+    author: { '@type': 'Organization', name: post.author || 'Execora Editorial Team', url: 'https://www.execora.work' },
+    publisher: { '@type': 'Organization', name: 'Execora', url: 'https://www.execora.work' },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': pageUrl },
+  }
+  if (script) {
+    script.textContent = JSON.stringify(payload)
+    return
+  }
+  const el = document.createElement('script')
+  el.type = 'application/ld+json'
+  el.setAttribute('data-article-jsonld', '')
+  el.textContent = JSON.stringify(payload)
+  document.head.appendChild(el)
+}
+
+function renderRelatedLinks(relatedLinks, externalSources) {
+  const parts = []
+  const internal = (relatedLinks || []).filter((l) => l && l.type !== 'external')
+  const external = (relatedLinks || []).filter((l) => l && l.type === 'external')
+
+  if (internal.length) {
+    const items = internal
+      .map((l) => {
+        const target = /^\//.test(l.target) ? l.target : `/blog/${l.target}`
+        return `<li><a href="${escapeHtml(target)}">${escapeHtml(l.anchor)}</a></li>`
+      })
+      .join('')
+    parts.push(`<aside class="article-related"><h2>Related reading</h2><ul>${items}</ul></aside>`)
+  }
+
+  if (external.length) {
+    const items = external
+      .map(
+        (l) =>
+          `<li><a href="${escapeHtml(l.target)}" target="_blank" rel="noopener">${escapeHtml(l.anchor)}</a></li>`
+      )
+      .join('')
+    parts.push(`<aside class="article-related"><h2>Related resources</h2><ul>${items}</ul></aside>`)
+  }
+
+  const sources = (externalSources || []).filter((s) => s && s.label && s.url)
+  if (sources.length) {
+    const items = sources
+      .map(
+        (s) =>
+          `<li><a href="${escapeHtml(s.url)}" target="_blank" rel="noopener">${escapeHtml(s.label)}</a></li>`
+      )
+      .join('')
+    parts.push(`<aside class="article-related article-sources"><h2>Sources</h2><ul>${items}</ul></aside>`)
+  }
+
+  return parts.join('')
+}
+
 /* ---------- renderers ---------- */
 function cardHtml(post) {
   const url = post.slug?.current ? `/blog/${post.slug.current}` : '#'
@@ -366,6 +430,16 @@ async function renderArticle(slug) {
   setMetaProperty('og:url', pageUrl)
   setCanonical(pageUrl)
   if (imgUrl) setMetaProperty('og:image', imgUrl)
+  setMetaName('author', post.author || 'Execora Editorial Team')
+  if (post.primaryKeyword || (post.secondaryKeywords && post.secondaryKeywords.length)) {
+    const keywords = [post.primaryKeyword, ...(post.secondaryKeywords || [])]
+      .filter(Boolean)
+      .join(', ')
+    setMetaName('keywords', keywords)
+  }
+  setArticleJsonLd({ post, pageUrl, date })
+
+  const relatedLinksHtml = renderRelatedLinks(post.relatedLinks, post.externalSources)
 
   articleEl.innerHTML = `
     <article class="blog-article-inner">
@@ -376,12 +450,15 @@ async function renderArticle(slug) {
         <div class="article-meta">
           ${date ? `<span>${date}</span>` : ''}
           ${post.readingTime ? `<span>${post.readingTime} min read</span>` : ''}
+          ${post.author ? `<span>${escapeHtml(post.author)}</span>` : ''}
         </div>
       </header>
 
       ${imgUrl ? `<figure class="article-hero"><img src="${imgUrl}" alt="${escapeHtml(alt)}" /></figure>` : ''}
 
       <div class="article-body ${imgUrl ? '' : 'no-media'}">${body}</div>
+
+      ${relatedLinksHtml}
 
       <footer class="article-cta reveal">
         <span class="eyebrow">Let’s work together</span>

@@ -328,6 +328,40 @@
   margin: 0 auto 1.6rem;
 }
 
+.article-related {
+  margin: 2.6rem 0 0;
+  padding: 1.6rem 1.8rem;
+  border: 1px solid var(--stone-100);
+  border-radius: var(--radius-soft);
+  background: #fff;
+  font-size: 1rem;
+}
+.article-related + .article-related { margin-top: 1.4rem; }
+.article-related h2 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 0.9rem;
+}
+.article-related ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+.article-related a {
+  color: var(--coral-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 400;
+}
+.article-related a:hover { color: var(--ink); }
+.article-sources a {
+  color: var(--muted);
+  font-weight: 300;
+}
+
 /* ============================================================
    Blog Subscribe
    ============================================================ */
