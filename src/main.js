@@ -83,64 +83,49 @@ revealEls.forEach((el) => {
 })
 
 /* ============================================================
-   Hero - rotating word (found · trusted · chosen · contacted)
+   Hero - subtle parallax on the clay composition (desktop only).
+   Fine pointers and reduced-motion are respected; depth is tiny
+   so nothing looks disjointed on the clay scene.
    ============================================================ */
-function initHeroRotator() {
-  const word = document.querySelector('.hero-word')
-  if (!word) return
+function initHeroParallax() {
+  const scene = document.querySelector('[data-hero-parallax]')
+  if (!scene) return
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return
 
-  const words = ['found', 'trusted', 'chosen', 'contacted']
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  const TYPE_MS = 70        // per character typed
-  const DELETE_MS = 40      // per character deleted
-  const HOLD_MS = 1800      // pause on full word
-  const END_MS = 500        // brief pause after deleting before typing next
-  let index = 0
-  let timer = null
+  const layers = Array.from(scene.querySelectorAll('[data-depth]'))
+  if (layers.length === 0) return
 
-  // Reserve width for the widest word so the headline never reflows.
-  const probe = word.cloneNode(true)
-  probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;left:-9999px;top:0'
-  probe.textContent = words[0]
-  const container = word.parentElement
-  container.appendChild(probe)
-  let maxWidth = 0
-  words.forEach((w) => {
-    probe.textContent = w
-    maxWidth = Math.max(maxWidth, probe.offsetWidth)
-  })
-  probe.remove()
-  word.style.minWidth = maxWidth + 'px'
+  const MAX_X = 6   // px of horizontal drift per unit of depth
+  const MAX_Y = 4   // px of vertical drift per unit of depth
+  let raf = null
 
-  if (reduced) {
-    word.textContent = 'found'
-    return
+  const apply = (x, y) => {
+    const dx = x * MAX_X
+    const dy = y * MAX_Y
+    layers.forEach((el) => {
+      const depth = parseFloat(el.dataset.depth) || 1
+      el.style.transform = `translate3d(${(dx * depth).toFixed(2)}px, ${(dy * depth).toFixed(2)}px, 0)`
+    })
   }
 
-  function type(i, charIndex) {
-    if (charIndex <= words[i].length) {
-      word.textContent = words[i].slice(0, charIndex)
-      timer = setTimeout(() => type(i, charIndex + 1), TYPE_MS)
-    } else {
-      // word complete - hold, then delete
-      timer = setTimeout(() => erase(i, words[i].length), HOLD_MS)
-    }
+  const reset = () => {
+    if (raf) { cancelAnimationFrame(raf); raf = null }
+    layers.forEach((el) => { el.style.transform = '' })
   }
 
-  function erase(i, charIndex) {
-    if (charIndex >= 0) {
-      word.textContent = words[i].slice(0, charIndex)
-      timer = setTimeout(() => erase(i, charIndex - 1), DELETE_MS)
-    } else {
-      const next = (i + 1) % words.length
-      timer = setTimeout(() => type(next, 0), END_MS)
-    }
+  const onMove = (e) => {
+    const nx = (e.clientX / window.innerWidth) * 2 - 1
+    const ny = (e.clientY / window.innerHeight) * 2 - 1
+    if (raf) return
+    raf = requestAnimationFrame(() => { raf = null; apply(nx, ny) })
   }
 
-  // start typing the first word after the hero reveal settles
-  timer = setTimeout(() => type(0, 0), 1400)
+  window.addEventListener('pointermove', onMove, { passive: true })
+  document.addEventListener('visibilitychange', reset)
+  window.addEventListener('blur', reset)
 }
-initHeroRotator()
+initHeroParallax()
 
 const WHATSAPP_NUMBER = '4407345384868'
 const CONTACT_SCRIPT_URL = import.meta.env.NEXT_PUBLIC_CONTACT_SCRIPT_URL
