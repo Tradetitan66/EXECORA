@@ -1,6 +1,6 @@
 import './style.css'
 import { hydrateHomepage } from './sanity/site.js'
-import { initCheckout } from './checkout.js'
+import { initCheckout, openModal } from './checkout.js'
 import { initAnalytics, trackEvent } from './analytics.js'
 
 // Initialise GA4 (single page_view for the homepage).
@@ -174,6 +174,7 @@ phoneInput.addEventListener('input', validatePhone)
 
 // Store the details so the WhatsApp button can open with them on click.
 let savedData = null
+let prototypeFlow = false
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault()
@@ -183,6 +184,7 @@ form.addEventListener('submit', async (e) => {
     return
   }
   const data = Object.fromEntries(new FormData(form).entries())
+  const isPrototype = prototypeFlow
 
   note.textContent = 'Saving your details…'
   note.style.color = '#78716c'
@@ -222,6 +224,14 @@ form.addEventListener('submit', async (e) => {
 
   // Fire as a confirmation/conversion once - no personal data is sent.
   trackEvent('generate_lead')
+
+  // If this was a prototype flow, open the checkout modal after a short delay.
+  if (isPrototype) {
+    setTimeout(() => {
+      openModal()
+    }, 600)
+    prototypeFlow = false
+  }
 })
 
 successWaBtn.addEventListener('click', () => {
@@ -237,9 +247,11 @@ document.querySelectorAll('[data-focus-form]').forEach((btn) => {
     if (plan) {
       const planField = document.getElementById('f-plan')
       if (planField) planField.value = plan
+      prototypeFlow = true
     } else {
       const planField = document.getElementById('f-plan')
       if (planField && planField.value === '') planField.value = 'General enquiry'
+      prototypeFlow = false
     }
     const nameField = document.getElementById('f-name')
     form.scrollIntoView({ behavior: 'smooth', block: 'center' })

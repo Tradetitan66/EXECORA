@@ -186,6 +186,12 @@ section {
 .accent {
   color: var(--coral-ink);
 }
+.accent-gold {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
 
 /* ============================================================
    Buttons
@@ -1755,6 +1761,65 @@ body.modal-open { overflow: hidden; }
   .section-title { font-size: 2rem; }
 
   .step { padding: 1.6rem 1.4rem 1.5rem; }
+
+  .biz-grid { gap: 0.8rem; }
+  .biz-card {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: center;
+    column-gap: 0.85rem;
+    padding: 1.05rem 1.05rem 1.15rem;
+    border-radius: 18px;
+  }
+  .biz-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    margin-bottom: 0;
+  }
+  .biz-icon svg { width: 22px; height: 22px; }
+  .biz-title {
+    font-size: 1rem;
+    line-height: 1.2;
+    margin-bottom: 0;
+    align-self: center;
+  }
+  .biz-body {
+    grid-column: 1 / -1;
+    font-size: 0.86rem;
+    line-height: 1.45;
+    margin-top: 0.7rem;
+  }
+
+  .journey { gap: 0.8rem; }
+  .journey-item {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    align-items: center;
+    column-gap: 0.85rem;
+    text-align: left;
+    padding: 1rem 1.05rem;
+    border-radius: 18px;
+  }
+  .journey-item::after { display: none; }
+  .journey-dot {
+    width: 40px;
+    height: 40px;
+    margin: 0;
+    font-size: 0.95rem;
+  }
+  .journey-title {
+    font-size: 1rem;
+    line-height: 1.2;
+    margin-bottom: 0;
+    align-self: center;
+  }
+  .journey-body {
+    grid-column: 1 / -1;
+    font-size: 0.86rem;
+    line-height: 1.45;
+    margin-top: 0.7rem;
+  }
 
   .faq-item summary { padding: 1.2rem 1.2rem; }
   .faq-body { padding: 0 1.2rem 1.2rem; }
