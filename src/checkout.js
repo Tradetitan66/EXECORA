@@ -52,6 +52,8 @@ export function initCheckout() {
   const ctas = document.querySelectorAll('[data-payment-cta]')
   ctas.forEach((btn) => {
     btn.addEventListener('click', () => {
+      const planInput = modal.querySelector('input[name="plan"]')
+      if (planInput) planInput.value = btn.getAttribute('data-plan') || ''
       openModal()
     })
   })

@@ -52,6 +52,7 @@
           <a href="#showcase">Examples</a>
           <a href="#pricing">Pricing</a>
           <a href="#why-execora">About</a>
+          <a href="#contact">Contact</a>
           <button class="nav-cta" type="button" data-payment-cta>Get my £5 prototype</button>
         </nav>
         <button
@@ -434,10 +435,10 @@
               <tr>
                 <th scope="row">Get started</th>
                 <td>
-                  <a class="btn btn-coral plan-cta" href="#contact" data-focus-form data-plan="Essential">Get my £5 prototype</a>
+                  <button class="btn btn-coral plan-cta" type="button" data-payment-cta data-plan="Essential">Get my £5 prototype</button>
                 </td>
                 <td class="is-featured">
-                  <a class="btn btn-coral plan-cta" href="#contact" data-focus-form data-plan="Growth">Get my £5 prototype</a>
+                  <button class="btn btn-coral plan-cta" type="button" data-payment-cta data-plan="Growth">Get my £5 prototype</button>
                 </td>
               </tr>
             </tbody>
@@ -461,7 +462,7 @@
                 <li>Contact form &amp; WhatsApp</li>
                 <li>Basic on-page SEO</li>
               </ul>
-              <a class="btn btn-coral plan-cta" href="#contact" data-focus-form data-plan="Essential">Get my £5 prototype</a>
+              <button class="btn btn-coral plan-cta" type="button" data-payment-cta data-plan="Essential">Get my £5 prototype</button>
             </article>
 
             <article class="plan-card-mobile is-featured">
@@ -480,7 +481,7 @@
                 <li>Google Analytics &amp; Search Console</li>
                 <li>Enquiry &amp; conversion tracking</li>
               </ul>
-              <a class="btn btn-coral plan-cta" href="#contact" data-focus-form data-plan="Growth">Get my £5 prototype</a>
+              <button class="btn btn-coral plan-cta" type="button" data-payment-cta data-plan="Growth">Get my £5 prototype</button>
             </article>
           </div>
         </div>
@@ -820,6 +821,7 @@
         </div>
 
         <form class="checkout-form" novalidate>
+          <input type="hidden" name="plan" />
           <div class="form-row">
             <div class="field">
               <label for="c-name">Name <span class="req">*</span></label>

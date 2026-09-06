@@ -1314,13 +1314,17 @@ section {
   max-width: 720px;
   margin-inline: auto;
   text-align: center;
-  color: var(--stone-400);
-  font-size: 0.8rem;
+  color: var(--muted);
+  font-size: 0.9rem;
   line-height: 1.6;
-  font-weight: 300;
+  font-weight: 400;
   padding-top: 0.4rem;
 }
-.pricing-note p + p { margin-top: 0.5rem; }
+.pricing-note + .pricing-note {
+  margin-top: 0.75rem;
+  font-weight: 500;
+  color: var(--ink);
+}
 
 /* ============================================================
    FAQs (CSS-only accordion)

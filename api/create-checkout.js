@@ -47,6 +47,7 @@ export default async function handler(req, res) {
     social = '',
     style = '',
     notes = '',
+    plan = '',
   } = body
 
   const fullname = [name, business].filter(Boolean).join(' ').trim()
@@ -63,6 +64,7 @@ export default async function handler(req, res) {
   if (social) metadata.social = social
   if (style) metadata.style = style
   if (notes) metadata.notes = notes
+  if (plan) metadata.plan = plan
 
   try {
     const session = await stripe.checkout.sessions.create({
