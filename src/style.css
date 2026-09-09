@@ -1703,6 +1703,7 @@ section {
 }
 .checkout-title .cursive { font-size: 1.1em; }
 .checkout-sub { color: var(--muted); font-weight: 300; font-size: 1rem; max-width: 44ch; margin-inline: auto; }
+.checkout-form .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
 .checkout-form .field { text-align: left; }
 body.modal-open { overflow: hidden; }
 
@@ -1953,6 +1954,7 @@ body.modal-open { overflow: hidden; }
   .contact-inner { grid-template-columns: 1fr; text-align: center; max-width: 620px; margin-inline: auto; }
   .enquiry-form .form-row { grid-template-columns: 1fr; }
   .enquiry-form .field { text-align: left; }
+  .checkout-form .form-row { grid-template-columns: 1fr; }
   .contact-copy { text-align: center; }
   .contact-copy .eyebrow { justify-content: center; }
 
