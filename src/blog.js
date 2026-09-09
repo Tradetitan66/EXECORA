@@ -121,30 +121,35 @@ function setArticleJsonLd({ post, pageUrl, date }) {
 
 function renderRelatedLinks(relatedLinks, externalSources) {
   const parts = []
+  const isLocalPath = (target) => /^\/blog\/[\w-]+$/i.test(target)
+  const isExternalUrl = (target) => /^https?:\/\//i.test(target)
+  const isSelfDomain = (target) => /^https?:\/\/(www\.)?execora\.work/i.test(target)
+
   const internal = (relatedLinks || []).filter((l) => l && l.type !== 'external')
   const external = (relatedLinks || []).filter((l) => l && l.type === 'external')
 
   if (internal.length) {
     const items = internal
-      .map((l) => {
-        const target = /^\//.test(l.target) ? l.target : `/blog/${l.target}`
-        return `<li><a href="${escapeHtml(target)}">${escapeHtml(l.anchor)}</a></li>`
-      })
+      .filter((l) => l.anchor && isLocalPath(l.target))
+      .map((l) => `<li><a href="${escapeHtml(l.target)}">${escapeHtml(l.anchor)}</a></li>`)
       .join('')
-    parts.push(`<aside class="article-related"><h2>Related reading</h2><ul>${items}</ul></aside>`)
+    if (items) parts.push(`<aside class="article-related"><h2>Related reading</h2><ul>${items}</ul></aside>`)
   }
 
   if (external.length) {
     const items = external
+      .filter((l) => l.anchor && isExternalUrl(l.target) && !isSelfDomain(l.target))
       .map(
         (l) =>
           `<li><a href="${escapeHtml(l.target)}" target="_blank" rel="noopener">${escapeHtml(l.anchor)}</a></li>`
       )
       .join('')
-    parts.push(`<aside class="article-related"><h2>Related resources</h2><ul>${items}</ul></aside>`)
+    if (items) parts.push(`<aside class="article-related"><h2>Related resources</h2><ul>${items}</ul></aside>`)
   }
 
-  const sources = (externalSources || []).filter((s) => s && s.label && s.url)
+  const sources = (externalSources || []).filter(
+    (s) => s && s.label && s.url && isExternalUrl(s.url) && !isSelfDomain(s.url)
+  )
   if (sources.length) {
     const items = sources
       .map(

@@ -16,6 +16,7 @@ import {
   buildArticlePrompt,
   buildDraftDocument,
   getArticleJSONSchema,
+  sanitizeInternalLinks,
   ALLOWED_CATEGORIES,
 } from './generate-daily-blog.js'
 
@@ -646,12 +647,25 @@ describe('buildArticlePrompt', () => {
     const prompt = buildArticlePrompt({ titles: [], categories: [] }, {})
     assert.ok(prompt.user.includes('INTERNAL LINKS:'))
     assert.ok(prompt.user.includes('internalLinks'))
+    assert.ok(prompt.user.includes('MUST be one of the /blog/<slug> values'))
+    assert.ok(!prompt.user.includes('/website-design'))
+    assert.ok(!prompt.user.includes('/local-seo'))
     assert.ok(prompt.user.includes('SOURCE QUALITY:'))
     assert.ok(prompt.user.includes('GOV.UK'))
     assert.ok(prompt.user.includes('EXECORA COMMERCIAL RELEVANCE:'))
     assert.ok(prompt.user.includes('no more than twice'))
     assert.ok(prompt.user.includes('CONTENT MIX:'))
     assert.ok(prompt.user.includes('NICHE ROTATION:'))
+  })
+
+  test('lists real internal link targets from published slugs', () => {
+    const prompt = buildArticlePrompt(
+      { titles: [], categories: [], slugs: ['local-seo-guide', 'plumber-websites'] },
+      {}
+    )
+    assert.ok(prompt.user.includes('REAL INTERNAL LINK TARGETS'))
+    assert.ok(prompt.user.includes('/blog/local-seo-guide'))
+    assert.ok(prompt.user.includes('/blog/plumber-websites'))
   })
 
   test('includes a crediting authors instruction', () => {
@@ -762,8 +776,8 @@ describe('getRecentTopics', () => {
         capturedQuery = query
         capturedParams.params = params
         return [
-          { title: 'Post A', category: 'Website Tips' },
-          { title: 'Post B', category: 'Google & SEO' },
+          { title: 'Post A', category: 'Website Tips', slug: { current: 'post-a' } },
+          { title: 'Post B', category: 'Google & SEO', slug: { current: 'post-b' } },
         ]
       },
     }
@@ -772,13 +786,57 @@ describe('getRecentTopics', () => {
 
     assert.equal(
       capturedQuery,
-      `*[_type == "blogPost"] | order(publishedDate desc)[0...60]{title, category}`
+      `*[_type == "blogPost"] | order(publishedDate desc)[0...60]{title, category, slug}`
     )
     assert.equal(
       result.titles.join(','),
       'Post A,Post B'
     )
     assert.equal(result.categories.join(','), 'Website Tips,Google & SEO')
+    assert.equal(result.slugs.join(','), 'post-a,post-b')
+  })
+})
+
+describe('sanitizeInternalLinks', () => {
+  test('keeps internal links that match real slugs and valid external URLs', () => {
+    const slugs = ['local-seo-guide', 'plumber-websites']
+    const links = [
+      { anchor: 'Local SEO guide', target: '/blog/local-seo-guide', type: 'internal' },
+      { anchor: 'Plumber websites', target: '/blog/plumber-websites', type: 'internal' },
+      { anchor: 'Google help', target: 'https://support.google.com/business', type: 'external' },
+    ]
+    assert.deepEqual(sanitizeInternalLinks(links, slugs), links)
+  })
+
+  test('drops internal targets that are not real published posts', () => {
+    const slugs = ['local-seo-guide']
+    const links = [
+      { anchor: 'Good', target: '/blog/local-seo-guide', type: 'internal' },
+      { anchor: 'Service page', target: '/website-design', type: 'internal' },
+      { anchor: 'Missing slug', target: '/blog/nope', type: 'internal' },
+      { anchor: 'Bare slug', target: 'local-seo-guide', type: 'internal' },
+    ]
+    assert.deepEqual(sanitizeInternalLinks(links, slugs), [
+      { anchor: 'Good', target: '/blog/local-seo-guide', type: 'internal' },
+    ])
+  })
+
+  test('drops malformed external links and links back to the site itself', () => {
+    const links = [
+      { anchor: 'Good', target: 'https://ico.org.uk/guidance', type: 'external' },
+      { anchor: 'Relative', target: 'support.google.com', type: 'external' },
+      { anchor: 'Self', target: 'https://www.execora.work/blog/x', type: 'external' },
+      { anchor: 'No target', target: '', type: 'external' },
+    ]
+    assert.deepEqual(sanitizeInternalLinks(links, []), [
+      { anchor: 'Good', target: 'https://ico.org.uk/guidance', type: 'external' },
+    ])
+  })
+
+  test('returns an empty array for non-array input', () => {
+    assert.deepEqual(sanitizeInternalLinks(undefined, []), [])
+    assert.deepEqual(sanitizeInternalLinks(null, []), [])
+    assert.deepEqual(sanitizeInternalLinks('junk', []), [])
   })
 })
 
@@ -1091,7 +1149,7 @@ describe('POST /api/generate-daily-blog happy path', () => {
     author: 'Execora Editorial Team',
     internalLinks: [
       { anchor: 'local SEO for small business', target: '/blog/local-seo-small-business', type: 'internal' },
-      { anchor: 'Google Business Profile guide', target: '/google-business-profile', type: 'internal' },
+      { anchor: 'Google Business Profile guide', target: '/blog/google-business-profile-guide', type: 'internal' },
     ],
     externalSources: [
       { label: 'Google Business Profile help', url: 'https://support.google.com/business' },
@@ -1114,7 +1172,10 @@ describe('POST /api/generate-daily-blog happy path', () => {
     setClientFactory(({ projectId, dataset, token }) => ({
       fetch: async (query, params) => {
         if (params && params.id) return null
-        if (query.includes('_type == "blogPost"')) return []
+        if (query.includes('_type == "blogPost"')) return [
+          { title: 'Local SEO for Small Business', category: 'Google & SEO', slug: { current: 'local-seo-small-business' } },
+          { title: 'Google Business Profile guide', category: 'Google & SEO', slug: { current: 'google-business-profile-guide' } },
+        ]
         return null
       },
       create: async (doc) => { createdDoc = doc; return doc },
@@ -1188,7 +1249,7 @@ describe('POST /api/generate-daily-blog happy path', () => {
     assert.equal(createdDoc.author, 'Execora Editorial Team')
     assert.deepEqual(createdDoc.relatedLinks, [
       { anchor: 'local SEO for small business', target: '/blog/local-seo-small-business', type: 'internal' },
-      { anchor: 'Google Business Profile guide', target: '/google-business-profile', type: 'internal' },
+      { anchor: 'Google Business Profile guide', target: '/blog/google-business-profile-guide', type: 'internal' },
     ])
     assert.deepEqual(createdDoc.externalSources, [
       { label: 'Google Business Profile help', url: 'https://support.google.com/business' },
@@ -1225,6 +1286,33 @@ describe('POST /api/generate-daily-blog happy path', () => {
     assert.equal(createdDoc.author, 'Execora Editorial Team')
     assert.deepEqual(createdDoc.relatedLinks, [])
     assert.deepEqual(createdDoc.externalSources, [])
+  })
+
+  test('drops internal links that are not real published posts', async () => {
+    const hallucinatedArticle = {
+      ...sampleArticle,
+      internalLinks: [
+        { anchor: 'local SEO for small business', target: '/blog/local-seo-small-business', type: 'internal' },
+        { anchor: 'Website design', target: '/website-design', type: 'internal' },
+        { anchor: 'Local SEO', target: '/local-seo', type: 'internal' },
+        { anchor: 'A made up post', target: '/blog/does-not-exist', type: 'internal' },
+        { anchor: 'External resource', target: 'https://support.google.com/business', type: 'external' },
+        { anchor: 'Relative junk', target: 'website-design', type: 'external' },
+      ],
+    }
+    setOpenaiFetch(async () => ({
+      ok: true,
+      json: async () => ({
+        output: [{ type: 'message', content: [{ text: JSON.stringify(hallucinatedArticle) }] }],
+      }),
+    }))
+    const res = makeRes()
+    await handler(makeReq({ token: 'test-blog-secret' }), res)
+    assert.equal(res._status, 200)
+    assert.deepEqual(createdDoc.relatedLinks, [
+      { anchor: 'local SEO for small business', target: '/blog/local-seo-small-business', type: 'internal' },
+      { anchor: 'External resource', target: 'https://support.google.com/business', type: 'external' },
+    ])
   })
 
   test('image is attached with the uploaded asset reference', async () => {

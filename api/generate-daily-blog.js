@@ -161,11 +161,12 @@ export function countWords(text) {
 
 export async function getRecentTopics(client) {
   const posts = await client.fetch(
-    `*[_type == "blogPost"] | order(publishedDate desc)[0...60]{title, category}`
+    `*[_type == "blogPost"] | order(publishedDate desc)[0...60]{title, category, slug}`
   )
   return {
     titles: posts.map((p) => p.title).filter(Boolean),
     categories: posts.map((p) => p.category).filter(Boolean),
+    slugs: posts.map((p) => p.slug?.current).filter(Boolean),
   }
 }
 
@@ -252,6 +253,13 @@ export function buildArticlePrompt(recentTopics, settings = null) {
     ? `\n\nRecent category distribution (rotate naturally, do not over-use any single category):\n${recentTopics.categories.join(', ')}`
     : ''
 
+  // Real internal link targets the model is allowed to reference. These are the
+  // slugs of currently published blog posts, so internal links never 404.
+  const recentSlugs = recentTopics.slugs || []
+  const realTargets = recentSlugs.length
+    ? `\n\nREAL INTERNAL LINK TARGETS (only ever use targets from this list):\n${recentSlugs.map((s, i) => `${i + 1}. /blog/${s}`).join('\n')}`
+    : ''
+
   // Owner-supplied guidance supplements (never replaces) the hard-coded rules.
   const guidance = []
   if (settings && settings.articleContentPrompt) {
@@ -303,11 +311,12 @@ export function buildArticlePrompt(recentTopics, settings = null) {
       'Do not use em dashes anywhere in the article.',
       topicsList,
       categoryHint,
+      realTargets,
       'SEO SEARCH INTENT:\nChoose ONE primary keyword and 3 to 6 closely related secondary terms, and record them in primaryKeyword and secondaryKeywords. Prefer specific, problem-based queries UK local business owners realistically search for. Record the dominant search intent in the searchIntent field using one of: informational, commercial investigation, local or transactional. Record the relevant topic cluster in contentCluster. Use keywords naturally and never force exact-match keywords.',
       'TOPIC CLUSTERS:\nBuild topical authority rather than producing unrelated daily articles. Rotate naturally between these clusters: Website Design for Local Businesses, Local SEO, Google Business Profile, Website Conversion, Lead Generation, Trades Websites, Customer Experience, Business Systems. Support and reinforce existing clusters where possible.',
       'GEOGRAPHY:\nExecora\'s primary local market is ' + GEOGRAPHY_PRIMARY + ', with secondary areas ' + GEOGRAPHY_SECONDARY + ', plus wider Scotland for informational topics. Use a location naturally only when it genuinely adds relevance; never stuff location keywords. Record any location in the targetLocation field.',
       'ANSWER-FIRST WRITING:\nWhenever an H2 or H3 asks a question, answer it directly within the first 1 to 3 sentences before expanding. Write definitions, explanations and recommendations so they make sense when read independently and are quotable by search engines and AI systems. Do not deliberately break content into unnatural chunks for AI systems.',
-      'INTERNAL LINKS:\nSuggest 2 to 4 relevant internal links using the internalLinks array. Each entry needs anchor text, a target (Execora service page or related blog article, for example /website-design, /local-seo or /blog/slug) and type "internal". Use concise descriptive natural anchor text. Never use generic anchors such as "click here", "learn more" or "read more".',
+      'INTERNAL LINKS:\nSuggest 2 to 4 relevant internal links using the internalLinks array. Each entry needs anchor text, a target, and type "internal". The target MUST be one of the /blog/<slug> values listed under REAL INTERNAL LINK TARGETS (without inventing, modifying or adding prefixes to them). If none of the listed articles is genuinely relevant, return an empty internalLinks array rather than inventing a target. Use concise descriptive natural anchor text. Never use generic anchors such as "click here", "learn more" or "read more".',
       'SOURCE QUALITY:\nWhen making a factual claim that benefits from authoritative evidence, use the externalSources array with a source label and URL, preferring trustworthy UK or first-party sources such as Google Search Central, Google Business Profile documentation, GOV.UK, the Scottish Government, ONS or ICO. Never invent citations or add links for their own sake.',
       keywordList,
       'EXECORA COMMERCIAL RELEVANCE:\nEducate first. Where genuinely relevant near the end, briefly explain how professional website design, local SEO or enquiry optimisation can help solve the problem. Mention Execora no more than twice, and never force Execora into a topic where it adds no value.',
@@ -522,6 +531,31 @@ export function validateArticle(article) {
   }
 
   return { ok: true }
+}
+
+// ---------------------------------------------------------------------------
+// Link sanitation
+// ---------------------------------------------------------------------------
+
+// Keep only internal links that point at a real published blog post, and only
+// external links that are genuine http(s) URLs (not the site itself). Anything
+// else is a hallucinated target and is silently dropped so drafts never ship
+// broken links. Run after validation, before drafting.
+export function sanitizeInternalLinks(internalLinks, slugs) {
+  if (!Array.isArray(internalLinks)) return []
+  const valid = new Set((slugs || []).map((s) => `/blog/${s}`))
+  return internalLinks.filter((link) => {
+    if (!link || typeof link !== 'object') return false
+    if (typeof link.anchor !== 'string' || typeof link.target !== 'string') return false
+    if (link.type !== 'external') {
+      return valid.has(link.target)
+    }
+    return (
+      /^https?:\/\/[^/]+/i.test(link.target) &&
+      !link.target.startsWith('https://www.execora.work') &&
+      !link.target.startsWith('https://execora.work')
+    )
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -936,6 +970,12 @@ export default async function handler(req, res) {
   if (!validation.ok) {
     console.error('[generate-daily-blog] stage=validation error:', validation.error)
     return res.status(502).json({ error: 'Generated article failed validation' })
+  }
+
+  // Only keep internal links that point at real published posts and external
+  // links that are genuine http(s) URLs, so drafts never ship dead links.
+  if (Array.isArray(article.internalLinks)) {
+    article.internalLinks = sanitizeInternalLinks(article.internalLinks, recentTopics.slugs)
   }
 
   // --- Generate image ---

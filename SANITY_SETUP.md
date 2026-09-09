@@ -518,8 +518,10 @@ Blog post → SEO** tab and rendered on the live article page):
 - `targetLocation` — location the article is relevant to (e.g. Edinburgh),
   or empty for non-local topics.
 - `author` — defaults to **Execora Editorial Team**.
-- `relatedLinks` — 2-4 suggested internal/external links. Internal targets are
-  rendered as `/blog/...` links; external targets open in a new tab.
+- `relatedLinks` — 2-4 suggested internal/external links. **Internal targets must
+  be a real published `/blog/<slug>`** — the automation only accepts links that
+  point at an existing post, so related links never 404. External targets open
+  in a new tab.
 - `externalSources` — authoritative UK/first-party sources (Google, GOV.UK,
   Scottish Government, ONS, ICO).
 
