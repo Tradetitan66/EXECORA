@@ -161,12 +161,20 @@ export function countWords(text) {
 
 export async function getRecentTopics(client) {
   const posts = await client.fetch(
-    `*[_type == "blogPost"] | order(publishedDate desc)[0...60]{title, category, slug}`
+    `*[_type == "blogPost"] | order(publishedDate desc)[0...60]{title, category, slug, externalSources}`
   )
+  const recentUrls = []
+  for (const p of posts) {
+    for (const s of p.externalSources || []) {
+      const url = s && typeof s.url === 'string' ? s.url.trim() : ''
+      if (url && !recentUrls.includes(url)) recentUrls.push(url)
+    }
+  }
   return {
     titles: posts.map((p) => p.title).filter(Boolean),
     categories: posts.map((p) => p.category).filter(Boolean),
     slugs: posts.map((p) => p.slug?.current).filter(Boolean),
+    sourceUrls: recentUrls,
   }
 }
 
@@ -244,6 +252,27 @@ export const KEYWORD_ARCHITECTURE = [
 const GEOGRAPHY_PRIMARY = 'Edinburgh'
 const GEOGRAPHY_SECONDARY = 'Penicuik, Musselburgh, Dalkeith, Loanhead, Livingston, Midlothian, East Lothian and West Lothian'
 
+// Pick the least-used article category from the recent flattened list so the
+// automation rotates evenly across all categories instead of stacking one.
+// Ties break in the order categories are listed (deterministic for tests).
+export function pickCategory(recentCategories = []) {
+  const categories = recentCategories || []
+  const counts = {}
+  for (const cat of categories) {
+    if (ALLOWED_CATEGORIES.includes(cat)) counts[cat] = (counts[cat] || 0) + 1
+  }
+  let chosen = ALLOWED_CATEGORIES[0]
+  let chosenCount = Infinity
+  for (const cat of ALLOWED_CATEGORIES) {
+    const n = counts[cat] || 0
+    if (n < chosenCount) {
+      chosen = cat
+      chosenCount = n
+    }
+  }
+  return chosen
+}
+
 export function buildArticlePrompt(recentTopics, settings = null) {
   const topicsList = recentTopics.titles.length
     ? `\n\nRecent blog posts (DO NOT repeat, rewrite or closely overlap these topics):\n${recentTopics.titles.map((t, i) => `${i + 1}. ${t}`).join('\n')}`
@@ -258,6 +287,19 @@ export function buildArticlePrompt(recentTopics, settings = null) {
   const recentSlugs = recentTopics.slugs || []
   const realTargets = recentSlugs.length
     ? `\n\nREAL INTERNAL LINK TARGETS (only ever use targets from this list):\n${recentSlugs.map((s, i) => `${i + 1}. /blog/${s}`).join('\n')}`
+    : ''
+
+  // Strong category rotation: assign the least-used category so a single
+  // category never dominates the blog.
+  const preferredCategory = pickCategory(recentTopics.categories || [])
+  const preferredCategoryBlock = `\n\nPREFERRED CATEGORY:\n${preferredCategory}\nWrite THIS article so it genuinely belongs to the preferred category above. Choose the topic, primary keyword, content cluster and examples to fit it, and set the category field to exactly this value. Only deviate if no angle fits the preferred category - then still pick one of the five allowed categories, but avoid repeating the same category in consecutive posts.`
+
+  // Curated, link-checked sources the article may cite; never invent or edit URLs.
+  const sourceBankBlock = `\n\nSOURCE BANK (only ever cite sources from this list):\n${SOURCE_BANK.map((s, i) => `${i + 1}. ${s.label} — ${s.url}`).join('\n')}`
+
+  const recentSourceUrls = recentTopics.sourceUrls || []
+  const recentlyUsedBlock = recentSourceUrls.length
+    ? `\n\nRECENTLY USED SOURCES (do not cite any of these again in this article):\n${recentSourceUrls.join('\n')}`
     : ''
 
   // Owner-supplied guidance supplements (never replaces) the hard-coded rules.
@@ -312,12 +354,15 @@ export function buildArticlePrompt(recentTopics, settings = null) {
       topicsList,
       categoryHint,
       realTargets,
+      preferredCategoryBlock,
+      sourceBankBlock,
+      recentlyUsedBlock,
       'SEO SEARCH INTENT:\nChoose ONE primary keyword and 3 to 6 closely related secondary terms, and record them in primaryKeyword and secondaryKeywords. Prefer specific, problem-based queries UK local business owners realistically search for. Record the dominant search intent in the searchIntent field using one of: informational, commercial investigation, local or transactional. Record the relevant topic cluster in contentCluster. Use keywords naturally and never force exact-match keywords.',
       'TOPIC CLUSTERS:\nBuild topical authority rather than producing unrelated daily articles. Rotate naturally between these clusters: Website Design for Local Businesses, Local SEO, Google Business Profile, Website Conversion, Lead Generation, Trades Websites, Customer Experience, Business Systems. Support and reinforce existing clusters where possible.',
       'GEOGRAPHY:\nExecora\'s primary local market is ' + GEOGRAPHY_PRIMARY + ', with secondary areas ' + GEOGRAPHY_SECONDARY + ', plus wider Scotland for informational topics. Use a location naturally only when it genuinely adds relevance; never stuff location keywords. Record any location in the targetLocation field.',
       'ANSWER-FIRST WRITING:\nWhenever an H2 or H3 asks a question, answer it directly within the first 1 to 3 sentences before expanding. Write definitions, explanations and recommendations so they make sense when read independently and are quotable by search engines and AI systems. Do not deliberately break content into unnatural chunks for AI systems.',
       'INTERNAL LINKS:\nSuggest 2 to 4 relevant internal links using the internalLinks array. Each entry needs anchor text, a target, and type "internal". The target MUST be one of the /blog/<slug> values listed under REAL INTERNAL LINK TARGETS (without inventing, modifying or adding prefixes to them). If none of the listed articles is genuinely relevant, return an empty internalLinks array rather than inventing a target. Use concise descriptive natural anchor text. Never use generic anchors such as "click here", "learn more" or "read more".',
-      'SOURCE QUALITY:\nWhen making a factual claim that benefits from authoritative evidence, use the externalSources array with a source label and URL, preferring trustworthy UK or first-party sources such as Google Search Central, Google Business Profile documentation, GOV.UK, the Scottish Government, ONS or ICO. Never invent citations or add links for their own sake.',
+      'SOURCE QUALITY:\nWhen making a factual claim that benefits from authoritative evidence, use the externalSources array with a source label and URL. Cite ONLY sources from the SOURCE BANK list above, using the exact URL shown. Do not invent, shorten, or edit those URLs, and do not add any other website. Never cite a URL from RECENTLY USED SOURCES. If no bank source genuinely supports a claim, omit the source. Prefer 1 to 3 genuinely relevant sources over padding.',
       keywordList,
       'EXECORA COMMERCIAL RELEVANCE:\nEducate first. Where genuinely relevant near the end, briefly explain how professional website design, local SEO or enquiry optimisation can help solve the problem. Mention Execora no more than twice, and never force Execora into a topic where it adds no value.',
       'CONTENT MIX:\nRotate article types to cover education, problem/solution, and commercial investigation. Include decision-oriented topics where genuinely useful, such as how much a small business website costs in the UK, Wix vs a professional website, whether tradespeople still need a website if they have a Facebook page, Google Business Profile vs a website, or whether a small business should pay monthly for a website.',
@@ -550,11 +595,7 @@ export function sanitizeInternalLinks(internalLinks, slugs) {
     if (link.type !== 'external') {
       return valid.has(link.target)
     }
-    return (
-      /^https?:\/\/[^/]+/i.test(link.target) &&
-      !link.target.startsWith('https://www.execora.work') &&
-      !link.target.startsWith('https://execora.work')
-    )
+    return SOURCE_BANK_NORMALISED.has(normaliseSourceUrl(link.target))
   })
 }
 
@@ -586,6 +627,55 @@ const MAX_ARTICLE_WORDS = 1600
 // to the env-var default so an invalid model can never break generation.
 const ALLOWED_TEXT_MODELS = ['gpt-5-mini', 'gpt-5.4', 'gpt-5.4-mini', 'gpt-4o-mini']
 const ALLOWED_IMAGE_MODELS = ['gpt-image-1-mini', 'gpt-image-1']
+
+// Curated, link-checked sources the article may cite in externalSources and as
+// external-type relatedLinks. Restricting to this bank guarantees cited sources
+// never 404 and stops the model from inventing (or endlessly repeating) URLs.
+// Only add URLs that load successfully; keep labels short and descriptive.
+export const SOURCE_BANK = [
+  { label: 'Google Business Profile help', url: 'https://support.google.com/business/' },
+  { label: 'Google Search Central: SEO starter guide', url: 'https://developers.google.com/search/docs/fundamentals/seo-starter-guide' },
+  { label: 'Google Search Central: creating helpful content', url: 'https://developers.google.com/search/docs/fundamentals/creating-helpful-content' },
+  { label: 'Google Search Central: title links', url: 'https://developers.google.com/search/docs/appearance/title-link' },
+  { label: 'ICO: advice for small organisations', url: 'https://ico.org.uk/for-organisations/advice-for-small-organisations/' },
+  { label: 'ICO: UK GDPR guidance and resources', url: 'https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/' },
+  { label: 'ICO: data protection principles', url: 'https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/data-protection-principles/' },
+  { label: 'GOV.UK: set up a business', url: 'https://www.gov.uk/set-up-business' },
+  { label: 'GOV.UK: business finance support finder', url: 'https://www.gov.uk/business-finance-support-finder' },
+  { label: 'GOV.UK: employing staff', url: 'https://www.gov.uk/employing-staff' },
+  { label: 'GOV.UK: accessibility requirements for public sector websites', url: 'https://www.gov.uk/guidance/accessibility-requirements-for-public-sector-websites-and-apps' },
+  { label: 'GOV.UK Service Manual: making your service accessible', url: 'https://www.gov.uk/service-manual/helping-people-to-use-your-service/making-your-service-accessible-an-introduction' },
+  { label: 'Scottish Government: publications', url: 'https://www.gov.scot/publications/' },
+  { label: 'ONS: business activity, size and location', url: 'https://www.ons.gov.uk/businessindustryandtrade/business/activitysizeandlocation' },
+  { label: 'ONS: employment and labour market', url: 'https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork' },
+]
+
+// Normalised form (lowercase, trailing slash stripped) used for bank matching.
+function normaliseSourceUrl(url) {
+  return String(url || '').trim().replace(/\/+$/, '').toLowerCase()
+}
+
+// Set of normalised bank URLs for O(1) membership checks.
+const SOURCE_BANK_NORMALISED = new Set(SOURCE_BANK.map((s) => normaliseSourceUrl(s.url)))
+
+// Keep only external sources that exist in the verified bank, have a label and
+// url, are not duplicated, and have not already been cited in recent posts.
+export function sanitizeExternalSources(sources, usedUrls = []) {
+  if (!Array.isArray(sources)) return []
+  const recentlyUsed = new Set(Array.isArray(usedUrls) ? usedUrls.map(normaliseSourceUrl) : [])
+  const seen = new Set()
+  const kept = []
+  for (const s of sources) {
+    if (!s || typeof s !== 'object' || typeof s.label !== 'string' || !s.label || typeof s.url !== 'string') continue
+    const norm = normaliseSourceUrl(s.url)
+    if (!SOURCE_BANK_NORMALISED.has(norm)) continue
+    if (recentlyUsed.has(norm)) continue
+    if (seen.has(norm)) continue
+    seen.add(norm)
+    kept.push({ label: s.label, url: s.url })
+  }
+  return kept
+}
 
 /**
  * Resolves the article model: prefer an allowlisted Sanity value, else the
@@ -973,9 +1063,13 @@ export default async function handler(req, res) {
   }
 
   // Only keep internal links that point at real published posts and external
-  // links that are genuine http(s) URLs, so drafts never ship dead links.
+  // links (or external sources) that exist in the verified SOURCE_BANK, so
+  // drafts never ship dead or repeating links.
   if (Array.isArray(article.internalLinks)) {
     article.internalLinks = sanitizeInternalLinks(article.internalLinks, recentTopics.slugs)
+  }
+  if (Array.isArray(article.externalSources)) {
+    article.externalSources = sanitizeExternalSources(article.externalSources, recentTopics.sourceUrls)
   }
 
   // --- Generate image ---

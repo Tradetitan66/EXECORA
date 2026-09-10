@@ -520,10 +520,21 @@ Blog post → SEO** tab and rendered on the live article page):
 - `author` — defaults to **Execora Editorial Team**.
 - `relatedLinks` — 2-4 suggested internal/external links. **Internal targets must
   be a real published `/blog/<slug>`** — the automation only accepts links that
-  point at an existing post, so related links never 404. External targets open
-  in a new tab.
-- `externalSources` — authoritative UK/first-party sources (Google, GOV.UK,
-  Scottish Government, ONS, ICO).
+  point at an existing post, so related links never 404. External links (type
+  `external`) are accepted **only when the target is a URL from the verified
+  source bank** (see below).
+- `externalSources` — authoritative UK/first-party sources. The model may cite
+  **only the link-checked source bank** (`SOURCE_BANK` in
+  `api/generate-daily-blog.js`: Google Search Central / Google Business Profile,
+  ICO, GOV.UK, Scottish Government, ONS). URLs are sanitised at runtime to
+  guarantee sources never 404, and URLs already cited in a post from the last 60
+  are excluded to stop sources repeating.
+
+**Category rotation:** each automatic post is assigned the **least-used category**
+over the last 60 posts (Website Tips, Local Business, Google & SEO, Customer
+Experience, Business Growth), which is passed to the model as the required
+`PREFERRED CATEGORY` in the prompt — so the blog cycles evenly across categories
+instead of stacking one.
 
 The article page also emits **Article JSON-LD** (`schema.org`) and a meta
 `keywords` tag built from the primary + secondary keywords. All fields are

@@ -17,6 +17,9 @@ import {
   buildDraftDocument,
   getArticleJSONSchema,
   sanitizeInternalLinks,
+  sanitizeExternalSources,
+  pickCategory,
+  SOURCE_BANK,
   ALLOWED_CATEGORIES,
 } from './generate-daily-blog.js'
 
@@ -668,6 +671,47 @@ describe('buildArticlePrompt', () => {
     assert.ok(prompt.user.includes('/blog/plumber-websites'))
   })
 
+  test('assigns the least-used category as the preferred category', () => {
+    const prompt = buildArticlePrompt(
+      {
+        titles: [],
+        categories: ['Website Tips', 'Website Tips', 'Website Tips', 'Google & SEO', 'Business Growth'],
+      },
+      {}
+    )
+    assert.ok(prompt.user.includes('PREFERRED CATEGORY:'))
+    assert.ok(prompt.user.includes('Local Business'))
+    assert.ok(prompt.user.includes('set the category field to exactly this value'))
+  })
+
+  test('prefers the first allowed category when no recent categories exist', () => {
+    const prompt = buildArticlePrompt({ titles: [], categories: [] }, {})
+    assert.ok(prompt.user.includes('PREFERRED CATEGORY:'))
+    assert.ok(prompt.user.includes(ALLOWED_CATEGORIES[0]))
+  })
+
+  test('lists the source bank and restricts sources to it', () => {
+    const prompt = buildArticlePrompt({ titles: [], categories: [] }, {})
+    assert.ok(prompt.user.includes('SOURCE BANK'))
+    assert.ok(prompt.user.includes('only ever cite sources from this list'))
+    assert.ok(prompt.user.includes('https://www.gov.uk/set-up-business'))
+    assert.ok(prompt.user.includes('Never cite a URL from RECENTLY USED SOURCES'))
+  })
+
+  test('lists recently used sources so the model avoids repeating them', () => {
+    const prompt = buildArticlePrompt(
+      {
+        titles: [],
+        categories: [],
+        sourceUrls: ['https://www.gov.uk/set-up-business', 'https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/'],
+      },
+      {}
+    )
+    assert.ok(prompt.user.includes('RECENTLY USED SOURCES'))
+    assert.ok(prompt.user.includes('https://www.gov.uk/set-up-business'))
+    assert.ok(prompt.user.includes('do not cite any of these again'))
+  })
+
   test('includes a crediting authors instruction', () => {
     const prompt = buildArticlePrompt({ titles: [], categories: [] }, {})
     assert.ok(prompt.user.includes('Execora Editorial Team'))
@@ -786,7 +830,7 @@ describe('getRecentTopics', () => {
 
     assert.equal(
       capturedQuery,
-      `*[_type == "blogPost"] | order(publishedDate desc)[0...60]{title, category, slug}`
+      `*[_type == "blogPost"] | order(publishedDate desc)[0...60]{title, category, slug, externalSources}`
     )
     assert.equal(
       result.titles.join(','),
@@ -794,6 +838,42 @@ describe('getRecentTopics', () => {
     )
     assert.equal(result.categories.join(','), 'Website Tips,Google & SEO')
     assert.equal(result.slugs.join(','), 'post-a,post-b')
+    assert.deepEqual(result.sourceUrls, [])
+  })
+
+  test('extracts unique source urls from recent posts', async () => {
+    const client = {
+      fetch: async () => [
+        {
+          title: 'Post A',
+          category: 'Website Tips',
+          slug: { current: 'post-a' },
+          externalSources: [{ label: 'GOV.UK', url: 'https://www.gov.uk/set-up-business' }],
+        },
+        {
+          title: 'Post B',
+          category: 'Google & SEO',
+          slug: { current: 'post-b' },
+          externalSources: [
+            { label: 'GOV.UK', url: 'https://www.gov.uk/set-up-business' },
+            { label: 'ICO', url: 'https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/' },
+          ],
+        },
+        {
+          title: 'Post C',
+          category: 'Local Business',
+          slug: { current: 'post-c' },
+          externalSources: null,
+        },
+      ],
+    }
+
+    const result = await getRecentTopics(client)
+
+    assert.deepEqual(result.sourceUrls, [
+      'https://www.gov.uk/set-up-business',
+      'https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/',
+    ])
   })
 })
 
@@ -821,15 +901,16 @@ describe('sanitizeInternalLinks', () => {
     ])
   })
 
-  test('drops malformed external links and links back to the site itself', () => {
+  test('drops malformed external links and links outside the source bank', () => {
     const links = [
-      { anchor: 'Good', target: 'https://ico.org.uk/guidance', type: 'external' },
+      { anchor: 'Good', target: 'https://ico.org.uk/for-organisations/advice-for-small-organisations/', type: 'external' },
       { anchor: 'Relative', target: 'support.google.com', type: 'external' },
       { anchor: 'Self', target: 'https://www.execora.work/blog/x', type: 'external' },
       { anchor: 'No target', target: '', type: 'external' },
+      { anchor: 'Not in bank', target: 'https://en.wikipedia.org/wiki/Google', type: 'external' },
     ]
     assert.deepEqual(sanitizeInternalLinks(links, []), [
-      { anchor: 'Good', target: 'https://ico.org.uk/guidance', type: 'external' },
+      { anchor: 'Good', target: 'https://ico.org.uk/for-organisations/advice-for-small-organisations/', type: 'external' },
     ])
   })
 
@@ -837,6 +918,83 @@ describe('sanitizeInternalLinks', () => {
     assert.deepEqual(sanitizeInternalLinks(undefined, []), [])
     assert.deepEqual(sanitizeInternalLinks(null, []), [])
     assert.deepEqual(sanitizeInternalLinks('junk', []), [])
+  })
+})
+
+describe('pickCategory', () => {
+  test('returns the least-used category from recent posts', () => {
+    const categories = [
+      'Website Tips', 'Website Tips', 'Website Tips',
+      'Google & SEO', 'Business Growth',
+    ]
+    assert.equal(pickCategory(categories), 'Local Business')
+  })
+
+  test('breaks ties by the allowed category order', () => {
+    const categories = ['Website Tips', 'Google & SEO', 'Business Growth']
+    assert.equal(pickCategory(categories), 'Local Business')
+  })
+
+  test('empty or no recent categories picks the first allowed category', () => {
+    assert.equal(pickCategory([]), ALLOWED_CATEGORIES[0])
+    assert.equal(pickCategory(null), ALLOWED_CATEGORIES[0])
+    assert.equal(pickCategory(undefined), ALLOWED_CATEGORIES[0])
+  })
+
+  test('ignores categories outside the allowlist', () => {
+    const categories = ['Website Tips', 'Uncategorised', 'Other']
+    assert.equal(pickCategory(categories), 'Local Business')
+  })
+})
+
+describe('sanitizeExternalSources', () => {
+  test('keeps only sources that exist in the verified bank', () => {
+    const sources = [
+      { label: 'GOV.UK: set up a business', url: 'https://www.gov.uk/set-up-business' },
+      { label: 'Not in bank', url: 'https://en.wikipedia.org/wiki/Google' },
+      { label: 'Invented URL', url: 'https://www.gov.uk/guidance/get-a-business-online' },
+      { label: 'Missing url', url: '' },
+      null,
+      'junk',
+    ]
+    assert.deepEqual(sanitizeExternalSources(sources, []), [
+      { label: 'GOV.UK: set up a business', url: 'https://www.gov.uk/set-up-business' },
+    ])
+  })
+
+  test('matches bank URLs regardless of trailing slashes', () => {
+    const sources = [
+      { label: 'GBP help', url: 'https://support.google.com/business/' },
+      { label: 'GBP help no slash', url: 'https://support.google.com/business' },
+    ]
+    assert.deepEqual(sanitizeExternalSources(sources, []), [
+      { label: 'GBP help', url: 'https://support.google.com/business/' },
+    ])
+  })
+
+  test('drops sources already cited in recent posts', () => {
+    const sources = [{ label: 'ICO principles', url: 'https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/data-protection-principles/' }]
+    assert.deepEqual(sanitizeExternalSources(sources, ['https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/data-protection-principles/']), [])
+  })
+
+  test('treats malformed usedUrls defensively', () => {
+    const sources = [{ label: 'ICO principles', url: 'https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/data-protection-principles/' }]
+    assert.equal(sanitizeExternalSources(sources, 'junk').length, 1)
+    assert.equal(sanitizeExternalSources(sources, [null, 42]).length, 1)
+  })
+
+  test('returns an empty array for non-array input', () => {
+    assert.deepEqual(sanitizeExternalSources(undefined), [])
+    assert.deepEqual(sanitizeExternalSources(null), [])
+    assert.deepEqual(sanitizeExternalSources('junk'), [])
+  })
+
+  test('the source bank is fully populated with http(s) urls', () => {
+    assert.ok(SOURCE_BANK.length >= 10)
+    for (const s of SOURCE_BANK) {
+      assert.ok(typeof s.label === 'string' && s.label.length > 0)
+      assert.match(s.url, /^https:\/\//)
+    }
   })
 })
 
@@ -1313,6 +1471,73 @@ describe('POST /api/generate-daily-blog happy path', () => {
       { anchor: 'local SEO for small business', target: '/blog/local-seo-small-business', type: 'internal' },
       { anchor: 'External resource', target: 'https://support.google.com/business', type: 'external' },
     ])
+  })
+
+  test('drops external sources and external links outside the verified bank', async () => {
+    const withDodgySources = {
+      ...sampleArticle,
+      externalSources: [
+        { label: 'GOV.UK: set up a business', url: 'https://www.gov.uk/set-up-business' },
+        { label: 'Dead GOV.UK link', url: 'https://www.gov.uk/guidance/get-a-business-online' },
+        { label: 'Not a source', url: 'https://example.com/random' },
+      ],
+      internalLinks: [
+        { anchor: 'local SEO for small business', target: '/blog/local-seo-small-business', type: 'internal' },
+        { anchor: 'External junk', target: 'https://en.wikipedia.org/wiki/SEO', type: 'external' },
+      ],
+    }
+    setOpenaiFetch(async () => ({
+      ok: true,
+      json: async () => ({
+        output: [{ type: 'message', content: [{ text: JSON.stringify(withDodgySources) }] }],
+      }),
+    }))
+    const res = makeRes()
+    await handler(makeReq({ token: 'test-blog-secret' }), res)
+    assert.equal(res._status, 200)
+    assert.deepEqual(createdDoc.relatedLinks, [
+      { anchor: 'local SEO for small business', target: '/blog/local-seo-small-business', type: 'internal' },
+    ])
+    assert.deepEqual(createdDoc.externalSources, [
+      { label: 'GOV.UK: set up a business', url: 'https://www.gov.uk/set-up-business' },
+    ])
+  })
+
+  test('drops recently used sources in the happy path', async () => {
+    setClientFactory(({ projectId, dataset, token }) => ({
+      fetch: async (query, params) => {
+        if (params && params.id) return null
+        if (query.includes('_type == "blogPost"')) return [
+          {
+            title: 'Local SEO for Small Business',
+            category: 'Google & SEO',
+            slug: { current: 'local-seo-small-business' },
+            externalSources: [{ label: 'GOV.UK: set up a business', url: 'https://www.gov.uk/set-up-business' }],
+          },
+        ]
+        return null
+      },
+      create: async (doc) => { createdDoc = doc; return doc },
+      assets: {
+        upload: async () => ({ _id: 'image-uploaded-123' }),
+      },
+    }))
+    const reused = {
+      ...sampleArticle,
+      externalSources: [
+        { label: 'GOV.UK: set up a business', url: 'https://www.gov.uk/set-up-business' },
+      ],
+    }
+    setOpenaiFetch(async () => ({
+      ok: true,
+      json: async () => ({
+        output: [{ type: 'message', content: [{ text: JSON.stringify(reused) }] }],
+      }),
+    }))
+    const res = makeRes()
+    await handler(makeReq({ token: 'test-blog-secret' }), res)
+    assert.equal(res._status, 200)
+    assert.deepEqual(createdDoc.externalSources, [])
   })
 
   test('image is attached with the uploaded asset reference', async () => {
