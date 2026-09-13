@@ -2199,3 +2199,10 @@ body.modal-open { overflow: hidden; }
   }
   .demo-frame-hint { display: none; }
 }
+
+.btn .icon-play {
+  display: inline-block;
+  transform: translateY(0);
+  transition: transform 0.25s var(--ease-slow);
+}
+.btn:hover .icon-play { transform: translateX(2px); }
