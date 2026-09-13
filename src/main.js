@@ -296,11 +296,45 @@ function initAutoScrollTrack({ trackSel, prevSel, nextSel, autoMs = 4000 }) {
 initAutoScrollTrack({ trackSel: '[data-showcase-track]', prevSel: '[data-showcase-prev]', nextSel: '[data-showcase-next]' })
 initAutoScrollTrack({ trackSel: '[data-reviews-track]', prevSel: '[data-reviews-prev]', nextSel: '[data-reviews-next]' })
 
-/* Live-demo link under the showcase - track outbound clicks. */
+/* Live demo iframe overlay - opens the demo site in-page so visitors
+   can come back to the Execora homepage without leaving it. */
+const demoFrame = document.getElementById('demo-frame')
+const demoIframe = demoFrame ? demoFrame.querySelector('[data-demo-iframe]') : null
+const DEMO_URL = 'https://livedemosite.vercel.app/'
+
+const openLiveDemo = () => {
+  if (!demoFrame) return
+  demoFrame.hidden = false
+  document.body.classList.add('modal-open')
+  if (demoIframe && !demoIframe.getAttribute('src')) {
+    demoIframe.setAttribute('src', DEMO_URL)
+  }
+  const back = demoFrame.querySelector('.demo-frame-back')
+  window.setTimeout(() => back && back.focus(), 120)
+}
+
+const closeLiveDemo = () => {
+  if (!demoFrame) return
+  demoFrame.hidden = true
+  document.body.classList.remove('modal-open')
+  if (demoIframe) demoIframe.removeAttribute('src')
+  const trigger = document.querySelector('[data-showcase-live]')
+  if (trigger) trigger.focus()
+}
+
 const showcaseLive = document.querySelector('[data-showcase-live]')
 if (showcaseLive) {
   showcaseLive.addEventListener('click', () => {
     trackEvent('outbound_click', { location: 'showcase_live' })
+    openLiveDemo()
+  })
+}
+if (demoFrame) {
+  demoFrame.querySelectorAll('[data-demo-close]').forEach((el) => {
+    el.addEventListener('click', closeLiveDemo)
+  })
+  document.addEventListener('keydown', (e) => {
+    if (!demoFrame.hidden && e.key === 'Escape') closeLiveDemo()
   })
 }
 

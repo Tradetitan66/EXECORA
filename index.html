@@ -296,15 +296,9 @@
 
         <div class="showcase-live reveal">
           <span class="showcase-live-label">See a real Execora site live:</span>
-          <a
-            class="btn btn-ghost btn-sm"
-            href="https://livedemosite.vercel.app/"
-            target="_blank"
-            rel="noopener"
-            data-showcase-live
-          >
+          <button class="btn btn-ghost btn-sm" type="button" data-showcase-live>
             View live demo <span aria-hidden="true">↗</span>
-          </a>
+          </button>
         </div>
       </section>
 
@@ -906,6 +900,25 @@
           </div>
           <p class="form-note" data-checkout-note style="display:none"></p>
         </form>
+      </div>
+    </div>
+
+    <div class="demo-frame" id="demo-frame" hidden role="dialog" aria-modal="true" aria-labelledby="demo-frame-title">
+      <div class="demo-frame-backdrop" data-demo-close></div>
+      <div class="demo-frame-panel">
+        <div class="demo-frame-bar">
+          <button class="demo-frame-back" type="button" data-demo-close>← Back to Execora</button>
+          <span class="demo-frame-hint" id="demo-frame-title">Viewing a real Execora-built website</span>
+          <button class="demo-frame-x" type="button" data-demo-close aria-label="Close live demo">×</button>
+        </div>
+        <iframe
+          class="demo-frame-iframe"
+          data-demo-iframe
+          title="Live Execora demo site"
+          loading="lazy"
+          referrerpolicy="no-referrer"
+          allowfullscreen
+        ></iframe>
       </div>
     </div>
 
