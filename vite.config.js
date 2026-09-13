@@ -28,6 +28,42 @@ export default defineConfig({
         })
       },
     },
+    // In dev only, mock the Vercel serverless functions the £5 checkout flow
+    // depends on (/api/create-checkout, /api/session-info). This lets the full
+    // modal -> redirect -> thank-you journey be demoed with a plain `npm run dev`
+    // without Stripe. The production build never includes this plugin.
+    {
+      name: 'mock-api-middleware',
+      apply: 'serve',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          const url = (req.url || '').split('?')[0]
+          if (url !== '/api/create-checkout' && url !== '/api/session-info') {
+            if (url.startsWith('/api/')) {
+              res.statusCode = 404
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ error: 'Not found in dev - run `vercel dev` for real serverless functions' }))
+              return
+            }
+            next()
+            return
+          }
+          // Drain the request body (unused by the mock) so the stream closes cleanly.
+          req.on('data', () => {})
+          req.on('end', () => {
+            console.info(
+              `[Execora] Mocked ${req.method} ${url} in local dev - no real payment was taken.`
+            )
+            res.setHeader('Content-Type', 'application/json')
+            const payload =
+              url === '/api/create-checkout'
+                ? { url: '/thank-you?session_id=demo_local_mock' }
+                : { payment_intent: 'demo_local_mock' }
+            res.end(JSON.stringify(payload))
+          })
+        })
+      },
+    },
   ],
   server: {
     open: false,

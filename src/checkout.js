@@ -1,7 +1,8 @@
 /**
  * Execora - £5 prototype checkout flow
  * ------------------------------------------------------------------
- * Opens a modal to collect business details, holds the data locally
+ * Opens a 3-step modal to collect business details (your details →
+ * your business → review & pay), holds the data locally
  * (sessionStorage), calls the create-checkout serverless function, and
  * redirects the user to Stripe Checkout. The data is re-read after
  * payment on the /thank-you page (Stripe redirects back with
@@ -11,6 +12,13 @@
 import { trackEvent } from './analytics.js'
 
 const STORAGE_KEY = 'execora_proto_data'
+const PHONE_MSG =
+  'Please enter a valid UK WhatsApp number starting with +44 (e.g. +44 7912 345678).'
+
+/* ---------- state ---------- */
+let modal = null
+let wizard = null // { panels, indicators, backBtn, nextBtn, submitBtn, reviewEl }
+let activeStep = 1
 
 /* ---------- helpers ---------- */
 function ukPhoneValid(value) {
@@ -20,23 +28,29 @@ function ukPhoneValid(value) {
   return false
 }
 
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (c) => {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  })
+}
+
 /* ---------- open / close modal ---------- */
 export function closeModal(target) {
-  const modal =
+  const modalEl =
     typeof target === 'string'
       ? document.querySelector(target)
       : target && target.closest?.('.checkout-modal')
-  if (!modal) return
-  modal.hidden = true
-  modal.classList.remove('is-open')
+  if (!modalEl) return
+  modalEl.hidden = true
+  modalEl.classList.remove('is-open')
   document.body.classList.remove('modal-open')
-  const closeBtn = modal.querySelector('[data-checkout-close]')
+  const closeBtn = modalEl.querySelector('[data-checkout-close]')
   if (closeBtn) closeBtn.focus()
 }
 
 export function openModal() {
-  const modal = document.getElementById('checkout-modal')
   if (!modal) return
+  showStep(1)
   modal.hidden = false
   modal.classList.add('is-open')
   document.body.classList.add('modal-open')
@@ -46,7 +60,7 @@ export function openModal() {
 
 /* ---------- wire the payment CTAs to open the modal ---------- */
 export function initCheckout() {
-  const modal = document.getElementById('checkout-modal')
+  modal = document.getElementById('checkout-modal')
   if (!modal) return
 
   const ctas = document.querySelectorAll('[data-payment-cta]')
@@ -68,13 +82,117 @@ export function initCheckout() {
     if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal(modal)
   })
 
+  initWizard()
+
   const form = modal.querySelector('form')
   if (form) form.addEventListener('submit', onSubmit)
+}
+
+/* ---------- 3-step wizard ---------- */
+function initWizard() {
+  if (!modal) return
+  const panels = Array.from(modal.querySelectorAll('[data-step-panel]'))
+  const indicators = Array.from(modal.querySelectorAll('[data-step-indicator]'))
+  const backBtn = modal.querySelector('[data-checkout-back]')
+  const nextBtn = modal.querySelector('[data-checkout-next]')
+  const submitBtn = modal.querySelector('[data-checkout-submit]')
+  const reviewEl = modal.querySelector('[data-checkout-review]')
+  if (!panels.length || !nextBtn) return
+
+  wizard = { panels, indicators, backBtn, nextBtn, submitBtn, reviewEl }
+
+  // Real-time UK WhatsApp validation so step 1 can never silently pass.
+  const phone = modal.querySelector('[name="phone"]')
+  if (phone) {
+    phone.addEventListener('input', () => {
+      phone.setCustomValidity(ukPhoneValid(phone.value) ? '' : PHONE_MSG)
+    })
+  }
+
+  nextBtn.addEventListener('click', () => {
+    if (stepValid(activeStep)) showStep(activeStep + 1)
+  })
+  backBtn.addEventListener('click', () => showStep(activeStep - 1))
+
+  showStep(1)
+}
+
+function showStep(n) {
+  if (!wizard) return
+  activeStep = Math.min(Math.max(n, 1), wizard.panels.length)
+
+  wizard.panels.forEach((panel, i) => {
+    const active = i + 1 === activeStep
+    panel.hidden = !active
+    panel.classList.toggle('is-active', active)
+    panel.setAttribute('aria-hidden', active ? 'false' : 'true')
+  })
+
+  wizard.indicators.forEach((el, i) => {
+    const idx = i + 1
+    el.classList.toggle('is-active', idx === activeStep)
+    el.classList.toggle('is-done', idx < activeStep)
+  })
+
+  wizard.backBtn.hidden = activeStep === 1
+  wizard.nextBtn.hidden = activeStep === wizard.panels.length
+  wizard.submitBtn.hidden = activeStep !== wizard.panels.length
+
+  if (activeStep === wizard.panels.length) buildReview()
+
+  const first = wizard.panels[activeStep - 1].querySelector('input, select, textarea')
+  window.setTimeout(() => first && first.focus(), 80)
+}
+
+function stepValid(n) {
+  if (!wizard) return true
+  const controls = [...wizard.panels[n - 1].querySelectorAll('input, select, textarea')]
+  const invalid = controls.find((el) => !el.checkValidity())
+  if (invalid) invalid.reportValidity()
+  return !invalid
+}
+
+function buildReview() {
+  if (!wizard || !wizard.reviewEl) return
+  const form = modal.querySelector('form')
+  if (!form) return
+  const data = Object.fromEntries(new FormData(form).entries())
+
+  const typeSel = form.querySelector('[name="type"]')
+  const typeLabel =
+    typeSel && typeSel.options && typeSel.selectedIndex !== -1
+      ? typeSel.options[typeSel.selectedIndex].text
+      : ''
+
+  const rows = [
+    ['Your name', data.name],
+    ['Business', data.business],
+    ['Email', data.email],
+    ['WhatsApp', data.phone],
+    ['Business type', data.type ? (typeLabel && typeLabel !== 'Please choose…' ? typeLabel : data.type) : ''],
+    ['Location', data.location],
+    ['Services', data.services],
+  ]
+
+  wizard.reviewEl.innerHTML = rows
+    .filter(([, value]) => value && String(value).trim() !== '')
+    .map(
+      ([label, value]) =>
+        `<div class="checkout-review-row"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`
+    )
+    .join('')
 }
 
 /* ---------- submit: hold data, then send to checkout ---------- */
 async function onSubmit(e) {
   e.preventDefault()
+
+  // Pressing Enter on an early step should advance, not try to pay.
+  if (wizard && activeStep < wizard.panels.length) {
+    showStep(activeStep + 1)
+    return
+  }
+
   const form = e.currentTarget
   const note = form.querySelector('[data-checkout-note]')
   const submitBtn = form.querySelector('button[type="submit"]')
@@ -82,9 +200,7 @@ async function onSubmit(e) {
   // UK phone validation
   const phoneInput = form.querySelector('[name="phone"]')
   if (phoneInput && !ukPhoneValid(phoneInput.value)) {
-    phoneInput.setCustomValidity(
-      'Please enter a valid UK WhatsApp number starting with +44 (e.g. +44 7912 345678).'
-    )
+    phoneInput.setCustomValidity(PHONE_MSG)
     phoneInput.reportValidity()
     return
   }

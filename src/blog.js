@@ -230,7 +230,7 @@ async function renderIndex() {
         <div class="blog-subscribe-card">
           <div class="blog-subscribe-text">
             <h2 class="blog-subscribe-title">Get tips straight to your inbox</h2>
-            <p class="blog-subscribe-desc">Practical advice for local businesses — no spam, just useful ideas you can act on.</p>
+            <p class="blog-subscribe-desc">Practical advice for local businesses - no spam, just useful ideas you can act on.</p>
           </div>
           <form class="blog-subscribe-form" id="blog-subscribe-form">
             <input type="hidden" name="type" value="blog-subscriber" />
@@ -337,13 +337,13 @@ function initBlogSubscribe() {
         })
         if (!res.ok) {
           console.error(`[Execora] Blog subscribe save rejected (HTTP ${res.status}).`)
-          note.textContent = 'Something went wrong — please try again.'
+          note.textContent = 'Something went wrong - please try again.'
           note.style.color = '#b91c1c'
           return
         }
       } catch (err) {
         console.error('[Execora] Blog subscribe save failed:', err)
-        note.textContent = 'Something went wrong — please try again.'
+        note.textContent = 'Something went wrong - please try again.'
         note.style.color = '#b91c1c'
         return
       }
@@ -384,12 +384,12 @@ function initFooterNewsletter() {
         })
         if (!res.ok) {
           console.error(`[Execora] Newsletter save rejected (HTTP ${res.status}).`)
-          if (note) note.textContent = 'Something went wrong — please try again.'
+          if (note) note.textContent = 'Something went wrong - please try again.'
           return
         }
       } catch (err) {
         console.error('[Execora] Newsletter save failed:', err)
-        if (note) note.textContent = 'Something went wrong — please try again.'
+        if (note) note.textContent = 'Something went wrong - please try again.'
         return
       }
     }

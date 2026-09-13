@@ -5,11 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:api": "vercel dev",
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test api/*.test.js"
   },
   "devDependencies": {
+    "vercel": "^59.16.0",
     "vite": "^5.4.0"
   },
   "dependencies": {

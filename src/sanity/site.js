@@ -72,8 +72,8 @@ export async function hydrateHomepage() {
   if (settings.heroSub) applyIf(heroSub, settings.heroSub)
 
   // The primary CTA label is standardised site-wide and must not be overridden
-  // by CMS content, so all home-page CTAs read "Get my £5 prototype".
-  if (heroCta) heroCta.textContent = 'Get my £5 prototype'
+  // by CMS content, so all home-page CTAs read "Get my £5 homepage design".
+  if (heroCta) heroCta.textContent = 'Get my £5 homepage design'
 
   // Contact
   const contactTitle = document.querySelector('.contact .contact-title')

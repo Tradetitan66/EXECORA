@@ -90,51 +90,6 @@ revealEls.forEach((el) => {
   io.observe(el)
 })
 
-/* ============================================================
-   Hero - subtle parallax on the clay composition (desktop only).
-   Fine pointers and reduced-motion are respected; depth is tiny
-   so nothing looks disjointed on the clay scene.
-   ============================================================ */
-function initHeroParallax() {
-  const scene = document.querySelector('[data-hero-parallax]')
-  if (!scene) return
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return
-
-  const layers = Array.from(scene.querySelectorAll('[data-depth]'))
-  if (layers.length === 0) return
-
-  const MAX_X = 6   // px of horizontal drift per unit of depth
-  const MAX_Y = 4   // px of vertical drift per unit of depth
-  let raf = null
-
-  const apply = (x, y) => {
-    const dx = x * MAX_X
-    const dy = y * MAX_Y
-    layers.forEach((el) => {
-      const depth = parseFloat(el.dataset.depth) || 1
-      el.style.transform = `translate3d(${(dx * depth).toFixed(2)}px, ${(dy * depth).toFixed(2)}px, 0)`
-    })
-  }
-
-  const reset = () => {
-    if (raf) { cancelAnimationFrame(raf); raf = null }
-    layers.forEach((el) => { el.style.transform = '' })
-  }
-
-  const onMove = (e) => {
-    const nx = (e.clientX / window.innerWidth) * 2 - 1
-    const ny = (e.clientY / window.innerHeight) * 2 - 1
-    if (raf) return
-    raf = requestAnimationFrame(() => { raf = null; apply(nx, ny) })
-  }
-
-  window.addEventListener('pointermove', onMove, { passive: true })
-  document.addEventListener('visibilitychange', reset)
-  window.addEventListener('blur', reset)
-}
-initHeroParallax()
-
 const WHATSAPP_NUMBER = '4407345384868'
 const CONTACT_SCRIPT_URL = import.meta.env.NEXT_PUBLIC_CONTACT_SCRIPT_URL
 
@@ -341,6 +296,14 @@ function initAutoScrollTrack({ trackSel, prevSel, nextSel, autoMs = 4000 }) {
 initAutoScrollTrack({ trackSel: '[data-showcase-track]', prevSel: '[data-showcase-prev]', nextSel: '[data-showcase-next]' })
 initAutoScrollTrack({ trackSel: '[data-reviews-track]', prevSel: '[data-reviews-prev]', nextSel: '[data-reviews-next]' })
 
+/* Live-demo link under the showcase - track outbound clicks. */
+const showcaseLive = document.querySelector('[data-showcase-live]')
+if (showcaseLive) {
+  showcaseLive.addEventListener('click', () => {
+    trackEvent('outbound_click', { location: 'showcase_live' })
+  })
+}
+
 /* ============================================================
    Reviews - subtle 3D tilt on each card as the pointer moves
    ============================================================ */
@@ -385,27 +348,6 @@ if (faqItems.length) {
 }
 
 /* ============================================================
-   Pricing - keep matching <details> sections in sync across all
-   plan cards so the same section opens side-by-side for comparison
-   ============================================================ */
-const planSectionDetails = Array.from(
-  document.querySelectorAll('.plan-full-body details[data-plan-section]')
-)
-if (planSectionDetails.length) {
-  let syncing = false
-  const sync = (details) => {
-    if (syncing) return
-    const group = details.dataset.planSection
-    syncing = true
-    planSectionDetails
-      .filter((d) => d.dataset.planSection === group && d !== details)
-      .forEach((d) => { d.open = details.open })
-    syncing = false
-  }
-  planSectionDetails.forEach((d) => d.addEventListener('toggle', () => sync(d)))
-}
-
-/* ============================================================
    Newsletter - footer email subscription (writes to BLOG subscribers)
    ============================================================ */
 const newsletterForm = document.getElementById('newsletter-form')
@@ -435,12 +377,12 @@ if (newsletterForm) {
         })
         if (!res.ok) {
           console.error(`[Execora] Newsletter save rejected (HTTP ${res.status}).`)
-          newsletterNote.textContent = 'Something went wrong — please try again.'
+          newsletterNote.textContent = 'Something went wrong - please try again.'
           return
         }
       } catch (err) {
         console.error('[Execora] Newsletter save failed:', err)
-        newsletterNote.textContent = 'Something went wrong — please try again.'
+        newsletterNote.textContent = 'Something went wrong - please try again.'
         return
       }
     }
@@ -449,22 +391,4 @@ if (newsletterForm) {
     if (newsletterSuccess) newsletterSuccess.hidden = false
     trackEvent('newsletter_subscribe')
   })
-}
-
-/* ============================================================
-   See full details - Essential/Growth tab switcher (mobile)
-   ============================================================ */
-const planTabs = Array.from(document.querySelectorAll('.plan-full-tabs [data-plan-tab]'))
-const planPanels = Array.from(document.querySelectorAll('.plan-full-body .plan-details[data-plan-panel]'))
-if (planTabs.length && planPanels.length) {
-  const selectTab = (tab) => {
-    const key = tab.dataset.planTab
-    planTabs.forEach((t) => {
-      const active = t === tab
-      t.classList.toggle('is-active', active)
-      t.setAttribute('aria-selected', active ? 'true' : 'false')
-    })
-    planPanels.forEach((p) => p.classList.toggle('is-active', p.dataset.planPanel === key))
-  }
-  planTabs.forEach((tab) => tab.addEventListener('click', () => selectTab(tab)))
 }
