@@ -1146,6 +1146,7 @@ section {
   border-bottom: 1px solid var(--stone-100);
 }
 .plan-cell { min-width: 0; }
+.plan-cell-label { display: none; font-weight: 600; font-size: 0.88rem; color: var(--ink); letter-spacing: -0.01em; }
 .plan-section .plan-who, .plan-section .plan-examples { margin: 0; }
 .plan-section .plan-examples { margin-top: 0.5rem; }
 .plan-section .plan-features { margin: 0.6rem 0 0.2rem; }
@@ -1945,6 +1946,8 @@ body.modal-open { overflow: hidden; }
   .plan-card-mobile .plan-cta { margin-top: auto; }
 
   .plan-col-captions, .plan-section-grid { grid-template-columns: 1fr; }
+  .plan-col-captions { display: none; }
+  .plan-cell-label { display: block; margin-bottom: 0.45rem; }
 
   .contact-inner { grid-template-columns: 1fr; text-align: center; max-width: 620px; margin-inline: auto; }
   .enquiry-form .form-row { grid-template-columns: 1fr; }
