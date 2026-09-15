@@ -1,0 +1,6 @@
+# Execora robots.txt
+# All crawlers are allowed. The XML sitemap is declared below.
+User-agent: *
+Allow: /
+
+Sitemap: https://www.execora.work/sitemap.xml

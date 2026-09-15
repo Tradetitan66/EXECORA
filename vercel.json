@@ -1,5 +1,7 @@
 {
   "framework": "vite",
+  "cleanUrls": true,
+  "trailingSlash": false,
   "crons": [
     {
       "path": "/api/daily-blog-0700",
@@ -30,16 +32,8 @@
   ],
   "rewrites": [
     {
-      "source": "/thank-you",
-      "destination": "/thank-you.html"
-    },
-    {
-      "source": "/blog",
-      "destination": "/blog.html"
-    },
-    {
       "source": "/blog/:slug*",
-      "destination": "/blog.html"
+      "destination": "/blog-shell"
     }
   ]
 }

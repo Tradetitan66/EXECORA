@@ -1,8 +1,15 @@
 import './style.css'
 import './blog.css'
-import { client, imageUrlFor, formatDate, sanityProjectId, sanityDataset } from './sanity/client.js'
+import { client } from './sanity/client.js'
 import { blogPostsQuery, blogPostBySlugQuery, blogCategoriesQuery } from './sanity/queries.js'
-import { portableTextToHtml } from './sanity/portable.js'
+import {
+  renderIndexMarkup,
+  renderArticleMarkup,
+  cardHtml,
+  emptyState,
+  articlePageMeta,
+  articleJsonLd,
+} from './seo/render.js'
 import { initAnalytics, trackEvent } from './analytics.js'
 import { initCheckout } from './checkout.js'
 
@@ -11,6 +18,12 @@ import { initCheckout } from './checkout.js'
    Routes:
      /blog            → index
      /blog/<slug>     → single article
+
+   Markup is shared with the static prerender (src/seo/render.js) so
+   the initial HTML served for a page and the client-rendered DOM are
+   identical. SEO metadata (title, description, canonical, Open Graph,
+   JSON-LD) is computed there too and applied here for navigation after
+   the page has already been served with it in place.
    ============================================================ */
 
 const CONTACT_SCRIPT_URL = import.meta.env.NEXT_PUBLIC_CONTACT_SCRIPT_URL
@@ -63,7 +76,7 @@ function initHeaderGlass() {
   update()
 }
 
-/* ---------- SEO helpers (article) ---------- */
+/* ---------- SEO helpers ---------- */
 function setMetaName(name, value) {
   let el = document.querySelector(`meta[name="${name}"]`)
   if (!el) {
@@ -94,20 +107,13 @@ function setCanonical(url) {
   link.setAttribute('href', url)
 }
 
-function setArticleJsonLd({ post, pageUrl, date }) {
+/**
+ * Update the prerendered Article JSON-LD (matched via data-article-jsonld)
+ * or create it if the page was served without one (SPA fallback route).
+ */
+function setArticleJsonLd(post, meta) {
+  const payload = articleJsonLd(post, meta)
   const script = document.querySelector('script[data-article-jsonld]')
-  const payload = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: post.title,
-    description: post.seoDescription || post.excerpt || '',
-    image: post.image ? imageUrlFor(post.image).width(1200).auto('format').url() : undefined,
-    datePublished: post.publishedDate || date,
-    dateModified: post.publishedDate || date,
-    author: { '@type': 'Organization', name: post.author || 'Execora Editorial Team', url: 'https://www.execora.work' },
-    publisher: { '@type': 'Organization', name: 'Execora', url: 'https://www.execora.work' },
-    mainEntityOfPage: { '@type': 'WebPage', '@id': pageUrl },
-  }
   if (script) {
     script.textContent = JSON.stringify(payload)
     return
@@ -117,88 +123,6 @@ function setArticleJsonLd({ post, pageUrl, date }) {
   el.setAttribute('data-article-jsonld', '')
   el.textContent = JSON.stringify(payload)
   document.head.appendChild(el)
-}
-
-function renderRelatedLinks(relatedLinks, externalSources) {
-  const parts = []
-  const isLocalPath = (target) => /^\/blog\/[\w-]+$/i.test(target)
-  const isExternalUrl = (target) => /^https?:\/\//i.test(target)
-  const isSelfDomain = (target) => /^https?:\/\/(www\.)?execora\.work/i.test(target)
-
-  const internal = (relatedLinks || []).filter((l) => l && l.type !== 'external')
-  const external = (relatedLinks || []).filter((l) => l && l.type === 'external')
-
-  if (internal.length) {
-    const items = internal
-      .filter((l) => l.anchor && isLocalPath(l.target))
-      .map((l) => `<li><a href="${escapeHtml(l.target)}">${escapeHtml(l.anchor)}</a></li>`)
-      .join('')
-    if (items) parts.push(`<aside class="article-related"><h2>Related reading</h2><ul>${items}</ul></aside>`)
-  }
-
-  if (external.length) {
-    const items = external
-      .filter((l) => l.anchor && isExternalUrl(l.target) && !isSelfDomain(l.target))
-      .map(
-        (l) =>
-          `<li><a href="${escapeHtml(l.target)}" target="_blank" rel="noopener">${escapeHtml(l.anchor)}</a></li>`
-      )
-      .join('')
-    if (items) parts.push(`<aside class="article-related"><h2>Related resources</h2><ul>${items}</ul></aside>`)
-  }
-
-  const sources = (externalSources || []).filter(
-    (s) => s && s.label && s.url && isExternalUrl(s.url) && !isSelfDomain(s.url)
-  )
-  if (sources.length) {
-    const items = sources
-      .map(
-        (s) =>
-          `<li><a href="${escapeHtml(s.url)}" target="_blank" rel="noopener">${escapeHtml(s.label)}</a></li>`
-      )
-      .join('')
-    parts.push(`<aside class="article-related article-sources"><h2>Sources</h2><ul>${items}</ul></aside>`)
-  }
-
-  return parts.join('')
-}
-
-/* ---------- renderers ---------- */
-function cardHtml(post) {
-  const url = post.slug?.current ? `/blog/${post.slug.current}` : '#'
-  const img = post.image ? imageUrlFor(post.image) : null
-  const imgUrl = img ? img.width(800).auto('format').url() : ''
-  const date = formatDate(post.publishedDate)
-  const cat = post.category || 'Article'
-
-  const media = imgUrl
-    ? `<div class="blog-card-media"><img src="${imgUrl}" alt="" loading="lazy" /></div>`
-    : `<div class="blog-card-media blog-card-media--empty"><span>${cat}</span></div>`
-
-  return `
-    <a class="blog-card" href="${url}">
-      ${media}
-      <div class="blog-card-body">
-        <div class="blog-card-meta">
-          <span class="blog-card-cat">${cat}</span>
-          ${date ? `<span class="blog-card-date">${date}</span>` : ''}
-        </div>
-        <h3 class="blog-card-title">${escapeHtml(post.title || '')}</h3>
-        ${post.excerpt ? `<p class="blog-card-excerpt">${escapeHtml(post.excerpt)}</p>` : ''}
-        <div class="blog-card-foot">
-          ${post.readingTime ? `<span class="blog-card-read">${post.readingTime} min read</span>` : ''}
-          <span class="blog-card-link">Read tips <span aria-hidden="true">→</span></span>
-        </div>
-      </div>
-    </a>
-  `
-}
-
-function escapeHtml(str) {
-  return String(str ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
 }
 
 /* ---------- render: index ---------- */
@@ -215,55 +139,7 @@ async function renderIndex() {
     console.warn('[Execora] Sanity unavailable while loading the blog.', err)
   }
 
-  indexEl.innerHTML = `
-    <section class="blog-index">
-      <header class="blog-head reveal is-visible">
-        <span class="eyebrow">Execora blog</span>
-        <h1 class="blog-title">Local business tips</h1>
-        <p class="blog-lead">
-          Practical ideas to help local businesses improve their website, build trust online
-          and turn more visitors into enquiries.
-        </p>
-      </header>
-
-      <div class="blog-subscribe-wrap reveal" id="blog-subscribe-wrap">
-        <div class="blog-subscribe-card">
-          <div class="blog-subscribe-text">
-            <h2 class="blog-subscribe-title">Get tips straight to your inbox</h2>
-            <p class="blog-subscribe-desc">Practical advice for local businesses - no spam, just useful ideas you can act on.</p>
-          </div>
-          <form class="blog-subscribe-form" id="blog-subscribe-form">
-            <input type="hidden" name="type" value="blog-subscriber" />
-            <div class="blog-subscribe-fields">
-              <div class="blog-subscribe-field">
-                <label for="bs-business" class="sr-only">Business name</label>
-                <input type="text" id="bs-business" name="business name" placeholder="Business name" required autocomplete="organization" />
-              </div>
-              <div class="blog-subscribe-field">
-                <label for="bs-email" class="sr-only">Email address</label>
-                <input type="email" id="bs-email" name="email" placeholder="Email address" required autocomplete="email" />
-              </div>
-              <div class="blog-subscribe-field">
-                <label for="bs-phone" class="sr-only">Phone (optional)</label>
-                <input type="tel" id="bs-phone" name="phone number optional" placeholder="Phone (optional)" autocomplete="tel" />
-              </div>
-              <button type="submit" class="btn btn-coral blog-subscribe-btn">Subscribe</button>
-            </div>
-            <p class="blog-subscribe-note" id="blog-subscribe-note"></p>
-          </form>
-          <div class="blog-subscribe-success" id="blog-subscribe-success" hidden>
-            <p class="blog-subscribe-success-text">You're subscribed! We'll send you useful tips for your business.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="blog-filters">${categories.length ? categoryFilters(categories) : ''}</div>
-
-      <div class="blog-grid" id="blog-grid">
-        ${posts.length ? posts.map(cardHtml).join('') : emptyState()}
-      </div>
-    </section>
-  `
+  indexEl.innerHTML = renderIndexMarkup({ posts, categories })
 
   indexEl.hidden = false
   if (loadingEl) loadingEl.hidden = true
@@ -271,25 +147,6 @@ async function renderIndex() {
   initFilters(posts)
   initBlogSubscribe()
   initReveal()
-}
-
-function categoryFilters(categories) {
-  const buttons = ['<button class="blog-filter is-active" data-cat="all">All</button>']
-  for (const c of categories) {
-    buttons.push(`<button class="blog-filter" data-cat="${escapeHtml(c)}">${escapeHtml(c)}</button>`)
-  }
-  return `<div class="blog-filterbar"><span class="blog-filter-label">Browse:</span><div class="blog-filters-inner">${buttons.join('')}</div></div>`
-}
-
-function emptyState() {
-  return `
-    <div class="blog-empty">
-      <p class="blog-empty-title">No tips yet</p>
-      <p class="blog-empty-body">
-        Check back soon - we’re writing practical guides for local businesses.
-      </p>
-    </div>
-  `
 }
 
 function initFilters(posts) {
@@ -307,7 +164,6 @@ function initFilters(posts) {
   })
 }
 
-/* ---------- blog subscribe form ---------- */
 function initBlogSubscribe() {
   const form = document.getElementById('blog-subscribe-form')
   const note = document.getElementById('blog-subscribe-note')
@@ -401,6 +257,15 @@ function initFooterNewsletter() {
 }
 
 /* ---------- render: article ---------- */
+async function fetchLatestPosts() {
+  try {
+    return await client.fetch(blogPostsQuery)
+  } catch (err) {
+    console.warn('[Execora] Sanity unavailable while loading related posts.', err)
+    return []
+  }
+}
+
 async function renderArticle(slug) {
   const articleEl = document.getElementById('blog-article')
   const loadingEl = document.getElementById('blog-loading')
@@ -418,64 +283,28 @@ async function renderArticle(slug) {
     return
   }
 
-  const img = post.image ? imageUrlFor(post.image) : null
-  const imgUrl = img ? img.width(1400).auto('format').url() : ''
-  const alt = post.image?.alt || post.title || ''
-  const date = formatDate(post.publishedDate)
-  const body = Array.isArray(post.body) ? portableTextToHtml(post.body) : ''
-  const pageUrl = `https://www.execora.work/blog/${post.slug?.current || ''}`
+  const meta = articlePageMeta(post)
+  const allPosts = await fetchLatestPosts()
+  const markup = renderArticleMarkup(post, { includeAutoRelated: true, allPosts })
 
   // SEO
-  document.title = post.seoTitle || `${post.title} - Execora`
-  setMetaProperty('og:title', post.title)
-  setMetaName('description', post.seoDescription || post.excerpt || '')
-  setMetaProperty('og:description', post.seoDescription || post.excerpt || '')
-  setMetaName('twitter:description', post.seoDescription || post.excerpt || '')
-  setMetaName('twitter:title', post.title)
-  setMetaProperty('og:url', pageUrl)
-  setCanonical(pageUrl)
-  if (imgUrl) setMetaProperty('og:image', imgUrl)
-  setMetaName('author', post.author || 'Execora Editorial Team')
-  if (post.primaryKeyword || (post.secondaryKeywords && post.secondaryKeywords.length)) {
-    const keywords = [post.primaryKeyword, ...(post.secondaryKeywords || [])]
-      .filter(Boolean)
-      .join(', ')
-    setMetaName('keywords', keywords)
+  document.title = meta.title
+  setMetaProperty('og:title', meta.title)
+  setMetaName('description', meta.description)
+  setMetaProperty('og:description', meta.description)
+  setMetaName('twitter:description', meta.description)
+  setMetaName('twitter:title', meta.title)
+  setMetaProperty('og:url', meta.url)
+  setCanonical(meta.url)
+  if (meta.image) {
+    setMetaProperty('og:image', meta.image)
+    setMetaName('twitter:image', meta.image)
   }
-  setArticleJsonLd({ post, pageUrl, date })
+  setMetaName('author', post.author || 'Execora Editorial Team')
+  if (meta.keywords) setMetaName('keywords', meta.keywords)
+  setArticleJsonLd(post, meta)
 
-  const relatedLinksHtml = renderRelatedLinks(post.relatedLinks, post.externalSources)
-
-  articleEl.innerHTML = `
-    <article class="blog-article-inner">
-      <header class="article-head reveal is-visible">
-        <a class="article-back" href="/blog">← All tips</a>
-        <span class="blog-card-cat">${post.category || 'Tip'}</span>
-        <h1 class="article-title">${escapeHtml(post.title || '')}</h1>
-        <div class="article-meta">
-          ${date ? `<span>${date}</span>` : ''}
-          ${post.readingTime ? `<span>${post.readingTime} min read</span>` : ''}
-          ${post.author ? `<span>${escapeHtml(post.author)}</span>` : ''}
-        </div>
-      </header>
-
-      ${imgUrl ? `<figure class="article-hero"><img src="${imgUrl}" alt="${escapeHtml(alt)}" /></figure>` : ''}
-
-      <div class="article-body ${imgUrl ? '' : 'no-media'}">${body}</div>
-
-      ${relatedLinksHtml}
-
-      <footer class="article-cta reveal">
-        <span class="eyebrow">Let’s work together</span>
-        <h2 class="article-cta-title">Need a better website for your business?</h2>
-        <p class="article-cta-body">
-          Execora builds simple, professional websites designed to help local businesses get found,
-          build trust and generate enquiries.
-        </p>
-        <a class="btn btn-coral" href="/#pricing">View our plans</a>
-      </footer>
-    </article>
-  `
+  articleEl.innerHTML = markup
 
   articleEl.hidden = false
   if (loadingEl) loadingEl.hidden = true
@@ -490,7 +319,7 @@ function renderNotFound() {
       <header class="blog-head reveal is-visible">
         <span class="eyebrow">Local business tips</span>
         <h1 class="blog-title">Tip not found</h1>
-        <p class="blog-lead">The tip you’re looking for doesn’t exist or isn’t published yet.</p>
+        <p class="blog-lead">The tip you're looking for doesn't exist or isn't published yet.</p>
         <a class="btn btn-coral" href="/blog">Back to tips</a>
       </header>
     </section>

@@ -1,5 +1,6 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
+import { prerenderPlugin } from './src/seo/prerender.mjs'
 
 export default defineConfig({
   // Expose env vars prefixed NEXT_PUBLIC_ (and standard VITE_) to client code,
@@ -64,6 +65,10 @@ export default defineConfig({
         })
       },
     },
+    // Static prerender the blog (index + every published article) into
+    // dist/blog/*.html during `vite build`, plus sitemap.xml/robots.txt.
+    // Falls back to the SPA shell behaviour when Sanity is unreachable.
+    prerenderPlugin(),
   ],
   server: {
     open: false,

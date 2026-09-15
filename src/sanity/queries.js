@@ -28,13 +28,21 @@ export const blogPostsQuery = `
   | order(publishedDate desc)
   {
     _id,
+    _updatedAt,
     title,
     slug,
     category,
+    contentCluster,
     excerpt,
     publishedDate,
     readingTime,
-    image
+    image {
+      ...,
+      asset-> {
+        _id,
+        metadata { dimensions { width, height } }
+      }
+    }
   }
 `
 
@@ -43,15 +51,23 @@ export const blogPostBySlugQuery = `
   *[_type == "blogPost" && slug.current == $slug && defined(slug.current)][0]
   {
     _id,
+    _updatedAt,
     title,
     slug,
     category,
     excerpt,
     publishedDate,
     readingTime,
-    image,
+    image {
+      ...,
+      asset-> {
+        _id,
+        metadata { dimensions { width, height } }
+      }
+    },
     body[]{
       ...,
+      "imageDims": image.asset->.metadata.dimensions,
       markDefs[]{
         ...,
         _type == "link" => { "href": @.href }
