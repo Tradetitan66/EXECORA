@@ -27,6 +27,7 @@ function makeRes() {
     res._body = body
     return res
   }
+  res.end = () => res
   res.json = (obj) => {
     res._body = obj
     return res
@@ -60,11 +61,11 @@ afterEach(() => {
   Object.keys(baseEnv).forEach((k) => delete process.env[k])
 })
 
-test('only allows GET', async () => {
+test('only allows GET and HEAD', async () => {
   const res = makeRes()
   await handler(makeReq({ method: 'POST' }), res)
   assert.equal(res._status, 405)
-  assert.equal(res.headers.Allow, 'GET')
+  assert.equal(res.headers.Allow, 'GET, HEAD')
 })
 
 test('returns a sitemap with home, blog and every returned post', async () => {
@@ -88,7 +89,7 @@ test('returns a sitemap with home, blog and every returned post', async () => {
 
   assert.equal(res._status, 200)
   assert.match(res.headers['Content-Type'], /application\/xml/)
-  assert.match(res.headers['Cache-Control'], /s-maxage=600/)
+  assert.match(res.headers['Cache-Control'], /s-maxage=60/)
   assert.match(res._body, /^<\?xml version="1.0" encoding="UTF-8"\?>/)
   assert.match(res._body, /<loc>https:\/\/www\.execora\.work\/<\/loc>/)
   assert.match(res._body, /<loc>https:\/\/www\.execora\.work\/blog<\/loc>/)
@@ -96,6 +97,34 @@ test('returns a sitemap with home, blog and every returned post', async () => {
   assert.match(res._body, /https:\/\/www\.execora\.work\/blog\/another-tip/)
   assert.match(res._body, /<lastmod>2026-03-04<\/lastmod>/)
   assert.equal((res._body.match(/<url>/g) || []).length, 4)
+})
+
+test('HEAD returns the same headers with no body', async () => {
+  setClientFactory(() =>
+    fakeClient([
+      { _id: 'post-1', _updatedAt: '2026-03-04T12:00:00Z', slug: { current: 'a-tip' } },
+    ])
+  )
+
+  const res = makeRes()
+  await handler(makeReq({ method: 'HEAD' }), res)
+
+  assert.equal(res._status, 200)
+  assert.match(res.headers['Content-Type'], /application\/xml/)
+  assert.match(res.headers['Cache-Control'], /s-maxage=60/)
+  assert.equal(res._body, null)
+})
+
+test('HEAD still succeeds when Sanity is unreachable', async () => {
+  setClientFactory(() => fakeClient([], { fail: true }))
+
+  const res = makeRes()
+  await handler(makeReq({ method: 'HEAD' }), res)
+
+  assert.equal(res._status, 200)
+  assert.match(res.headers['Content-Type'], /application\/xml/)
+  assert.match(res.headers['Cache-Control'], /s-maxage=30/)
+  assert.equal(res._body, null)
 })
 
 test('falls back to a minimal valid sitemap when Sanity is unreachable', async () => {
@@ -106,7 +135,7 @@ test('falls back to a minimal valid sitemap when Sanity is unreachable', async (
 
   assert.equal(res._status, 200)
   assert.match(res.headers['Content-Type'], /application\/xml/)
-  assert.match(res.headers['Cache-Control'], /s-maxage=60/)
+  assert.match(res.headers['Cache-Control'], /s-maxage=30/)
   assert.match(res._body, /<loc>https:\/\/www\.execora\.work\/<\/loc>/)
   assert.match(res._body, /<loc>https:\/\/www\.execora\.work\/blog<\/loc>/)
   assert.equal((res._body.match(/<url>/g) || []).length, 2)

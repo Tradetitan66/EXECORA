@@ -10,10 +10,13 @@ import { sitemapXml } from '../src/seo/render.js'
  * and future-dated posts (`publishedDate <= now()`) surface as soon as
  * their date arrives — no redeploy needed.
  *
- * The response is cached on the Vercel CDN with a short TTL (10 min) so
- * it stays fresh without hammering Sanity. If Sanity is unreachable we
- * still return a valid sitemap (home + blog index) with a much shorter
- * TTL, so crawlers never see a 500 and a transient failure self-heals.
+ * The response is cached on the Vercel CDN for a short window (60s, via
+ * `s-maxage`) so a newly published or now-due post shows up within a
+ * minute while still avoiding a Sanity query on every hit.
+ * `stale-while-revalidate` keeps responses flowing if a revalidation is
+ * slow. If Sanity is unreachable we still return a valid sitemap (home +
+ * blog index) with a much shorter TTL, so crawlers never see a 500 and a
+ * transient failure self-heals.
  *
  * No env vars required — the project/dataset fall back to production
  * defaults (same as the client bundle).
@@ -49,8 +52,8 @@ function defaultClientFactory({ projectId, dataset }) {
 }
 
 export default async function handler(req, res) {
-  if (req.method !== 'GET') {
-    res.setHeader('Allow', 'GET')
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.setHeader('Allow', 'GET, HEAD')
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
@@ -64,11 +67,13 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error('[Execora] sitemap Sanity fetch failed:', err.message)
     res.setHeader('Content-Type', 'application/xml; charset=utf-8')
-    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300')
+    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=30, stale-while-revalidate=300')
+    if (req.method === 'HEAD') return res.status(200).end()
     return res.status(200).send(sitemapXml([]))
   }
 
   res.setHeader('Content-Type', 'application/xml; charset=utf-8')
-  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=600, stale-while-revalidate=3600')
+  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=3600')
+  if (req.method === 'HEAD') return res.status(200).end()
   return res.status(200).send(sitemapXml(posts))
 }
