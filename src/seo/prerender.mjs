@@ -12,7 +12,6 @@ import {
   breadcrumbJsonLd,
   collectionJsonLd,
   headTags,
-  sitemapXml,
   robotsTxt,
 } from './render.js'
 
@@ -24,7 +23,13 @@ import {
     - dist/blog-shell.html  ← SPA fallback for unknown/new slugs
     - dist/blog/index.html  ← prerendered blog index (/blog)
     - dist/blog/<slug>.html ← prerendered article (/blog/<slug>)
-    - dist/sitemap.xml, dist/robots.txt
+    - dist/robots.txt
+
+   The XML sitemap is served dynamically at /sitemap.xml by
+   /api/sitemap.js (rewrite in vercel.json) so newly published and
+   now-due future-dated posts appear without a redeploy. It is NOT
+   written here, because Vercel serves static files before rewrites
+   and a static sitemap.xml would shadow the dynamic route.
 
    Vercel serves the filesystem before any rewrite, so each URL with a
    generated file is served directly; any other /blog/<slug> falls back
@@ -186,8 +191,8 @@ export function prerenderPlugin() {
           await writeFile(path.join(blogDir, `${post.slug.current}.html`), articleHtml)
         }
 
-        await writeFile(path.join(outDir, 'sitemap.xml'), sitemapXml(posts))
-        this.info(`[execora-prerender] Prerendered ${posts.length} blog pages + sitemap.`)
+        await writeFile(path.join(outDir, 'robots.txt'), robotsTxt())
+        this.info(`[execora-prerender] Wrote robots.txt (sitemap served dynamically by /api/sitemap).`)
       } else {
         this.warn('[execora-prerender] No published posts returned - sitemap omitted.')
       }
