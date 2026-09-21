@@ -343,6 +343,7 @@ section {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
+  min-height: 44px;
 }
 .logo-dot {
   width: 30px;
@@ -399,8 +400,8 @@ section {
   flex-direction: column;
   justify-content: center;
   gap: 5px;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   align-items: center;
   background: transparent;
   border: 1px solid rgba(41, 37, 36, 0.12);
@@ -730,7 +731,7 @@ section {
 .btn-sm {
   font-size: 0.85rem;
   padding: 0.55rem 1.1rem;
-  min-height: 40px;
+  min-height: 44px;
 }
 
 /* Live demo link under the slider */
@@ -1034,6 +1035,7 @@ section {
   box-shadow: 0 0 0 3px rgba(201, 164, 92, 0.22);
 }
 .plan-table .plan-cta { width: 100%; display: inline-flex; }
+.plan-ctas { display: grid; gap: 0.6rem; }
 
 .plan-cards-mobile { display: none; }
 .plan-full { max-width: var(--maxw); margin-inline: auto; margin-bottom: 2.6rem; }
@@ -1224,6 +1226,7 @@ section {
   color: var(--coral-ink);
   font-weight: 600;
   text-decoration: underline;
+  padding: 0.35rem 0;
 }
 
 /* Terms of Service link under the plan table */
@@ -1332,6 +1335,7 @@ section {
   font-family: var(--font-body);
   font-size: 0.95rem;
   width: 100%;
+  min-height: 44px;
   color: var(--ink);
   padding: 0.72rem 1rem;
   border: 1px solid var(--stone-100);
@@ -1499,6 +1503,7 @@ section {
 .newsletter-field { flex: 1; min-width: 0; }
 .newsletter-field input {
   width: 100%;
+  min-height: 44px;
   padding: 0.75rem 1rem;
   font-family: var(--font-body);
   font-size: 0.95rem;
@@ -1813,7 +1818,8 @@ body.modal-open { overflow: hidden; }
   .hero-actions { flex-direction: column; align-items: stretch; }
   .hero-actions .btn { width: 100%; }
 
-  .eyebrow { font-size: 0.7rem; letter-spacing: 0.13em; }
+  .eyebrow { font-size: 0.75rem; letter-spacing: 0.13em; }
+  .showcase-cred { font-size: 0.75rem; }
   .section-title { font-size: 2rem; }
 
   .step { padding: 1.6rem 1.4rem 1.5rem; }
@@ -1966,7 +1972,8 @@ body.modal-open { overflow: hidden; }
   .plan-card-mobile .plan-card-mobile-head { display: flex; flex-direction: column; gap: 0.4rem; }
   .plan-card-mobile .plan-card-mobile-price small { display: block; font-size: 0.78rem; color: var(--muted); margin-top: 0.3rem; }
   .plan-card-mobile-bestfor { color: var(--ink); font-size: 0.95rem; font-weight: 400; line-height: 1.55; }
-  .plan-card-mobile .plan-cta { margin-top: auto; }
+  .plan-card-mobile .plan-ctas { margin-top: auto; }
+  .plan-card-mobile .plan-ctas .plan-cta { margin-top: 0; }
 
   .plan-col-captions, .plan-section-grid { grid-template-columns: 1fr; }
   .plan-col-captions { display: none; }
@@ -1980,6 +1987,22 @@ body.modal-open { overflow: hidden; }
   .contact-copy .eyebrow { justify-content: center; }
 
   .footer-links { gap: 2rem; }
+
+  /* Comfortable tap targets on touch screens */
+  .footer-col { gap: 0.1rem; }
+  .footer-col a,
+  .footer-email,
+  .legal-inner a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .nav-cta {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 /* ============ TABLET portrait (iPad) & below ============ */

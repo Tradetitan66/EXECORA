@@ -12,6 +12,14 @@ hydrateHomepage()
 // Wire all £5 prototype CTAs to open the checkout modal (Stripe Checkout flow).
 initCheckout()
 
+// Track clicks on the £39/£59 monthly plan subscribe links (external Stripe
+// Payment Links). Only a non-personal location label is sent.
+document.querySelectorAll('[data-subscribe-cta]').forEach((link) => {
+  link.addEventListener('click', () => {
+    trackEvent('subscribe_click', { location: link.dataset.location || 'pricing' })
+  })
+})
+
 function initHeaderGlass() {
   const header = document.querySelector('.nav-bar')
   if (!header) return

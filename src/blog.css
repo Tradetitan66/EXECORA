@@ -71,6 +71,7 @@
   border: 1px solid var(--stone-100);
   border-radius: 999px;
   padding: 0.45rem 1rem;
+  min-height: 44px;
   cursor: pointer;
   transition: color 0.3s var(--ease-slow), border-color 0.3s var(--ease-slow),
     background 0.3s var(--ease-slow);
@@ -411,6 +412,7 @@
 }
 .blog-subscribe-field input {
   width: 100%;
+  min-height: 44px;
   padding: 0.7rem 0.9rem;
   font-family: var(--font-body);
   font-size: 0.9rem;
@@ -479,4 +481,5 @@
   .blog-subscribe-field input { padding: 0.65rem 0.85rem; }
   .blog-subscribe-btn { width: 100%; justify-content: center; }
   .blog-subscribe-desc { font-size: 0.9rem; }
+  .blog-card-cat { font-size: 0.75rem; }
 }

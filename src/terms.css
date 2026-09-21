@@ -177,6 +177,9 @@
 .terms-plan p b { color: var(--ink); font-weight: 600; }
 .terms-plan p a { color: var(--coral-ink); font-weight: 600; text-decoration: underline; }
 
+/* Give inline WhatsApp links a larger tap area without shifting text flow */
+a[href^="https://wa.me"]:not(.btn) { padding: 0.4rem 0; }
+
 .terms-contact {
   background: var(--card-alt);
   border-radius: var(--radius-soft);
@@ -253,4 +256,6 @@
   .terms-fact-grid { grid-template-columns: 1fr; }
   .terms-plan-header { flex-direction: column; }
   .terms-wa-fields { grid-template-columns: 1fr; }
+  .terms-plan-badge,
+  .terms-fact-title { font-size: 0.75rem; }
 }
