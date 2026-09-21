@@ -1810,6 +1810,7 @@ body.modal-open { overflow: hidden; }
 
 /* ============ PHABLET (fine phones / small tablets) ============ */
 @media (max-width: 640px) {
+  .plan-cards-mobile { padding-top: 1.5rem; }
   .plan-card-mobile { font-size: 1rem; padding: 1.2rem; }
   .plan-card-mobile-head { font-size: 1.1rem; }
   .plan-full-details { font-size: 1rem; }
@@ -2244,6 +2245,7 @@ body.modal-open { overflow: hidden; }
 }
 
 @media (max-width: 640px) {
+  .plan-cards-mobile { padding-top: 1.5rem; }
   .plan-card-mobile { font-size: 1rem; padding: 1.2rem; }
   .plan-card-mobile-head { font-size: 1.1rem; }
   .plan-full-details { font-size: 1rem; }
