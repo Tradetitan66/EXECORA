@@ -586,9 +586,12 @@ export function sitemapXml(posts) {
 export function robotsTxt() {
   return [
     `# ${BRAND_NAME} robots.txt`,
-    '# All crawlers are allowed. The XML sitemap is declared below.',
+    '# Crawlers are welcome. The XML sitemap is declared below.',
     'User-agent: *',
     'Allow: /',
+    '# Private post-payment pages (no SEO value).',
+    'Disallow: /welcome',
+    'Disallow: /thank-you',
     '',
     `Sitemap: ${SITE_URL}/sitemap.xml`,
     '',

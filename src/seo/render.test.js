@@ -207,10 +207,12 @@ test('sitemap lists home, terms, blog and every post with real lastmod', () => {
   assert.equal((xml.match(/<url>/g) || []).length, 4)
 })
 
-test('robots.txt allows all crawlers and declares the sitemap', () => {
+test('robots.txt allows crawlers, disallows post-payment pages and declares the sitemap', () => {
   const robots = robotsTxt()
   assert.match(robots, /^User-agent: \*$/m)
   assert.match(robots, /^Allow: \/$/m)
+  assert.match(robots, /^Disallow: \/welcome$/m)
+  assert.match(robots, /^Disallow: \/thank-you$/m)
   assert.match(robots, /Sitemap: https:\/\/www\.execora\.work\/sitemap\.xml/)
 })
 

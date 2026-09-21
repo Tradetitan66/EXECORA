@@ -1,11 +1,17 @@
 import Stripe from 'stripe'
 
 /**
- * Execora — Look up a Checkout Session to read its PaymentIntent ID.
+ * Execora — Look up a Checkout Session's key details.
  * ------------------------------------------------------------------
- * Vercel serverless function. Called from the thank-you page after a
- * successful payment so the receipt / WhatsApp handoff can include the
- * canonical `pi_...` payment ID. Requires the server-only STRIPE_SECRET_KEY.
+ * Vercel serverless function. Called from:
+ *   - the thank-you page (after a £5 prototype payment) to read the
+ *     canonical `pi_...` PaymentIntent ID for the receipt / WhatsApp
+ *     handoff;
+ *   - the welcome page (after a £39/£59 subscription) to verify the
+ *     real plan (from the line-item amount) and show a reference.
+ *
+ * Only non-sensitive fields are returned — never the customer's email.
+ * Requires the server-only STRIPE_SECRET_KEY.
  */
 
 export default async function handler(req, res) {
@@ -34,8 +40,23 @@ export default async function handler(req, res) {
   const stripe = new Stripe(stripeSecret)
 
   try {
-    const session = await stripe.checkout.sessions.retrieve(sessionId)
-    return res.status(200).json({ payment_intent: session.payment_intent || '' })
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['line_items'],
+    })
+
+    const lineItem = session.line_items?.data?.[0]
+    const price = lineItem?.price
+    const amount = price?.unit_amount ?? session.amount_subtotal ?? session.amount_total ?? null
+
+    return res.status(200).json({
+      payment_intent: session.payment_intent || '',
+      mode: session.mode || '',
+      status: session.status || '',
+      amount: typeof amount === 'number' ? amount : null,
+      currency: price?.currency || session.currency || 'gbp',
+      subscription: session.subscription || '',
+      customer: session.customer || '',
+    })
   } catch (err) {
     console.error('[Execora] session-info lookup failed:', err.message)
     return res.status(500).json({ error: 'Could not retrieve session' })

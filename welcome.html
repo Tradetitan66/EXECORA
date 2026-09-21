@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta
+      name="description"
+      content="Welcome to Execora - your monthly website plan is active. Tell us about your business so we can start your build."
+    />
+    <meta name="theme-color" content="#F7F2E9" />
+    <title>Welcome - Execora</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Reenie+Beanie&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/thank-you.css" />
+    <link rel="stylesheet" href="/src/welcome.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <!-- Grain overlay -->
+    <div class="grain" aria-hidden="true"></div>
+
+    <!-- ============ NAVIGATION ============ -->
+    <header class="nav-bar" data-header>
+      <div class="nav-inner">
+        <a class="nav-logo" href="/" aria-label="Execora home">
+          <span class="logo-dot" aria-hidden="true"><span class="logo-core"></span></span>
+          <span class="logo-word">Execora</span>
+        </a>
+        <nav class="nav-links" id="site-nav" aria-label="Primary">
+          <a href="/">Home</a>
+          <a href="/#pricing">Pricing</a>
+          <a href="/#contact">Contact</a>
+        </nav>
+        <button
+          class="menu-toggle"
+          id="menu-toggle"
+          aria-expanded="false"
+          aria-controls="site-nav"
+          aria-label="Toggle menu"
+        >
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </button>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- ============ WELCOME HERO ============ -->
+      <section class="thanks welcome-hero">
+        <div class="blob blob-peach" aria-hidden="true"></div>
+        <div class="blob blob-lavender" aria-hidden="true"></div>
+
+        <div class="thanks-inner">
+          <span class="thanks-check" aria-hidden="true">
+            <span class="check-core"></span>
+          </span>
+          <span class="eyebrow">Subscription confirmed</span>
+          <p class="thanks-payment-ref" id="welcome-ref" hidden>
+            <span class="ref-label">Subscription reference:</span>
+            <span class="ref-value" id="welcome-ref-value"></span>
+          </p>
+          <h1 class="thanks-title">Welcome <span class="cursive accent">aboard.</span></h1>
+          <p class="thanks-sub" id="welcome-sub">
+            Your Execora website plan is active. Tell us about your business below and we will get
+            your build underway.
+          </p>
+        </div>
+      </section>
+
+      <!-- ============ WELCOME BODY ============ -->
+      <section class="welcome-body">
+        <div class="wrap welcome-wrap">
+          <!-- Plan summary -->
+          <div class="welcome-plan" id="welcome-plan">
+            <h2>Your plan</h2>
+            <div class="welcome-plan-grid">
+              <div class="welcome-plan-cell">
+                <span class="welcome-plan-label">Plan</span>
+                <span class="welcome-plan-value" id="welcome-plan-name">Monthly website plan</span>
+              </div>
+              <div class="welcome-plan-cell">
+                <span class="welcome-plan-label">Price</span>
+                <span class="welcome-plan-value" id="welcome-plan-price">Monthly</span>
+              </div>
+              <div class="welcome-plan-cell">
+                <span class="welcome-plan-label">Minimum term</span>
+                <span class="welcome-plan-value">12 months</span>
+              </div>
+              <div class="welcome-plan-cell">
+                <span class="welcome-plan-label">Total over 12 months</span>
+                <span class="welcome-plan-value" id="welcome-plan-total">-</span>
+              </div>
+            </div>
+            <p class="welcome-plan-note">
+              No setup fee. Billing continues monthly after the first 12 months, with 30 days'
+              notice to cancel after the initial term. Read the
+              <a href="/terms">Terms of Service</a>.
+            </p>
+          </div>
+
+          <!-- What happens next -->
+          <div class="welcome-steps">
+            <h2>What happens next</h2>
+            <ol class="welcome-steps-list">
+              <li>
+                <span class="welcome-step-num" aria-hidden="true">1</span>
+                <div>
+                  <h3>We review your details</h3>
+                  <p>We read what you send below and prepare questions specific to your business.</p>
+                </div>
+              </li>
+              <li>
+                <span class="welcome-step-num" aria-hidden="true">2</span>
+                <div>
+                  <h3>We contact you to start</h3>
+                  <p>We reach out on WhatsApp or email to confirm your goals and begin your build.</p>
+                </div>
+              </li>
+              <li>
+                <span class="welcome-step-num" aria-hidden="true">3</span>
+                <div>
+                  <h3>Your site goes live</h3>
+                  <p>We build, refine and launch your website, then support it month to month.</p>
+                </div>
+              </li>
+            </ol>
+          </div>
+
+          <!-- Onboarding form -->
+          <article class="welcome-onboard">
+            <h2 id="welcome-onboard-title">Tell us about your business</h2>
+            <p class="welcome-onboard-lead">
+              The more you share, the faster we can start. Every field is optional - you can also
+              send this straight to us on WhatsApp.
+            </p>
+
+            <form id="welcome-form" class="detail-form" novalidate>
+              <div class="form-row">
+                <div class="field">
+                  <label for="w-name">Your name</label>
+                  <input id="w-name" name="name" type="text" autocomplete="name" placeholder="e.g. Sam" />
+                </div>
+                <div class="field">
+                  <label for="w-business">Business name</label>
+                  <input
+                    id="w-business"
+                    name="business"
+                    type="text"
+                    autocomplete="organization"
+                    placeholder="e.g. Brightside Plumbing"
+                  />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="field">
+                  <label for="w-email">Email</label>
+                  <input id="w-email" name="email" type="email" autocomplete="email" placeholder="you@business.co.uk" />
+                </div>
+                <div class="field">
+                  <label for="w-phone">WhatsApp number</label>
+                  <input id="w-phone" name="phone" type="tel" autocomplete="tel" placeholder="07… or +44…" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="field">
+                  <label for="w-type">Business type</label>
+                  <input id="w-type" name="type" type="text" placeholder="e.g. plumber, salon, café" />
+                </div>
+                <div class="field">
+                  <label for="w-location">Location</label>
+                  <input id="w-location" name="location" type="text" placeholder="e.g. Edinburgh" />
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="w-services">Services or products</label>
+                <input id="w-services" name="services" type="text" placeholder="What do you offer?" />
+              </div>
+
+              <div class="form-row">
+                <div class="field">
+                  <label for="w-style">Website style</label>
+                  <input id="w-style" name="style" type="text" placeholder="e.g. clean, bold, friendly" />
+                </div>
+                <div class="field">
+                  <label for="w-social">Social or existing website</label>
+                  <input id="w-social" name="social" type="text" inputmode="url" placeholder="yourbusiness.co.uk" />
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="w-notes">Anything else?</label>
+                <textarea id="w-notes" name="notes" rows="3" placeholder="Goals, deadlines, examples you like…"></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-coral btn-block" id="welcome-submit">
+                Send my business details
+              </button>
+              <p class="form-note" id="welcome-form-note">
+                We use these details only to build and support your website. Any field can be left blank.
+              </p>
+            </form>
+
+            <div class="welcome-success" id="welcome-success" hidden>
+              <h3 id="welcome-success-title">Got it - thank you.</h3>
+              <p>
+                Your details are on their way to our team. Prefer to talk it through? Send the same
+                details to us on WhatsApp.
+              </p>
+              <button type="button" class="btn btn-wa" id="welcome-wa-btn">
+                Continue on WhatsApp
+              </button>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a class="nav-logo" href="/" aria-label="Execora home">
+            <span class="logo-dot" aria-hidden="true"><span class="logo-core"></span></span>
+            <span class="logo-word">Execora</span>
+          </a>
+          <p class="footer-tagline">Helping local businesses show up, stand out, and grow.</p>
+          <p class="footer-location">Rooted locally. Ready for everywhere. · Based in Edinburgh, UK</p>
+          <a class="footer-email" href="mailto:hello@execora.work">hello@execora.work</a>
+        </div>
+        <nav class="footer-links" aria-label="Footer">
+          <div class="footer-col">
+            <h4 class="footer-heading">Explore</h4>
+            <a href="/#how-it-works">How it works</a>
+            <a href="/#showcase">Examples</a>
+            <a href="/#pricing">Pricing</a>
+            <a href="/blog">Local Business Tips</a>
+            <a href="/#contact">Contact</a>
+            <a href="/#faqs">FAQs</a>
+          </div>
+          <div class="footer-col">
+            <h4 class="footer-heading">Company</h4>
+            <a href="/#why-execora">About Execora</a>
+            <a href="/#services">Who we build for</a>
+            <a href="/terms">Terms of Service</a>
+          </div>
+        </nav>
+      </div>
+      <div class="footer-legal">
+        <div class="legal-inner">
+          <p>© 2026 Execora.</p>
+          <p class="legal-note">Made for local businesses.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/welcome.js"></script>
+  </body>
+</html>
