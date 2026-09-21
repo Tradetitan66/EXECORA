@@ -92,11 +92,12 @@ test('returns a sitemap with home, blog and every returned post', async () => {
   assert.match(res.headers['Cache-Control'], /s-maxage=60/)
   assert.match(res._body, /^<\?xml version="1.0" encoding="UTF-8"\?>/)
   assert.match(res._body, /<loc>https:\/\/www\.execora\.work\/<\/loc>/)
+  assert.match(res._body, /<loc>https:\/\/www\.execora\.work\/terms<\/loc>/)
   assert.match(res._body, /<loc>https:\/\/www\.execora\.work\/blog<\/loc>/)
   assert.match(res._body, /https:\/\/www\.execora\.work\/blog\/how-to-show-your-prices-clearly/)
   assert.match(res._body, /https:\/\/www\.execora\.work\/blog\/another-tip/)
   assert.match(res._body, /<lastmod>2026-03-04<\/lastmod>/)
-  assert.equal((res._body.match(/<url>/g) || []).length, 4)
+  assert.equal((res._body.match(/<url>/g) || []).length, 5)
 })
 
 test('HEAD returns the same headers with no body', async () => {
@@ -137,8 +138,9 @@ test('falls back to a minimal valid sitemap when Sanity is unreachable', async (
   assert.match(res.headers['Content-Type'], /application\/xml/)
   assert.match(res.headers['Cache-Control'], /s-maxage=30/)
   assert.match(res._body, /<loc>https:\/\/www\.execora\.work\/<\/loc>/)
+  assert.match(res._body, /<loc>https:\/\/www\.execora\.work\/terms<\/loc>/)
   assert.match(res._body, /<loc>https:\/\/www\.execora\.work\/blog<\/loc>/)
-  assert.equal((res._body.match(/<url>/g) || []).length, 2)
+  assert.equal((res._body.match(/<url>/g) || []).length, 3)
 })
 
 test('passes the project/dataset from env to the client factory', async () => {

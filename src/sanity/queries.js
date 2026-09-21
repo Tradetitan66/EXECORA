@@ -15,9 +15,7 @@ export const siteSettingsQuery = `
     contactHeading,
     contactSub,
     footerTagline,
-    essentialSetupFee,
     essentialMonthlyFee,
-    growthSetupFee,
     growthMonthlyFee
   }
 `

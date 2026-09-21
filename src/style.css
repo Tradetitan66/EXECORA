@@ -1220,6 +1220,27 @@ section {
   font-weight: 500;
   color: var(--ink);
 }
+.pricing-note a {
+  color: var(--coral-ink);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* Terms of Service link under the plan table */
+.pricing-terms-link {
+  max-width: 720px;
+  margin: 0 auto 1.8rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.pricing-terms-link a {
+  color: var(--coral-ink);
+  font-weight: 600;
+  text-decoration: underline;
+}
 
 /* ============================================================
    FAQs (CSS-only accordion)
@@ -1534,6 +1555,8 @@ section {
   gap: 0.6rem;
 }
 .legal-inner p { font-size: 0.85rem; color: var(--stone-400); }
+.legal-inner a { font-size: 0.85rem; color: var(--stone-400); transition: color 0.3s var(--ease-slow); }
+.legal-inner a:hover { color: var(--ink); text-decoration: underline; }
 .legal-note { font-style: italic; }
 
 /* ============================================================

@@ -86,32 +86,18 @@ export const siteSettings = defineType({
     }),
     // ---- Pricing ----
     defineField({
-      name: 'essentialSetupFee',
-      title: 'Essential — one-time setup fee (£)',
-      type: 'number',
-      group: 'pricing',
-      description: 'Setup fee shown on the Essential plan. Leave empty to use the hard-coded £299.',
-    }),
-    defineField({
       name: 'essentialMonthlyFee',
       title: 'Essential — monthly fee (£)',
       type: 'number',
       group: 'pricing',
-      description: 'Monthly fee shown on the Essential plan. Leave empty to use the hard-coded £49.',
-    }),
-    defineField({
-      name: 'growthSetupFee',
-      title: 'Growth — one-time setup fee (£)',
-      type: 'number',
-      group: 'pricing',
-      description: 'Setup fee shown on the Growth plan. Leave empty to use the hard-coded £499.',
+      description: 'Monthly fee shown on the Essential plan. Leave empty to use the hard-coded £39. Plans have no setup fee.',
     }),
     defineField({
       name: 'growthMonthlyFee',
       title: 'Growth — monthly fee (£)',
       type: 'number',
       group: 'pricing',
-      description: 'Monthly fee shown on the Growth plan. Leave empty to use the hard-coded £79.',
+      description: 'Monthly fee shown on the Growth plan. Leave empty to use the hard-coded £59. Plans have no setup fee.',
     }),
   ],
 })

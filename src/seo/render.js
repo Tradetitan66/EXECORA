@@ -567,7 +567,7 @@ export function breadcrumbJsonLd(post) {
    ============================================================ */
 
 export function sitemapXml(posts) {
-  const urls = [{ loc: `${SITE_URL}/` }, { loc: BLOG_URL }]
+  const urls = [{ loc: `${SITE_URL}/` }, { loc: `${SITE_URL}/terms` }, { loc: BLOG_URL }]
   for (const p of posts || []) {
     urls.push({
       loc: `${BLOG_URL}/${p.slug.current}`,

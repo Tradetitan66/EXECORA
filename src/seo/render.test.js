@@ -194,16 +194,17 @@ test('JSON-LD builders emit valid, self-consistent objects', () => {
   assert.equal(col.mainEntity.itemListElement[0].position, 1)
 })
 
-test('sitemap lists home, blog and every post with real lastmod', () => {
+test('sitemap lists home, terms, blog and every post with real lastmod', () => {
   const xml = sitemapXml([basePost])
   assert.match(xml, /^<\?xml version="1.0" encoding="UTF-8"\?>/)
   assert.match(xml, /<loc>https:\/\/www\.execora\.work\/<\/loc>/)
+  assert.match(xml, /<loc>https:\/\/www\.execora\.work\/terms<\/loc>/)
   assert.match(xml, /<loc>https:\/\/www\.execora\.work\/blog<\/loc>/)
   assert.ok(
     xml.includes('<loc>https://www.execora.work/blog/how-to-show-your-prices-clearly-without-losing-enquiries</loc>')
   )
   assert.match(xml, /<lastmod>2026-03-04<\/lastmod>/)
-  assert.equal((xml.match(/<url>/g) || []).length, 3)
+  assert.equal((xml.match(/<url>/g) || []).length, 4)
 })
 
 test('robots.txt allows all crawlers and declares the sitemap', () => {

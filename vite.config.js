@@ -14,7 +14,9 @@ export default defineConfig({
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
           const url = (req.url || '').split('?')[0]
-          if (url === '/blog' || url === '/blog/' || url.startsWith('/blog/')) {
+          if (url === '/term' || url === '/terms' || url === '/terms/') {
+            req.url = '/terms.html'
+          } else if (url === '/blog' || url === '/blog/' || url.startsWith('/blog/')) {
             req.url = '/blog.html'
           } else if (url === '/admin' || url === '/admin/' || url.startsWith('/admin/')) {
             // /admin redirects to the standalone Sanity Studio in production
@@ -90,7 +92,8 @@ export default defineConfig({
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         'thank-you': fileURLToPath(new URL('./thank-you.html', import.meta.url)),
-        blog: fileURLToPath(new URL('./blog.html', import.meta.url))
+        blog: fileURLToPath(new URL('./blog.html', import.meta.url)),
+        terms: fileURLToPath(new URL('./terms.html', import.meta.url))
       }
     }
   }

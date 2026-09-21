@@ -155,9 +155,9 @@ Studio URL, plus authentication.
 **Site settings** (`siteSettings`) — homepage/footer strings:
 - Business name, hero eyebrow / title / rotating words / subtitle
 - Primary call-to-action, contact heading/subtitle, footer tagline
-- **Pricing:** one-time setup fee and monthly fee for the Essential and Growth
-  plans (in £, entered as numbers). Leave any field empty to keep the
-  hard-coded default (Essential £299/£49, Growth £499/£79). The "12 months"
+- **Pricing:** monthly fee for the Essential and Growth plans (in £, entered
+  as numbers). Leave any field empty to keep the hard-coded default
+  (Essential £39, Growth £59). Plans have no setup fee. The "12 months"
   wording stays fixed in code.
 
 Everything else (layout, design, animations, prices, FAQ text, form logic, SEO

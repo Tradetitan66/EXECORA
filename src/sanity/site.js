@@ -40,13 +40,11 @@ function applyIf(el, value) {
   if (el && value) el.textContent = value
 }
 
-// Update the plan pricing cells in the comparison table.
-// Only applied when BOTH the setup and monthly fee are present from Sanity;
-// otherwise the hard-coded copy in the HTML is kept.
-function applyPlanPrice(planKey, setupFee, monthlyFee) {
-  if (typeof setupFee !== 'number' || typeof monthlyFee !== 'number') return
-  document.querySelectorAll(`[data-plan-price="${planKey}"]`)
-    .forEach((el) => { el.textContent = `+£${setupFee}` })
+// Update the plan monthly pricing cells in the comparison table.
+// Only applied when the monthly fee is present from Sanity; otherwise the
+// hard-coded copy in the HTML is kept. Plans have no setup fee.
+function applyPlanPrice(planKey, monthlyFee) {
+  if (typeof monthlyFee !== 'number') return
   document.querySelectorAll(`[data-plan-monthly="${planKey}"]`)
     .forEach((el) => { el.textContent = `£${monthlyFee}/month` })
 }
@@ -86,6 +84,6 @@ export async function hydrateHomepage() {
   if (settings.footerTagline) applyIf(footerTagline, settings.footerTagline)
 
   // Pricing
-  applyPlanPrice('essential', settings.essentialSetupFee, settings.essentialMonthlyFee)
-  applyPlanPrice('growth', settings.growthSetupFee, settings.growthMonthlyFee)
+  applyPlanPrice('essential', settings.essentialMonthlyFee)
+  applyPlanPrice('growth', settings.growthMonthlyFee)
 }

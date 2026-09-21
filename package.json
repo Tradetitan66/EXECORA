@@ -8,7 +8,7 @@
     "dev:api": "vercel dev",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test api/*.test.js src/seo/*.test.js"
+    "test": "node --test api/*.test.js src/seo/*.test.js src/*.test.js"
   },
   "devDependencies": {
     "vercel": "^59.16.0",
