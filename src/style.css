@@ -511,7 +511,7 @@ section {
    ============================================================ */
 .clay-card {
   background: linear-gradient(180deg, var(--card) 0%, #fdf5e6 100%);
-  border-radius: var(--radius-soft);
+  border-radius: 1rem;
   box-shadow: var(--clay-edge);
 }
 .coin-num {
@@ -549,7 +549,7 @@ section {
   display: flex;
   flex-direction: column;
   gap: 0.7rem;
-  border-radius: var(--radius-soft);
+  border-radius: 1rem;
   background: linear-gradient(180deg, var(--card) 0%, #fdf5e6 100%);
   box-shadow: var(--clay-edge);
   transition: transform 0.4s var(--ease-slow), box-shadow 0.4s var(--ease-slow);
@@ -907,7 +907,7 @@ section {
   margin-inline: auto;
   margin-bottom: 2.4rem;
   overflow-x: auto;
-  border-radius: var(--radius-soft);
+  border-radius: 1rem;
   box-shadow: var(--clay-edge);
   background: var(--card);
 }
@@ -916,7 +916,7 @@ section {
   border-collapse: collapse;
   min-width: 720px;
   text-align: left;
-  border-radius: var(--radius-soft);
+  border-radius: 1rem;
   overflow: hidden;
 }
 .plan-table th,
@@ -1042,7 +1042,7 @@ section {
 .plan-full-details {
   background: var(--card);
   border: 1px solid var(--stone-100);
-  border-radius: var(--radius-soft);
+  border-radius: 1rem;
   box-shadow: var(--clay-edge);
   overflow: hidden;
   border: 0;
@@ -1166,7 +1166,7 @@ section {
 }
 .which-item {
   background: linear-gradient(180deg, var(--card) 0%, #fdf5e6 100%);
-  border-radius: var(--radius-soft);
+  border-radius: 1rem;
   padding: 1.7rem 1.6rem 1.8rem;
   box-shadow: var(--clay-edge);
   display: flex;
@@ -1200,7 +1200,7 @@ section {
   background:
     radial-gradient(120% 120% at 85% 0%, rgba(201, 164, 92, 0.25) 0%, rgba(201, 164, 92, 0) 50%),
     linear-gradient(180deg, var(--card) 0%, #fdf5e6 100%);
-  border-radius: var(--radius-soft);
+  border-radius: 1rem;
   box-shadow: var(--clay-edge);
 }
 .custom-plan-head { max-width: 600px; margin-inline: auto; margin-bottom: 1.5rem; }
@@ -1298,7 +1298,7 @@ section {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.7);
-  border-radius: var(--radius-soft);
+  border-radius: 1rem;
   box-shadow: var(--shadow-lift);
   padding: clamp(2rem, 5vw, 3rem);
   text-align: left;
@@ -1482,7 +1482,7 @@ section {
   margin-bottom: 3rem;
   padding: 2rem 2.2rem;
   border: 1px solid rgba(201, 164, 92, 0.4);
-  border-radius: var(--radius-soft);
+  border-radius: 1rem;
   background:
     radial-gradient(120% 120% at 100% 0%, rgba(201, 164, 92, 0.22) 0%, rgba(201, 164, 92, 0) 55%),
     linear-gradient(180deg, var(--card) 0%, var(--gold-soft) 100%);
@@ -1592,7 +1592,7 @@ section {
   max-height: 90vh;
   overflow-y: auto;
   background: var(--paper);
-  border-radius: var(--radius-soft);
+  border-radius: 1rem;
   box-shadow: 0 40px 90px -30px rgba(41, 37, 36, 0.55);
   padding: clamp(1.5rem, 4vw, 2.5rem);
 }
@@ -1960,7 +1960,7 @@ body.modal-open { overflow: hidden; }
   }
   .plan-card-mobile {
     background: linear-gradient(180deg, var(--card) 0%, #fdf5e6 100%);
-    border-radius: var(--radius-soft);
+    border-radius: 1rem;
     padding: 1.7rem 1.5rem 1.8rem;
     box-shadow: var(--clay-edge);
     display: flex;
@@ -2186,7 +2186,7 @@ body.modal-open { overflow: hidden; }
   z-index: 2;
   width: min(92vw, 1100px);
   height: min(88vh, 760px);
-  border-radius: var(--radius-soft);
+  border-radius: 1rem;
   background: var(--card);
   box-shadow: 0 40px 90px -30px rgba(41, 37, 36, 0.55);
   overflow: hidden;
