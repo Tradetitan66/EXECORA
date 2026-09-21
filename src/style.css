@@ -1037,7 +1037,7 @@ section {
 .plan-table .plan-cta { width: 100%; display: inline-flex; }
 .plan-ctas { display: grid; gap: 0.6rem; }
 
-.plan-cards-mobile { display: none; }
+.plan-cards-mobile { display: grid; grid-template-columns: 1fr; max-width: 620px; margin: auto; gap: 1.5rem; padding: 0 1rem; }
 .plan-full { max-width: var(--maxw); margin-inline: auto; margin-bottom: 2.6rem; }
 .plan-full-details {
   background: var(--card);
@@ -1810,6 +1810,10 @@ body.modal-open { overflow: hidden; }
 
 /* ============ PHABLET (fine phones / small tablets) ============ */
 @media (max-width: 640px) {
+  .plan-card-mobile { font-size: 1rem; padding: 1.2rem; }
+  .plan-card-mobile-head { font-size: 1.1rem; }
+  .plan-full-details { font-size: 1rem; }
+  /* Additional tweaks for mobile readability */
   body { font-size: 16px; }
   section { padding-inline: 1.25rem; padding-block: 3.6rem; }
 
@@ -1899,7 +1903,7 @@ body.modal-open { overflow: hidden; }
   .final-scene { gap: 0.5rem; }
 }
 
-/* ============ MOBILE & TABLET - collapsed menu ============ */
+/* ============ Mobile improvements for plan cards - finalized version */
 @media (max-width: 1023px) {
   .menu-toggle { display: inline-flex; }
 
@@ -2240,6 +2244,10 @@ body.modal-open { overflow: hidden; }
 }
 
 @media (max-width: 640px) {
+  .plan-card-mobile { font-size: 1rem; padding: 1.2rem; }
+  .plan-card-mobile-head { font-size: 1.1rem; }
+  .plan-full-details { font-size: 1rem; }
+  /* Additional tweaks for mobile readability */
   .demo-frame { padding: 0; }
   .demo-frame-panel {
     width: 100vw;
