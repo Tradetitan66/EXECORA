@@ -34,13 +34,13 @@ function personalise() {
   const sub = document.getElementById('thanks-sub')
   const data = getHeldData()
   if (sub && data && data.name) {
-    sub.textContent = `Thank you, ${data.name}. Your £5 prototype payment went through and we’ve got your business details - we’re ready to begin crafting your website prototype.`
+    sub.textContent = `Thank you, ${data.name}. Your payment went through and we’ve got your business details - we’re ready to begin crafting your website prototype.`
   }
   return data
 }
 
 const WHATSAPP_NUMBER = '4407345384868'
-const WHATSAPP_SCOPE_MESSAGE = 'I just paid for my £5 prototype on your website. My details:'
+const WHATSAPP_SCOPE_MESSAGE = 'I just paid for my prototype on your website. My details:'
 
 const FIELD_LABELS = {
   name: 'Name',

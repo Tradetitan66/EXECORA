@@ -7,7 +7,7 @@
 
 import { initAnalytics, trackEvent } from './analytics.js'
 import { openWhatsApp } from './whatsapp.js'
-import { resolvePlan, planSummary, buildWelcomeWhatsAppMessage } from './welcome-plan.js'
+import { resolvePlan, subscriptionSubText, buildWelcomeWhatsAppMessage } from './welcome-plan.js'
 
 initAnalytics({ path: '/welcome' })
 
@@ -17,25 +17,16 @@ const params = new URLSearchParams(window.location.search)
 const queryPlan = params.get('plan')
 const sessionId = params.get('session_id')
 
-// The ?plan= query is only a fallback; the Stripe-verified amount wins.
+// Resolved only for the internal onboarding record (the Sheet payload) and
+// for the price shown in the confirmation line - never the plan name or total.
 let planKey = resolvePlan({ query: queryPlan })
 
-function renderPlan(key) {
-  const summary = planSummary(key)
-  if (!summary) return
-  const sub = document.getElementById('welcome-sub')
-  const name = document.getElementById('welcome-plan-name')
-  const price = document.getElementById('welcome-plan-price')
-  const total = document.getElementById('welcome-plan-total')
-  if (sub) {
-    sub.textContent = `${summary.sub} Tell us about your business below and we will get your build underway.`
-  }
-  if (name) name.textContent = `${summary.name} plan`
-  if (price) price.textContent = summary.monthlyLabel
-  if (total) total.textContent = `£${summary.total}`
+function renderSub(key) {
+  const el = document.getElementById('welcome-sub')
+  if (el) el.textContent = subscriptionSubText(key)
 }
 
-renderPlan(planKey)
+renderSub(planKey)
 
 /** Verify the real subscription via Stripe when a session id is present. */
 async function verifySubscription() {
@@ -52,7 +43,7 @@ async function verifySubscription() {
     const verified = resolvePlan({ amount: json.amount, query: queryPlan })
     if (verified) {
       planKey = verified
-      renderPlan(planKey)
+      renderSub(planKey)
     }
 
     const reference = json.subscription || json.payment_intent || ''
@@ -124,7 +115,7 @@ if (form) {
 if (waBtn) {
   waBtn.addEventListener('click', () => {
     trackEvent('whatsapp_click', { location: 'welcome' })
-    openWhatsApp(buildWelcomeWhatsAppMessage(savedData || {}, planKey))
+    openWhatsApp(buildWelcomeWhatsAppMessage(savedData || {}))
   })
 }
 

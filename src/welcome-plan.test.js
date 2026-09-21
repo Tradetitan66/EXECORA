@@ -1,11 +1,11 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  PLANS,
   planFromAmount,
   planFromQuery,
   resolvePlan,
-  planSummary,
+  planPriceLabel,
+  subscriptionSubText,
   buildWelcomeWhatsAppMessage,
 } from './welcome-plan.js'
 
@@ -37,42 +37,59 @@ test('resolvePlan prefers the verified amount over the query param', () => {
   assert.equal(resolvePlan(), null)
 })
 
-test('planSummary exposes the plan, monthly label and total', () => {
-  assert.deepEqual(planSummary('essential'), {
-    ...PLANS.essential,
-    monthlyLabel: '£39/month',
-    sub: 'Your £39/month Essential plan is active.',
-  })
-  assert.equal(planSummary('growth').total, 708)
-  assert.equal(planSummary('nope'), null)
+test('planPriceLabel returns the paid monthly price for a plan, or null', () => {
+  assert.equal(planPriceLabel('essential'), '£39/month')
+  assert.equal(planPriceLabel('growth'), '£59/month')
+  assert.equal(planPriceLabel(null), null)
+  assert.equal(planPriceLabel('nope'), null)
 })
 
-test('buildWelcomeWhatsAppMessage includes plan, fields and normalised website', () => {
-  const msg = buildWelcomeWhatsAppMessage(
-    {
-      name: 'Sam',
-      business: 'Brightside Plumbing',
-      email: 'sam@brightside.co.uk',
-      phone: '+44 7912 345678',
-      type: 'Plumber',
-      location: 'Edinburgh',
-      services: 'Boilers, bathrooms',
-      style: 'Clean and friendly',
-      social: 'brightsideplumbing.co.uk',
-      notes: 'Wants more quote requests',
-    },
-    'growth'
+test('subscriptionSubText shows the price the customer actually paid', () => {
+  assert.equal(
+    subscriptionSubText('essential'),
+    'Your £39/month subscription is active. Tell us about your business below and we will get your build underway.'
   )
-  assert.match(msg, /Plan: £59\/month Growth/)
+  assert.equal(
+    subscriptionSubText('growth'),
+    'Your £59/month subscription is active. Tell us about your business below and we will get your build underway.'
+  )
+})
+
+test('subscriptionSubText falls back to a generic line with no price', () => {
+  const text = subscriptionSubText(null)
+  assert.equal(
+    text,
+    'Your subscription is active. Tell us about your business below and we will get your build underway.'
+  )
+  assert.doesNotMatch(text, /£/)
+})
+
+test('buildWelcomeWhatsAppMessage includes the onboarding fields and normalised website', () => {
+  const msg = buildWelcomeWhatsAppMessage({
+    name: 'Sam',
+    business: 'Brightside Plumbing',
+    email: 'sam@brightside.co.uk',
+    phone: '+44 7912 345678',
+    type: 'Plumber',
+    location: 'Edinburgh',
+    services: 'Boilers, bathrooms',
+    style: 'Clean and friendly',
+    social: 'brightsideplumbing.co.uk',
+    notes: 'Wants more quote requests',
+  })
   assert.match(msg, /Name: Sam/)
   assert.match(msg, /Business: Brightside Plumbing/)
   assert.match(msg, /WhatsApp: \+44 7912 345678/)
   assert.match(msg, /Social \/ website: https:\/\/brightsideplumbing\.co\.uk/)
 })
 
+test('buildWelcomeWhatsAppMessage never mentions a plan or price', () => {
+  const msg = buildWelcomeWhatsAppMessage({ name: 'Sam', business: 'Brightside Plumbing' })
+  assert.doesNotMatch(msg, /£|plan/i)
+})
+
 test('buildWelcomeWhatsAppMessage fills blanks with "Not provided"', () => {
   const msg = buildWelcomeWhatsAppMessage({ business: 'Brightside Plumbing' })
-  assert.match(msg, /Plan: Not provided/)
   assert.match(msg, /Name: Not provided/)
   assert.match(msg, /Business: Brightside Plumbing/)
   assert.match(msg, /Notes: Not provided/)
@@ -80,5 +97,5 @@ test('buildWelcomeWhatsAppMessage fills blanks with "Not provided"', () => {
 
 test('buildWelcomeWhatsAppMessage handles no argument at all', () => {
   const msg = buildWelcomeWhatsAppMessage()
-  assert.equal((msg.match(/Not provided/g) || []).length, 11)
+  assert.equal((msg.match(/Not provided/g) || []).length, 10)
 })

@@ -4,6 +4,10 @@
  * The Stripe-verified line-item amount is the source of truth; the
  * ?plan= query param is only a fallback for when verification is not
  * available (e.g. a Payment Link redirect without session_id).
+ *
+ * The resolved plan is used only for internal onboarding records (the
+ * Google Sheet payload). Nothing plan- or price-related is shown on the
+ * confirmation page, since the customer already saw it at Stripe.
  */
 
 import { normaliseWebsite } from './whatsapp.js'
@@ -32,26 +36,31 @@ export function resolvePlan({ amount, query } = {}) {
   return planFromAmount(amount) || planFromQuery(query) || null
 }
 
-export function planSummary(key) {
+/** The monthly price label for a resolved plan, or null. */
+export function planPriceLabel(key) {
   const plan = PLANS[key]
-  if (!plan) return null
-  return {
-    ...plan,
-    monthlyLabel: `£${plan.monthly}/month`,
-    sub: `Your £${plan.monthly}/month ${plan.name} plan is active.`,
-  }
+  return plan ? `£${plan.monthly}/month` : null
+}
+
+/**
+ * The confirmation line under the hero. Mentions only the price the
+ * customer actually paid (no plan names, no totals) so the page matches
+ * whichever subscription they bought.
+ */
+export function subscriptionSubText(key) {
+  const price = planPriceLabel(key)
+  const lead = price ? `Your ${price} subscription is active.` : 'Your subscription is active.'
+  return `${lead} Tell us about your business below and we will get your build underway.`
 }
 
 /** Build the pre-filled WhatsApp message for the onboarding form. */
-export function buildWelcomeWhatsAppMessage(data = {}, key = null) {
-  const plan = PLANS[key]
+export function buildWelcomeWhatsAppMessage(data = {}) {
   const val = (v) => (String(v || '').trim() ? String(v).trim() : 'Not provided')
   return [
     'Hi Execora,',
     '',
     'I have just subscribed and here are my business details:',
     '',
-    `Plan: ${plan ? `£${plan.monthly}/month ${plan.name}` : 'Not provided'}`,
     `Name: ${val(data.name)}`,
     `Business: ${val(data.business)}`,
     `Email: ${val(data.email)}`,
