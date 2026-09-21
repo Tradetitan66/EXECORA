@@ -37,7 +37,7 @@
   --font-body: 'Outfit', sans-serif;
   --font-cursive: 'Reenie Beanie', cursive;
 
-  --radius-soft: 2rem;         /* large cards / panels       */
+  --radius-soft: 1rem;         /* large cards / panels       */
   --radius-soft-sm: 1.5rem;    /* medium cards               */
   --radius-sm: 1rem;           /* small chips, inputs, coins */
 
