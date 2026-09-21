@@ -43,6 +43,20 @@ export default defineConfig({
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
           const url = (req.url || '').split('?')[0]
+
+          // Mirror the production /pay/{plan} redirects to the Stripe Payment
+          // Links so the Subscribe buttons work in local dev too.
+          const payRedirects = {
+            '/pay/essential': 'https://buy.stripe.com/eVq9AS0Tm17T93NcaO6Vq05',
+            '/pay/growth': 'https://buy.stripe.com/14AfZgeKc4k56VF1wa6Vq06',
+          }
+          if (Object.prototype.hasOwnProperty.call(payRedirects, url)) {
+            res.statusCode = 308
+            res.setHeader('Location', payRedirects[url])
+            res.end()
+            return
+          }
+
           if (url !== '/api/create-checkout' && url !== '/api/session-info') {
             if (url.startsWith('/api/')) {
               res.statusCode = 404

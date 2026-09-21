@@ -28,6 +28,16 @@
       "source": "/admin/:path*",
       "destination": "https://execora.sanity.studio/:path*",
       "permanent": true
+    },
+    {
+      "source": "/pay/essential",
+      "destination": "https://buy.stripe.com/eVq9AS0Tm17T93NcaO6Vq05",
+      "permanent": true
+    },
+    {
+      "source": "/pay/growth",
+      "destination": "https://buy.stripe.com/14AfZgeKc4k56VF1wa6Vq06",
+      "permanent": true
     }
   ],
   "rewrites": [
