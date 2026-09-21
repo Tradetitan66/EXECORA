@@ -167,7 +167,7 @@ test('page meta is unique and complete for index and article', () => {
   const index = indexPageMeta()
   assert.equal(index.url, 'https://www.execora.work/blog')
   assert.equal(index.title, 'Local Business Tips - Execora')
-  assert.ok(index.image.endsWith('/showcase/shot-02.jpg'))
+  assert.ok(index.image.endsWith('/og-card.png'))
 })
 
 test('JSON-LD builders emit valid, self-consistent objects', () => {

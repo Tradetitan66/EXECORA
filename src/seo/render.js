@@ -15,7 +15,7 @@ import { createImageUrlBuilder } from '@sanity/image-url'
 
 export const SITE_URL = 'https://www.execora.work'
 export const BLOG_URL = `${SITE_URL}/blog`
-export const HOME_OG_IMAGE = `${SITE_URL}/showcase/shot-02.jpg`
+export const HOME_OG_IMAGE = `${SITE_URL}/og-card.png`
 export const BRAND_NAME = 'Execora'
 export const EDITORIAL_TEAM = 'Execora Editorial Team'
 export const DEFAULT_BLOG_DESCRIPTION =
