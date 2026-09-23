@@ -1037,7 +1037,7 @@ section {
 .plan-table .plan-cta { width: 100%; display: inline-flex; }
 .plan-ctas { display: grid; gap: 0.6rem; }
 
-.plan-cards-mobile { display: grid; grid-template-columns: 1fr; max-width: 620px; margin: auto; gap: 1.5rem; padding: 0 1rem; }
+.plan-cards-mobile { display: none; grid-template-columns: 1fr; max-width: 620px; margin: auto; gap: 1.5rem; padding: 0 1rem; }
 .plan-full { max-width: var(--maxw); margin-inline: auto; margin-bottom: 2.6rem; }
 .plan-full-details {
   background: var(--card);
