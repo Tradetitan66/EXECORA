@@ -76,6 +76,13 @@ export const blogPostBySlugQuery = `
     primaryKeyword,
     secondaryKeywords,
     searchIntent,
+    funnelStage,
+    industry,
+    faq[]{
+      question,
+      answer
+    },
+    cta,
     contentCluster,
     targetLocation,
     author,

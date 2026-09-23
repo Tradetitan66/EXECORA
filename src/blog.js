@@ -9,6 +9,7 @@ import {
   emptyState,
   articlePageMeta,
   articleJsonLd,
+  faqJsonLd,
 } from './seo/render.js'
 import { initAnalytics, trackEvent } from './analytics.js'
 import { initCheckout } from './checkout.js'
@@ -121,6 +122,29 @@ function setArticleJsonLd(post, meta) {
   const el = document.createElement('script')
   el.type = 'application/ld+json'
   el.setAttribute('data-article-jsonld', '')
+  el.textContent = JSON.stringify(payload)
+  document.head.appendChild(el)
+}
+
+/**
+ * Update or create the FAQPage JSON-LD. On prerendered pages the script is
+ * marked with data-faq-jsonld; on the SPA fallback route it is created fresh
+ * and removed again when a post without FAQ data is navigated to.
+ */
+async function setFaqJsonLd(post) {
+  const payload = faqJsonLd(post)
+  const existing = document.querySelector('script[data-faq-jsonld]')
+  if (!payload) {
+    if (existing) existing.remove()
+    return
+  }
+  if (existing) {
+    existing.textContent = JSON.stringify(payload)
+    return
+  }
+  const el = document.createElement('script')
+  el.type = 'application/ld+json'
+  el.setAttribute('data-faq-jsonld', '')
   el.textContent = JSON.stringify(payload)
   document.head.appendChild(el)
 }
@@ -303,6 +327,7 @@ async function renderArticle(slug) {
   setMetaName('author', post.author || 'Execora Editorial Team')
   if (meta.keywords) setMetaName('keywords', meta.keywords)
   setArticleJsonLd(post, meta)
+  setFaqJsonLd(post)
 
   articleEl.innerHTML = markup
 

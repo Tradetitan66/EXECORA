@@ -354,6 +354,23 @@ export function relatedMarkup(relatedLinks, externalSources) {
   return parts.join('')
 }
 
+/** Collapsible FAQ section rendered from the post's structured faq array. */
+export function faqMarkup(post) {
+  const faq = (post.faq || []).filter((f) => f && f.question && f.answer)
+  if (!faq.length) return ''
+
+  const items = faq
+    .map(
+      (f) =>
+        `<details class="article-faq-item"><summary>${escapeHtml(f.question)}</summary><p>${escapeHtml(
+          f.answer
+        )}</p></details>`
+    )
+    .join('')
+
+  return `<section class="article-faq" aria-label="Frequently asked questions"><h2>Frequently asked questions</h2>${items}</section>`
+}
+
 /**
  * Auto-generated contextual cross-links (internal-link audit). Deterministic:
  * same category first, then same content cluster, then most recent; capped at
@@ -407,6 +424,19 @@ export function renderArticleMarkup(post, opts = {}) {
     related += autoRelatedMarkup(post, opts.allPosts)
   }
 
+  const faq = faqMarkup(post)
+  const cta = post.cta && post.cta.heading
+    ? `<footer class="article-cta reveal"><h2 class="article-cta-title">${escapeHtml(post.cta.heading)}</h2>${post.cta.body ? `<p class="article-cta-body">${escapeHtml(post.cta.body)}</p>` : ''}<a class="btn btn-coral" href="${escapeHtml(post.cta.url || 'https://www.execora.work/')}">${escapeHtml(post.cta.buttonText || 'View our plans')}</a></footer>`
+    : `<footer class="article-cta reveal">
+        <span class="eyebrow">Let's work together</span>
+        <h2 class="article-cta-title">Need a better website for your business?</h2>
+        <p class="article-cta-body">
+          Execora builds simple, professional websites designed to help local businesses get found,
+          build trust and generate enquiries.
+        </p>
+        <a class="btn btn-coral" href="/#pricing">View our plans</a>
+      </footer>`
+
   return `
     <article class="blog-article-inner">
       <header class="article-head reveal is-visible">
@@ -424,17 +454,11 @@ export function renderArticleMarkup(post, opts = {}) {
 
       <div class="article-body ${imgUrl ? '' : 'no-media'}">${body}</div>
 
+      ${faq}
+
       ${related}
 
-      <footer class="article-cta reveal">
-        <span class="eyebrow">Let's work together</span>
-        <h2 class="article-cta-title">Need a better website for your business?</h2>
-        <p class="article-cta-body">
-          Execora builds simple, professional websites designed to help local businesses get found,
-          build trust and generate enquiries.
-        </p>
-        <a class="btn btn-coral" href="/#pricing">View our plans</a>
-      </footer>
+      ${cta}
     </article>
   `
 }
@@ -547,6 +571,21 @@ export function articleJsonLd(post, meta) {
     datePublished: post.publishedDate || undefined,
     dateModified: post._updatedAt || post.publishedDate || undefined,
     inLanguage: 'en-GB',
+  }
+}
+
+/** FAQPage structured data, emitted only when the post has an faq array. */
+export function faqJsonLd(post) {
+  const faq = (post.faq || []).filter((f) => f && f.question && f.answer)
+  if (!faq.length) return null
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faq.map((f) => ({
+      '@type': 'Question',
+      name: f.question,
+      acceptedAnswer: { '@type': 'Answer', text: f.answer },
+    })),
   }
 }
 

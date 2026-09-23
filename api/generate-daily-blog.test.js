@@ -19,8 +19,12 @@ import {
   sanitizeInternalLinks,
   sanitizeExternalSources,
   pickCategory,
+  pickIndustry,
+  pickFunnelStage,
   SOURCE_BANK,
   ALLOWED_CATEGORIES,
+  INDUSTRY_ORDER,
+  FUNNEL_STAGES,
 } from './generate-daily-blog.js'
 
 import { default as handler, setClientFactory, setOpenaiFetch, setImageFetch, setLondonHourOverride } from './generate-daily-blog.js'
@@ -206,7 +210,7 @@ describe('validateArticle', () => {
     assert.match(r.error, /at least 8/)
   })
 
-  test('rejects body with word count below 800', () => {
+  test('rejects body with word count below 900', () => {
     const body = Array.from({ length: 10 }, () => ({
       style: 'normal',
       listItem: null,
@@ -217,19 +221,19 @@ describe('validateArticle', () => {
     assert.match(r.error, /outside the acceptable range/)
   })
 
-  test('rejects body with word count above 1600', () => {
+  test('rejects body with word count above 2000', () => {
     const body = Array.from({ length: 10 }, () => ({
       style: 'normal',
       listItem: null,
-      text: 'word '.repeat(200),
+      text: 'word '.repeat(260),
     }))
     const r = validateArticle(validArticle({ body }))
     assert.equal(r.ok, false)
     assert.match(r.error, /outside the acceptable range/)
   })
 
-  test('accepts body at exactly 800 words', () => {
-    const body = Array.from({ length: 8 }, () => ({
+  test('accepts body at exactly 900 words', () => {
+    const body = Array.from({ length: 9 }, () => ({
       style: 'normal',
       listItem: null,
       text: 'word '.repeat(100),
@@ -238,22 +242,22 @@ describe('validateArticle', () => {
     assert.equal(r.ok, true)
   })
 
-  test('accepts body at exactly 1600 words', () => {
-    const body = Array.from({ length: 10 }, () => ({
+  test('accepts body at exactly 2000 words', () => {
+    const body = Array.from({ length: 20 }, () => ({
       style: 'normal',
       listItem: null,
-      text: 'word '.repeat(160),
+      text: 'word '.repeat(100),
     }))
     const r = validateArticle(validArticle({ body }))
     assert.equal(r.ok, true)
   })
 
-  test('rejects body at 1601 words', () => {
+  test('rejects body at 2001 words', () => {
     const body = [
-      ...Array.from({ length: 10 }, () => ({
+      ...Array.from({ length: 20 }, () => ({
         style: 'normal',
         listItem: null,
-        text: 'word '.repeat(160),
+        text: 'word '.repeat(100),
       })),
       { style: 'normal', listItem: null, text: 'word' },
     ]
@@ -322,6 +326,56 @@ describe('validateArticle', () => {
     }
   })
 
+  test('rejects an invalid funnelStage', () => {
+    const r = validateArticle(validArticle({ funnelStage: 'TOF' }))
+    assert.equal(r.ok, false)
+    assert.match(r.error, /funnelStage/)
+  })
+
+  test('accepts all valid funnelStages', () => {
+    for (const stage of FUNNEL_STAGES) {
+      const r = validateArticle(validArticle({ funnelStage: stage }))
+      assert.equal(r.ok, true, `should accept ${stage}`)
+    }
+  })
+
+  test('rejects an invalid industry', () => {
+    const r = validateArticle(validArticle({ industry: 'Mystery Niche' }))
+    assert.equal(r.ok, false)
+    assert.match(r.error, /industry/)
+  })
+
+  test('rejects a malformed faq entry', () => {
+    const r = validateArticle(validArticle({
+      faq: [{ question: 'Q?' }, 'junk'],
+    }))
+    assert.equal(r.ok, false)
+    assert.match(r.error, /faq/)
+  })
+
+  test('rejects a faq array over 6 items', () => {
+    const faq = Array.from({ length: 7 }, (_, i) => ({ question: `Q${i}?`, answer: 'An answer.' }))
+    const r = validateArticle(validArticle({ faq }))
+    assert.equal(r.ok, false)
+    assert.match(r.error, /faq/)
+  })
+
+  test('rejects a malformed cta', () => {
+    const r = validateArticle(validArticle({ cta: 'click' }))
+    assert.equal(r.ok, false)
+    assert.match(r.error, /cta/)
+  })
+
+  test('accepts valid funnelStage, industry, faq and cta', () => {
+    const r = validateArticle(validArticle({
+      funnelStage: 'MOFU',
+      industry: 'Plumbers',
+      faq: [{ question: 'Do plumbers need a website?', answer: 'Yes.' }],
+      cta: { heading: 'See your homepage preview', body: 'Get yours today.', buttonText: 'View plans', url: 'https://www.execora.work/' },
+    }))
+    assert.equal(r.ok, true)
+  })
+
   test('rejects an internalLinks entry missing fields', () => {
     const r = validateArticle(validArticle({
       internalLinks: [{ anchor: 'Ahoy' }],
@@ -346,40 +400,44 @@ describe('validateArticle', () => {
 describe('buildImagePrompt', () => {
   test('prepends Execora visual identity prefix', () => {
     const result = buildImagePrompt('A modern shop front')
-    assert.ok(result.startsWith('Premium 3D clay illustration in a soft, rounded, matte-plastic style'))
+    assert.ok(result.startsWith('Premium editorial photograph for an Execora business article'))
     assert.ok(result.endsWith('A modern shop front'))
   })
 
   test('includes all identity keywords', () => {
     const result = buildImagePrompt('test')
-    assert.ok(result.includes('3D clay illustration'))
-    assert.ok(result.includes('matte-plastic style'))
-    assert.ok(result.includes('pillowy 3D forms'))
-    assert.ok(result.includes('ivory'))
-    assert.ok(result.includes('#F3EBD8'))
+    assert.ok(result.includes('Premium editorial photograph'))
+    assert.ok(result.includes('realistic and natural-light'))
+    assert.ok(result.includes('UK small-business aesthetic'))
     assert.ok(result.includes('#292524'))
     assert.ok(result.includes('#C9A45C'))
     assert.ok(result.includes('#FFB7B2'))
     assert.ok(result.includes('#78716C'))
-    assert.ok(result.includes('UK local-business environment'))
-    assert.ok(result.includes('neighbourhood high streets'))
+    assert.ok(result.includes('real people, real work and real tools'))
+    assert.ok(result.includes('editorial and understated'))
     assert.ok(result.includes('No text'))
     assert.ok(result.includes('logos'))
-    assert.ok(result.toLowerCase().includes('matte surface'))
   })
 
   test('does not contain text or logo artifacts', () => {
     const result = buildImagePrompt('test')
-    assert.ok(result.includes('No text, letters, numbers, logos, brand names or watermarks inside the image'))
+    assert.ok(result.includes('No text, letters, numbers, logos, brand names, watermarks or screenshots inside the image'))
   })
 
   test('includes the Execora palette and acceptable colours', () => {
     const result = buildImagePrompt('test')
-    assert.ok(result.includes('warm ivory (#F3EBD8) background'))
-    assert.ok(result.includes('near-black (#292524)'))
-    assert.ok(result.includes('muted antique gold (#C9A45C)'))
-    assert.ok(result.includes('soft coral (#FFB7B2)'))
-    assert.ok(result.includes('warm grey (#78716C)'))
+    assert.ok(result.includes('Warm off-white cream background'))
+    assert.ok(result.includes('#292524'))
+    assert.ok(result.includes('#C9A45C'))
+    assert.ok(result.includes('#FFB7B2'))
+    assert.ok(result.includes('#78716C'))
+  })
+
+  test('reflects the editorial trade-scene style, not clay illustration', () => {
+    const result = buildImagePrompt('M', { geoTarget: 'Electricians' })
+    assert.ok(!/[Cc]lay/.test(result))
+    assert.ok(!/pillowy/.test(result))
+    assert.ok(result.includes('trades van') || result.includes('workshop') || result.includes('job site'))
   })
 
   test('preserves the article-specific image prompt', () => {
@@ -403,7 +461,7 @@ describe('composeImagePrompt', () => {
 
   test('falls back to IMAGE_PREFIX when settings are missing', () => {
     const result = composeImagePrompt({ articlePrompt: 'A UK café', settings: null })
-    assert.ok(result.startsWith('Premium 3D clay illustration in a soft, rounded, matte-plastic style'))
+    assert.ok(result.startsWith('Premium editorial photograph for an Execora business article'))
     assert.ok(result.includes('A UK café'))
   })
 
@@ -412,7 +470,7 @@ describe('composeImagePrompt', () => {
       articlePrompt: 'A UK café',
       settings: { imageStylePrompt: '', imageNegativePrompt: '' },
     })
-    assert.ok(result.startsWith('Premium 3D clay illustration in a soft, rounded, matte-plastic style'))
+    assert.ok(result.startsWith('Premium editorial photograph for an Execora business article'))
   })
 
   test('appends negative prompt only when present', () => {
@@ -548,8 +606,8 @@ describe('buildArticlePrompt', () => {
     const prompt = buildArticlePrompt({ titles: [], categories: [] })
     const user = prompt.user
     assert.ok(user.includes('imagePrompt'))
-    assert.ok(user.includes('one clear visual concept'))
-    assert.ok(user.includes('local-business setting'))
+    assert.ok(user.includes('FEATURED IMAGE:'))
+    assert.ok(user.includes('realistic, editorial photograph-worthy scene'))
     assert.ok(user.includes('no written words'))
   })
 
@@ -597,7 +655,7 @@ describe('buildArticlePrompt', () => {
       articleTonePrompt: 'Warm tone.',
     }
     const prompt = buildArticlePrompt({ titles: [], categories: [] }, settings)
-    assert.ok(prompt.user.includes('900 to 1,500 words'))
+    assert.ok(prompt.user.includes('1,200 to 1,800 words'))
     assert.ok(prompt.user.includes('SEO-optimised'))
     assert.ok(prompt.user.includes('no written words'))
     assert.ok(prompt.system.includes('British English'))
@@ -611,16 +669,16 @@ describe('buildArticlePrompt', () => {
     assert.equal(promptWithDefaults.user, promptWithEmpty.user)
     assert.ok(!promptWithEmpty.user.includes('EDITORIAL FOCUS:'))
     assert.ok(!promptWithEmpty.user.includes('WRITING STYLE:'))
-    assert.ok(promptWithEmpty.user.includes('900 to 1,500 words'))
+    assert.ok(promptWithEmpty.user.includes('1,200 to 1,800 words'))
   })
 
   test('includes the built-in keyword architecture for the owner list', () => {
     const prompt = buildArticlePrompt({ titles: [], categories: [] }, {})
-    assert.ok(prompt.user.includes('SEO SEARCH INTENT:'))
+    assert.ok(prompt.user.includes('SEARCH INTENT PRIORITY:'))
     assert.ok(prompt.user.includes('ONE primary keyword'))
     assert.ok(prompt.user.includes('secondaryKeywords'))
-    assert.ok(prompt.user.includes('website design for local businesses'))
-    assert.ok(prompt.user.includes('how much does a small business website cost UK'))
+    assert.ok(prompt.user.includes('website for electricians UK'))
+    assert.ok(prompt.user.includes('electrician website cost UK'))
     assert.ok(prompt.user.includes('Priority search topics'))
   })
 
@@ -646,7 +704,7 @@ describe('buildArticlePrompt', () => {
     assert.ok(prompt.user.includes('first 1 to 3 sentences'))
   })
 
-  test('includes internal link, source quality and commercial relevance blocks', () => {
+  test('includes internal link, source quality and execora bridge blocks', () => {
     const prompt = buildArticlePrompt({ titles: [], categories: [] }, {})
     assert.ok(prompt.user.includes('INTERNAL LINKS:'))
     assert.ok(prompt.user.includes('internalLinks'))
@@ -655,10 +713,36 @@ describe('buildArticlePrompt', () => {
     assert.ok(!prompt.user.includes('/local-seo'))
     assert.ok(prompt.user.includes('SOURCE QUALITY:'))
     assert.ok(prompt.user.includes('GOV.UK'))
-    assert.ok(prompt.user.includes('EXECORA COMMERCIAL RELEVANCE:'))
+    assert.ok(prompt.user.includes('EXECORA BRIDGE:'))
     assert.ok(prompt.user.includes('no more than twice'))
-    assert.ok(prompt.user.includes('CONTENT MIX:'))
-    assert.ok(prompt.user.includes('NICHE ROTATION:'))
+    assert.ok(prompt.user.includes('FAQ SECTION:'))
+    assert.ok(prompt.user.includes('4 to 6'))
+    assert.ok(prompt.user.includes('CTA:'))
+  })
+
+  test('includes preferred industry and funnel stage rotation blocks', () => {
+    const prompt = buildArticlePrompt({ titles: [], categories: [] }, {})
+    assert.ok(prompt.user.includes('PREFERRED INDUSTRY:'))
+    assert.ok(prompt.user.includes('PREFERRED FUNNEL STAGE:'))
+    assert.ok(prompt.user.includes('BOFU'))
+    assert.ok(prompt.user.includes('commercial or purchase intent'))
+  })
+
+  test('scopes priority keywords to the preferred industry', () => {
+    const prompt = buildArticlePrompt(
+      { titles: [], categories: [], industries: ['Plumbers', 'Plumbers'] },
+      {}
+    )
+    const kw = prompt.user.split('Priority search topics for ')[1].split(' (choose')[0]
+    assert.equal(kw, 'Electricians')
+    assert.ok(prompt.user.includes('website for electricians UK'))
+  })
+
+  test('does not shy from the commercial intent priority', () => {
+    const prompt = buildArticlePrompt({ titles: [], categories: [] }, {})
+    assert.ok(prompt.system.includes('At least 70% of articles should have strong commercial'))
+    assert.ok(prompt.user.includes('SEARCH INTENT PRIORITY:'))
+    assert.ok(prompt.user.includes('commercial or purchase intent'))
   })
 
   test('lists real internal link targets from published slugs', () => {
@@ -746,6 +830,24 @@ describe('getArticleJSONSchema', () => {
     const schema = getArticleJSONSchema()
     assert.deepEqual(schema.properties.category.enum, ALLOWED_CATEGORIES)
   })
+
+  test('industry enum matches INDUSTRY_ORDER', () => {
+    const schema = getArticleJSONSchema()
+    assert.deepEqual(schema.properties.industry.enum, INDUSTRY_ORDER)
+  })
+
+  test('funnelStage enum matches FUNNEL_STAGES', () => {
+    const schema = getArticleJSONSchema()
+    assert.deepEqual(schema.properties.funnelStage.enum, FUNNEL_STAGES)
+  })
+
+  test('schema requires the new structured fields', () => {
+    const schema = getArticleJSONSchema()
+    for (const field of ['funnelStage', 'industry', 'faq', 'cta']) {
+      assert.ok(schema.properties[field], `schema should define ${field}`)
+      assert.ok(schema.required.includes(field), `schema should require ${field}`)
+    }
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -801,6 +903,32 @@ describe('buildDraftDocument', () => {
     assert.equal(doc.publishedDate, '2026-09-02T00:00:00.000Z')
   })
 
+  test('carries the new structured fields into the draft document', () => {
+    const article = validArticle({
+      funnelStage: 'MOFU',
+      industry: 'Plumbers',
+      faq: [
+        { question: 'Do plumbers need a website?', answer: 'Yes.' },
+        'junk',
+      ],
+      cta: { heading: 'See your homepage preview', body: 'Get yours.', buttonText: 'View plans', url: 'https://www.execora.work/' },
+    })
+    const doc = buildDraftDocument({ article, imageAssetId: null, date: '2026-09-02' })
+    assert.equal(doc.funnelStage, 'MOFU')
+    assert.equal(doc.industry, 'Plumbers')
+    assert.deepEqual(doc.faq, [{ question: 'Do plumbers need a website?', answer: 'Yes.' }])
+    assert.deepEqual(doc.cta, { heading: 'See your homepage preview', body: 'Get yours.', buttonText: 'View plans', url: 'https://www.execora.work/' })
+  })
+
+  test('defaults structured fields for legacy or partial articles', () => {
+    const article = validArticle()
+    const doc = buildDraftDocument({ article, imageAssetId: null, date: '2026-09-02' })
+    assert.equal(doc.funnelStage, '')
+    assert.equal(doc.industry, '')
+    assert.deepEqual(doc.faq, [])
+    assert.equal(doc.cta, undefined)
+  })
+
   test('includes all SEO fields', () => {
     const article = validArticle()
     const doc = buildDraftDocument({ article, imageAssetId: null, date: '2026-09-02' })
@@ -830,7 +958,7 @@ describe('getRecentTopics', () => {
 
     assert.equal(
       capturedQuery,
-      `*[_type == "blogPost"] | order(publishedDate desc)[0...60]{title, category, slug, externalSources}`
+      `*[_type == "blogPost"] | order(publishedDate desc)[0...60]{title, category, slug, externalSources, funnelStage, industry}`
     )
     assert.equal(
       result.titles.join(','),
@@ -944,6 +1072,68 @@ describe('pickCategory', () => {
   test('ignores categories outside the allowlist', () => {
     const categories = ['Website Tips', 'Uncategorised', 'Other']
     assert.equal(pickCategory(categories), 'Local Business')
+  })
+})
+
+describe('pickIndustry', () => {
+  test('returns the least-used industry from recent posts', () => {
+    const industries = [
+      'Plumbers', 'Plumbers', 'Plumbers',
+      'Electricians', 'Builders',
+    ]
+    assert.equal(pickIndustry(industries), 'General Trades')
+  })
+
+  test('empty or no recent industries picks the first in the order', () => {
+    assert.equal(pickIndustry([]), INDUSTRY_ORDER[0])
+    assert.equal(pickIndustry(null), INDUSTRY_ORDER[0])
+  })
+
+  test('ignores industries outside the allowlist', () => {
+    const industries = ['Electricians', 'Plumbers', 'Mystery Niche']
+    assert.equal(pickIndustry(industries), 'Builders')
+  })
+
+  test('rotates through every allowed industry before repeating', () => {
+    const seen = []
+    for (let i = 0; i < INDUSTRY_ORDER.length * 2; i++) {
+      seen.push(pickIndustry(seen))
+    }
+    assert.deepEqual(
+      seen.slice(0, INDUSTRY_ORDER.length),
+      INDUSTRY_ORDER,
+      'first pass should walk the full ordered cycle'
+    )
+  })
+})
+
+describe('pickFunnelStage', () => {
+  test('returns the most under-target funnel stage', () => {
+    // 50% BOFU already hit; MOFU/TOFU at 0% so MOFU (35% target) wins over
+    // TOFU (15% target).
+    const stages = ['BOFU', 'BOFU', 'TOFU']
+    assert.equal(pickFunnelStage(stages), 'MOFU')
+  })
+
+  test('empty or no recent stages picks BOFU (commercial leads)', () => {
+    assert.equal(pickFunnelStage([]), 'BOFU')
+    assert.equal(pickFunnelStage(null), 'BOFU')
+  })
+
+  test('boosts TOFU once BOFU and MOFU are at target', () => {
+    const stages = [
+      'BOFU', 'BOFU', 'BOFU', 'BOFU', 'BOFU',
+      'MOFU', 'MOFU', 'MOFU',
+      'TOFU',
+    ]
+    // BOFU = 5/9 ≈ 0.56 (over 0.5), MOFU = 3/9 ≈ 0.33 (just under 0.35),
+    // TOFU = 1/9 ≈ 0.11 (well under 0.15) -> TOFU has the biggest gap.
+    assert.equal(pickFunnelStage(stages), 'TOFU')
+  })
+
+  test('ignores stages outside the allowlist', () => {
+    const stages = ['BOFU', 'nonsense', null]
+    assert.equal(pickFunnelStage(stages), 'MOFU')
   })
 })
 
@@ -1657,7 +1847,7 @@ describe('POST /api/generate-daily-blog automation settings integration', () => 
     const res = makeRes()
     await handler(makeReq({ token: 'test-blog-secret' }), res)
     assert.equal(res._status, 200)
-    assert.ok(capturedImagePrompt.startsWith('Premium 3D clay illustration in a soft, rounded, matte-plastic style'))
+    assert.ok(capturedImagePrompt.startsWith('Premium editorial photograph for an Execora business article'))
     assert.ok(capturedImagePrompt.includes('A friendly local shop with customers'))
     assert.ok(createdDoc)
   })
@@ -1668,7 +1858,7 @@ describe('POST /api/generate-daily-blog automation settings integration', () => 
     await handler(makeReq({ token: 'test-blog-secret' }), res)
     assert.equal(res._status, 200)
     assert.ok(createdDoc)
-    assert.ok(capturedImagePrompt.startsWith('Premium 3D clay illustration in a soft, rounded, matte-plastic style'))
+    assert.ok(capturedImagePrompt.startsWith('Premium editorial photograph for an Execora business article'))
   })
 })
 
@@ -1786,7 +1976,7 @@ describe('POST /api/generate-daily-blog article guidance integration', () => {
     settingsDoc = { articleContentPrompt: 'Focus on booking workflows.' }
     const res = makeRes()
     await handler(makeReq({ token: 'test-blog-secret' }), res)
-    assert.ok(capturedArticleUser.includes('900 to 1,500 words'))
+    assert.ok(capturedArticleUser.includes('1,200 to 1,800 words'))
     assert.ok(capturedArticleUser.includes('SEO-optimised'))
   })
 
@@ -1795,7 +1985,7 @@ describe('POST /api/generate-daily-blog article guidance integration', () => {
     const res = makeRes()
     await handler(makeReq({ token: 'test-blog-secret' }), res)
     assert.equal(res._status, 200)
-    assert.ok(capturedArticleUser.includes('900 to 1,500 words'))
+    assert.ok(capturedArticleUser.includes('1,200 to 1,800 words'))
     assert.ok(!capturedArticleUser.includes('EDITORIAL FOCUS:'))
     assert.ok(createdDoc)
   })
@@ -1807,7 +1997,7 @@ describe('POST /api/generate-daily-blog article guidance integration', () => {
     await handler(makeReq({ token: 'test-blog-secret' }), res)
     assert.equal(res._status, 200)
     assert.ok(createdDoc)
-    assert.ok(capturedArticleUser.includes('900 to 1,500 words'))
+    assert.ok(capturedArticleUser.includes('1,200 to 1,800 words'))
     assert.ok(!capturedArticleUser.includes('Should not appear.'))
   })
 

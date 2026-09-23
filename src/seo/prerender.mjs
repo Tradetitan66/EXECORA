@@ -9,6 +9,7 @@ import {
   indexPageMeta,
   articlePageMeta,
   articleJsonLd,
+  faqJsonLd,
   breadcrumbJsonLd,
   collectionJsonLd,
   headTags,
@@ -74,7 +75,15 @@ const prerenderQuery = `
       }
     },
     relatedLinks,
-    externalSources
+    externalSources,
+    searchIntent,
+    funnelStage,
+    industry,
+    faq[]{
+      question,
+      answer
+    },
+    cta
   }
 `
 
@@ -179,14 +188,19 @@ export function prerenderPlugin() {
 
         for (const post of posts) {
           const meta = articlePageMeta(post)
+          const jsonLdScripts = [
+            { json: articleJsonLd(post, meta), attrs: 'data-article-jsonld' },
+            { json: breadcrumbJsonLd(post) },
+          ]
+          const faqScript = faqJsonLd(post)
+          if (faqScript) {
+            jsonLdScripts.push({ json: faqScript, attrs: 'data-faq-jsonld' })
+          }
           const articleHtml = transformShell(shell, {
             meta,
             markup: renderArticleMarkup(post, { includeAutoRelated: true, allPosts: posts }),
             container: 'article',
-            jsonLdScripts: [
-              { json: articleJsonLd(post, meta), attrs: 'data-article-jsonld' },
-              { json: breadcrumbJsonLd(post) },
-            ],
+            jsonLdScripts,
           })
           await writeFile(path.join(blogDir, `${post.slug.current}.html`), articleHtml)
         }

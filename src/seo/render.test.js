@@ -13,6 +13,7 @@ import {
   indexPageMeta,
   organizationJsonLd,
   articleJsonLd,
+  faqJsonLd,
   breadcrumbJsonLd,
   collectionJsonLd,
   sitemapXml,
@@ -132,6 +133,39 @@ test('renderArticleMarkup has a single H1, related asides and CTA', () => {
   assert.match(html, /<h2>Related reading<\/h2>/)
   assert.match(html, /<h2>Sources<\/h2>/)
   assert.match(html, /class="article-cta/)
+  assert.doesNotMatch(html, /article-faq/)
+})
+
+test('renderArticleMarkup renders FAQ section from structured faq data', () => {
+  const withFaq = {
+    ...basePost,
+    faq: [
+      { question: 'Do plumbers need a website?', answer: 'Yes, to build trust.' },
+      { question: 'What does it cost?', answer: 'It depends on scope.' },
+      { question: '', answer: 'ignored' },
+    ],
+  }
+  const html = renderArticleMarkup(withFaq, { includeAutoRelated: true, allPosts: [] })
+  assert.match(html, /class="article-faq"/)
+  assert.match(html, /Frequently asked questions/)
+  assert.match(html, /Do plumbers need a website\?/)
+  assert.match(html, /Yes, to build trust\./)
+  assert.doesNotMatch(html, /ignored/)
+})
+
+test('renderArticleMarkup uses per-post CTA when present, static fallback otherwise', () => {
+  const withCta = {
+    ...basePost,
+    cta: { heading: 'See your homepage preview', body: 'Low-risk to start.', buttonText: 'View plans', url: 'https://www.execora.work/' },
+  }
+  const html = renderArticleMarkup(withCta, { includeAutoRelated: true, allPosts: [] })
+  assert.match(html, /See your homepage preview/)
+  assert.match(html, /Low-risk to start\./)
+  assert.match(html, /href="https:\/\/www\.execora\.work\/"/)
+
+  const fallback = renderArticleMarkup(basePost, { includeAutoRelated: true, allPosts: [] })
+  assert.match(fallback, /Need a better website for your business\?/)
+  assert.match(fallback, /href="\/#pricing"/)
 })
 
 test('auto-related block is deterministic, capped at 3 and excludes self/manual', () => {
@@ -192,6 +226,24 @@ test('JSON-LD builders emit valid, self-consistent objects', () => {
   assert.equal(col.mainEntity['@type'], 'ItemList')
   assert.equal(col.mainEntity.itemListElement.length, 2)
   assert.equal(col.mainEntity.itemListElement[0].position, 1)
+})
+
+test('faqJsonLd emits FAQPage only when the post has an faq array', () => {
+  assert.equal(faqJsonLd(basePost), null)
+
+  const withFaq = {
+    ...basePost,
+    faq: [
+      { question: 'Do plumbers need a website?', answer: 'Yes, to build trust.' },
+      { question: 'What does it cost?', answer: 'It depends.' },
+    ],
+  }
+  const ld = faqJsonLd(withFaq)
+  assert.equal(ld['@type'], 'FAQPage')
+  assert.equal(ld.mainEntity.length, 2)
+  assert.equal(ld.mainEntity[0]['@type'], 'Question')
+  assert.equal(ld.mainEntity[0].name, 'Do plumbers need a website?')
+  assert.equal(ld.mainEntity[0].acceptedAnswer.text, 'Yes, to build trust.')
 })
 
 test('sitemap lists home, terms, blog and every post with real lastmod', () => {

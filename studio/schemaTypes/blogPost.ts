@@ -137,6 +137,41 @@ export const blogPost = defineType({
       },
     }),
     defineField({
+      name: 'funnelStage',
+      title: 'Funnel stage',
+      type: 'string',
+      group: 'seo',
+      options: {
+        list: [
+          { title: 'BOFU — Bottom of funnel', value: 'BOFU' },
+          { title: 'MOFU — Middle of funnel', value: 'MOFU' },
+          { title: 'TOFU — Top of funnel', value: 'TOFU' },
+        ],
+      },
+      description: 'Where the article sits in the buying funnel. Target mix: BOFU 50%, MOFU 35%, TOFU 15%.',
+    }),
+    defineField({
+      name: 'industry',
+      title: 'Industry',
+      type: 'string',
+      group: 'seo',
+      options: {
+        list: [
+          { title: 'Electricians', value: 'Electricians' },
+          { title: 'Plumbers', value: 'Plumbers' },
+          { title: 'Builders', value: 'Builders' },
+          { title: 'General Trades', value: 'General Trades' },
+          { title: 'Roofers', value: 'Roofers' },
+          { title: 'Kitchen & Bathroom Installers', value: 'Kitchen & Bathroom Installers' },
+          { title: 'Landscapers', value: 'Landscapers' },
+          { title: 'Garage & Automotive', value: 'Garage & Automotive' },
+          { title: 'Comparison', value: 'Comparison' },
+          { title: 'Pricing & Costs', value: 'Pricing & Costs' },
+        ],
+      },
+      description: 'The industry or buying decision the article targets.',
+    }),
+    defineField({
       name: 'contentCluster',
       title: 'Content cluster',
       type: 'string',
@@ -208,6 +243,38 @@ export const blogPost = defineType({
       ],
       description:
         'Authoritative UK/first-party sources cited in the article (Google, GOV.UK, Scottish Government, ONS, ICO).',
+    }),
+    defineField({
+      name: 'faq',
+      title: 'FAQ',
+      type: 'array',
+      group: 'seo',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            { name: 'question', title: 'Question', type: 'string', validation: (r) => r.required() },
+            { name: 'answer', title: 'Answer', type: 'text', rows: 3, validation: (r) => r.required() },
+          ],
+          preview: {
+            select: { title: 'question' },
+          },
+        },
+      ],
+      description: '4-6 search-intent FAQs (answers 40-100 words each). Rendered on the article page as an FAQ section with FAQPage JSON-LD.',
+    }),
+    defineField({
+      name: 'cta',
+      title: 'Call to action',
+      type: 'object',
+      group: 'seo',
+      fields: [
+        { name: 'heading', title: 'Heading', type: 'string' },
+        { name: 'body', title: 'Body', type: 'text', rows: 3 },
+        { name: 'buttonText', title: 'Button text', type: 'string' },
+        { name: 'url', title: 'URL', type: 'url' },
+      ],
+      description: 'One primary CTA shown in the article footer. Falls back to the default Execora CTA when empty.',
     }),
   ],
   preview: {

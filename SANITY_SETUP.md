@@ -536,6 +536,21 @@ Experience, Business Growth), which is passed to the model as the required
 `PREFERRED CATEGORY` in the prompt — so the blog cycles evenly across categories
 instead of stacking one.
 
+**Industry + funnel rotation (purchase-intent master prompt):** posts also rotate
+through a fixed **industry cycle** (`INDUSTRY_ORDER` in
+`api/generate-daily-blog.js`: Electricians, Plumbers, Builders, General Trades,
+Roofers, Kitchen & Bathroom Installers, Landscapers, Garage & Automotive,
+Comparison, Pricing & Costs), each with its own priority keyword list
+(`INDUSTRY_KEYWORDS`). The **funnel stage** is picked so BOFU ≈ 50%, MOFU ≈ 35%
+and TOFU ≈ 15% of the recent window, keeping at least 70% of articles on
+commercial or purchase intent. Industry, funnel stage and the selected search
+intent are stored per post (`industry`, `funnelStage`, `searchIntent`).
+
+**Per-post FAQ + CTA:** the model returns a `faq` array (4-6 questions, answers
+40-100 words) and a single `cta` (heading/body/buttonText/url). The article page
+renders a collapsible FAQ section, emits **FAQPage JSON-LD**, and uses the
+per-post CTA (falling back to the static footer for legacy posts).
+
 The article page also emits **Article JSON-LD** (`schema.org`) and a meta
 `keywords` tag built from the primary + secondary keywords. All fields are
 informational — a draft is created and published normally even if a metadata
