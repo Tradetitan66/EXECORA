@@ -400,23 +400,25 @@ describe('validateArticle', () => {
 describe('buildImagePrompt', () => {
   test('prepends Execora visual identity prefix', () => {
     const result = buildImagePrompt('A modern shop front')
-    assert.ok(result.startsWith('Premium editorial photograph for an Execora business article'))
+    assert.ok(result.startsWith('Premium 3D clay illustration in a soft, rounded, matte-plastic style'))
     assert.ok(result.endsWith('A modern shop front'))
   })
 
   test('includes all identity keywords', () => {
     const result = buildImagePrompt('test')
-    assert.ok(result.includes('Premium editorial photograph'))
-    assert.ok(result.includes('realistic and natural-light'))
-    assert.ok(result.includes('UK small-business aesthetic'))
+    assert.ok(result.includes('Premium 3D clay illustration'))
+    assert.ok(result.includes('matte-plastic style'))
+    assert.ok(result.includes('pillowy 3D forms'))
+    assert.ok(result.includes('#F3EBD8'))
     assert.ok(result.includes('#292524'))
     assert.ok(result.includes('#C9A45C'))
     assert.ok(result.includes('#FFB7B2'))
     assert.ok(result.includes('#78716C'))
-    assert.ok(result.includes('real people, real work and real tools'))
-    assert.ok(result.includes('editorial and understated'))
+    assert.ok(result.includes('UK local-business environment'))
+    assert.ok(result.includes('trades van'))
     assert.ok(result.includes('No text'))
     assert.ok(result.includes('logos'))
+    assert.ok(result.toLowerCase().includes('matte surface'))
   })
 
   test('does not contain text or logo artifacts', () => {
@@ -426,18 +428,20 @@ describe('buildImagePrompt', () => {
 
   test('includes the Execora palette and acceptable colours', () => {
     const result = buildImagePrompt('test')
-    assert.ok(result.includes('Warm off-white cream background'))
+    assert.ok(result.includes('warm ivory (#F3EBD8) background'))
     assert.ok(result.includes('#292524'))
     assert.ok(result.includes('#C9A45C'))
     assert.ok(result.includes('#FFB7B2'))
     assert.ok(result.includes('#78716C'))
   })
 
-  test('reflects the editorial trade-scene style, not clay illustration', () => {
-    const result = buildImagePrompt('M', { geoTarget: 'Electricians' })
-    assert.ok(!/[Cc]lay/.test(result))
-    assert.ok(!/pillowy/.test(result))
+  test('renders the industry scene as clay, not photography', () => {
+    const result = buildImagePrompt('M')
+    assert.ok(/[Cc]lay/.test(result))
+    assert.ok(result.includes('pillowy 3D forms'))
     assert.ok(result.includes('trades van') || result.includes('workshop') || result.includes('job site'))
+    assert.ok(!result.includes('photograph-worthy'))
+    assert.ok(!result.includes('natural-light'))
   })
 
   test('preserves the article-specific image prompt', () => {
@@ -461,7 +465,7 @@ describe('composeImagePrompt', () => {
 
   test('falls back to IMAGE_PREFIX when settings are missing', () => {
     const result = composeImagePrompt({ articlePrompt: 'A UK café', settings: null })
-    assert.ok(result.startsWith('Premium editorial photograph for an Execora business article'))
+    assert.ok(result.startsWith('Premium 3D clay illustration in a soft, rounded, matte-plastic style'))
     assert.ok(result.includes('A UK café'))
   })
 
@@ -470,7 +474,7 @@ describe('composeImagePrompt', () => {
       articlePrompt: 'A UK café',
       settings: { imageStylePrompt: '', imageNegativePrompt: '' },
     })
-    assert.ok(result.startsWith('Premium editorial photograph for an Execora business article'))
+    assert.ok(result.startsWith('Premium 3D clay illustration in a soft, rounded, matte-plastic style'))
   })
 
   test('appends negative prompt only when present', () => {
@@ -607,7 +611,7 @@ describe('buildArticlePrompt', () => {
     const user = prompt.user
     assert.ok(user.includes('imagePrompt'))
     assert.ok(user.includes('FEATURED IMAGE:'))
-    assert.ok(user.includes('realistic, editorial photograph-worthy scene'))
+    assert.ok(user.includes('clay 3D visual scene'))
     assert.ok(user.includes('no written words'))
   })
 
@@ -1847,7 +1851,7 @@ describe('POST /api/generate-daily-blog automation settings integration', () => 
     const res = makeRes()
     await handler(makeReq({ token: 'test-blog-secret' }), res)
     assert.equal(res._status, 200)
-    assert.ok(capturedImagePrompt.startsWith('Premium editorial photograph for an Execora business article'))
+    assert.ok(capturedImagePrompt.startsWith('Premium 3D clay illustration in a soft, rounded, matte-plastic style'))
     assert.ok(capturedImagePrompt.includes('A friendly local shop with customers'))
     assert.ok(createdDoc)
   })
@@ -1858,7 +1862,7 @@ describe('POST /api/generate-daily-blog automation settings integration', () => 
     await handler(makeReq({ token: 'test-blog-secret' }), res)
     assert.equal(res._status, 200)
     assert.ok(createdDoc)
-    assert.ok(capturedImagePrompt.startsWith('Premium editorial photograph for an Execora business article'))
+    assert.ok(capturedImagePrompt.startsWith('Premium 3D clay illustration in a soft, rounded, matte-plastic style'))
   })
 })
 
