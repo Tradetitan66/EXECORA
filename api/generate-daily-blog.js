@@ -988,7 +988,7 @@ export async function generateArticle({ apiKey, model, recentTopics, extraGuidan
         },
       },
       reasoning: { effort: 'low' },
-      max_output_tokens: 4096,
+      max_output_tokens: 9000,
     },
   })
 
