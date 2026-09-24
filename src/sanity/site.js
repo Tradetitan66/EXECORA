@@ -70,14 +70,14 @@ export async function hydrateHomepage() {
   if (settings.heroSub) applyIf(heroSub, settings.heroSub)
 
   // The primary CTA label is standardised site-wide and must not be overridden
-  // by CMS content, so all home-page CTAs read "Get my £5 homepage design".
-  if (heroCta) heroCta.textContent = 'Get my £5 homepage design'
+  // by CMS content, so all home-page CTAs read "Get my £5 homepage preview".
+  if (heroCta) heroCta.textContent = 'Get my £5 homepage preview'
 
-  // Contact
+  // Contact (contact section lives on /contact; no-op on the homepage)
   const contactTitle = document.querySelector('.contact .contact-title')
   const contactSub = document.querySelector('.contact .contact-sub')
-  if (settings.contactHeading) setPrefixText(contactTitle, settings.contactHeading)
-  if (settings.contactSub) applyIf(contactSub, settings.contactSub)
+  if (contactTitle && settings.contactHeading) setPrefixText(contactTitle, settings.contactHeading)
+  if (contactSub && settings.contactSub) applyIf(contactSub, settings.contactSub)
 
   // Footer
   const footerTagline = document.querySelector('.footer-tagline')

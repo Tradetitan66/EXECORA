@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Get in touch with Execora. Based in Edinburgh, working with businesses across the UK. Tell us about your business and we'll help you get online."
+    />
+    <meta name="theme-color" content="#F7F2E9" />
+    <title>Get in touch - Execora</title>
+    <link rel="canonical" href="https://www.execora.work/contact" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Reenie+Beanie&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/style.css" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Execora" />
+    <meta property="og:title" content="Get in touch - Execora" />
+    <meta
+      property="og:description"
+      content="Get in touch with Execora. Based in Edinburgh, working with businesses across the UK. Tell us about your business and we'll help you get online."
+    />
+    <meta property="og:url" content="https://www.execora.work/contact" />
+    <meta property="og:image" content="https://www.execora.work/og-card.png" />
+    <meta property="og:image:secure_url" content="https://www.execora.work/og-card.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Get in touch - Execora" />
+    <meta
+      name="twitter:description"
+      content="Get in touch with Execora. Based in Edinburgh, working with businesses across the UK. Tell us about your business and we'll help you get online."
+    />
+    <meta name="twitter:image" content="https://www.execora.work/og-card.png" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <!-- Grain overlay -->
+    <div class="grain" aria-hidden="true"></div>
+
+    <!-- ============ NAVIGATION ============ -->
+    <header class="nav-bar" data-header>
+      <div class="nav-inner">
+        <a class="nav-logo" href="/" aria-label="Execora home">
+          <span class="logo-dot" aria-hidden="true"><span class="logo-core"></span></span>
+          <span class="logo-word">Execora</span>
+        </a>
+        <nav class="nav-links" id="site-nav" aria-label="Primary">
+          <a href="/">Home</a>
+          <a href="/#how-it-works">How it works</a>
+          <a href="/#pricing">Pricing</a>
+          <a href="/blog">Local Business Tips</a>
+          <a href="/contact" aria-current="page">Contact</a>
+        </nav>
+        <button
+          class="menu-toggle"
+          id="menu-toggle"
+          aria-expanded="false"
+          aria-controls="site-nav"
+          aria-label="Toggle menu"
+        >
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </button>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- ============ PAGE LEAD ============ -->
+      <section class="contact-page-lead wrap">
+        <span class="eyebrow">Get in touch</span>
+        <h1 class="contact-lead-title">Let’s get your business <span class="cursive accent">online.</span></h1>
+        <p class="contact-lead-sub">
+          Based in Edinburgh, working with businesses across the UK. Tell us a little about your
+          business and we’ll be in touch - usually within one working day. No pressure, no spam, ever.
+        </p>
+      </section>
+
+      <!-- ============ CONTACT / ENQUIRY FORM ============ -->
+      <section class="contact" id="contact">
+        <div class="contact-inner reveal">
+          <div class="contact-copy">
+            <span class="eyebrow">Start the conversation</span>
+            <h2 class="contact-title">Ready to be <span class="cursive accent">found?</span></h2>
+            <p class="contact-sub">
+              Let’s turn your local reputation into an online presence that works for you.
+            </p>
+            <button class="btn btn-wa btn-secondary" id="quick-wa-btn" type="button">Connect via WhatsApp</button>
+          </div>
+
+          <div id="enquiry-form-wrap">
+            <form class="enquiry-form" id="enquiry-form" novalidate>
+              <input type="hidden" name="plan" id="f-plan" value="" />
+              <div class="form-row">
+                <div class="field">
+                  <label for="f-name">Name <span class="req">*</span></label>
+                  <input id="f-name" name="name" type="text" autocomplete="name" required />
+                </div>
+                <div class="field">
+                  <label for="f-business">Business name <span class="req">*</span></label>
+                  <input id="f-business" name="business" type="text" autocomplete="organization" required />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="field">
+                  <label for="f-email">Email <span class="req">*</span></label>
+                  <input id="f-email" name="email" type="email" autocomplete="email" required />
+                </div>
+                <div class="field">
+                  <label for="f-phone">Phone <span class="req">*</span></label>
+                  <input id="f-phone" name="phone" type="tel" autocomplete="tel" required />
+                </div>
+              </div>
+              <div class="field">
+                <label for="f-message">Tell us about your business <span class="req">*</span></label>
+                <textarea id="f-message" name="message" rows="4" required></textarea>
+              </div>
+              <button class="btn-sub btn-block" type="submit">Send enquiry</button>
+              <p class="form-note" id="form-note">We’ll be in touch soon - no spam, ever.</p>
+            </form>
+          </div>
+
+          <div class="form-success" id="enquiry-success" hidden>
+            <p class="form-success-title" id="success-title">Got it - your details are saved.</p>
+            <p class="form-success-body">We’ll be in touch soon - you can also send us a quick WhatsApp now.</p>
+            <button class="btn btn-wa" id="success-wa-btn" type="button">Send us a WhatsApp ↳</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a class="nav-logo" href="/" aria-label="Execora home">
+            <span class="logo-dot" aria-hidden="true"><span class="logo-core"></span></span>
+            <span class="logo-word">Execora</span>
+          </a>
+          <p class="footer-tagline">Helping local businesses show up, stand out, and grow.</p>
+          <p class="footer-location">Based in Edinburgh · Working with businesses across the UK</p>
+          <a class="footer-email" href="mailto:hello@execora.work">hello@execora.work</a>
+        </div>
+        <nav class="footer-links" aria-label="Footer">
+          <div class="footer-col">
+            <h4 class="footer-heading">Explore</h4>
+            <a href="/#how-it-works">How it works</a>
+            <a href="/#showcase">Examples</a>
+            <a href="/#pricing">Pricing</a>
+            <a href="/blog">Local Business Tips</a>
+            <a href="/contact">Contact</a>
+            <a href="/#faqs">FAQs</a>
+          </div>
+          <div class="footer-col">
+            <h4 class="footer-heading">Company</h4>
+            <a href="/#why-execora">About Execora</a>
+            <a href="/#services">Who we build for</a>
+            <a href="/terms">Terms of Service</a>
+            <a href="/#top" id="privacy-link">Privacy</a>
+          </div>
+        </nav>
+      </div>
+      <div class="footer-legal">
+        <div class="legal-inner">
+          <p>© 2026 Execora.</p>
+          <p class="legal-note">Made for local businesses.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/contact.js"></script>
+  </body>
+</html>

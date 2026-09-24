@@ -25,7 +25,7 @@ const SENTINEL_PREFIX = 'execora_ga_sent_'
 const SCRIPT_URL = (id) => `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(id)}`
 
 // Events that should only fire once per visitor for this analytics session.
-const SINGLE_USE = ['generate_lead', 'prototype_checkout_click']
+const SINGLE_USE = ['generate_lead', 'preview_checkout_click']
 
 /* ---------- state ---------- */
 let initialised = false      // guards against duplicate init across entry points

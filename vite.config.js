@@ -16,6 +16,8 @@ export default defineConfig({
           const url = (req.url || '').split('?')[0]
           if (url === '/term' || url === '/terms' || url === '/terms/') {
             req.url = '/terms.html'
+          } else if (url === '/contact' || url === '/contact/') {
+            req.url = '/contact.html'
           } else if (url === '/welcome' || url === '/welcome/') {
             req.url = '/welcome.html'
           } else if (url === '/blog' || url === '/blog/' || url.startsWith('/blog/')) {
@@ -129,6 +131,7 @@ export default defineConfig({
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         'thank-you': fileURLToPath(new URL('./thank-you.html', import.meta.url)),
         blog: fileURLToPath(new URL('./blog.html', import.meta.url)),
+        contact: fileURLToPath(new URL('./contact.html', import.meta.url)),
         terms: fileURLToPath(new URL('./terms.html', import.meta.url)),
         welcome: fileURLToPath(new URL('./welcome.html', import.meta.url))
       }

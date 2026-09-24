@@ -34,13 +34,13 @@ function personalise() {
   const sub = document.getElementById('thanks-sub')
   const data = getHeldData()
   if (sub && data && data.name) {
-    sub.textContent = `Thank you, ${data.name}. Your payment went through and we’ve got your business details - we’re ready to begin crafting your website prototype.`
+    sub.textContent = `Thank you, ${data.name}. Your payment went through and we have your business details - you’ll receive your personalised homepage preview within 24 hours.`
   }
   return data
 }
 
 const WHATSAPP_NUMBER = '4407345384868'
-const WHATSAPP_SCOPE_MESSAGE = 'I just paid for my prototype on your website. My details:'
+const WHATSAPP_SCOPE_MESSAGE = 'I just paid for my £5 homepage preview on your website. My details:'
 
 const FIELD_LABELS = {
   name: 'Name',
@@ -101,6 +101,8 @@ async function loadPaymentIntent() {
       paymentIntent = json.payment_intent
       const el = document.getElementById('thanks-payment-id')
       if (el) el.textContent = paymentIntent
+      // Confirmed post-payment success (session_info validated server-side).
+      trackEvent('preview_payment_success')
     }
   } catch (err) {
     console.warn('[Execora] Could not load payment ID:', err)

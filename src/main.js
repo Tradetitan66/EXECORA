@@ -2,6 +2,7 @@ import './style.css'
 import { hydrateHomepage } from './sanity/site.js'
 import { initCheckout } from './checkout.js'
 import { initAnalytics, trackEvent } from './analytics.js'
+import { initEnquiryForm } from './enquiry.js'
 
 // Initialise GA4 (single page_view for the homepage).
 initAnalytics({ path: '/' })
@@ -9,8 +10,12 @@ initAnalytics({ path: '/' })
 // Fetch editable homepage copy from Sanity (falls back to hard-coded copy).
 hydrateHomepage()
 
-// Wire all £5 prototype CTAs to open the checkout modal (Stripe Checkout flow).
+// Wire all £5 homepage preview CTAs to open the checkout modal (Stripe flow).
 initCheckout()
+
+// The /contact form now lives on the /contact page. If a form is ever present
+// here too (e.g. reused markup), wire it up - otherwise this is a safe no-op.
+initEnquiryForm()
 
 // Track clicks on the £39/£59 monthly plan subscribe links (external Stripe
 // Payment Links). Only a non-personal location label is sent.
@@ -18,6 +23,41 @@ document.querySelectorAll('[data-subscribe-cta]').forEach((link) => {
   link.addEventListener('click', () => {
     trackEvent('subscribe_click', { location: link.dataset.location || 'pricing' })
   })
+})
+
+// Track the hero "£5 homepage preview" CTA.
+document.querySelector('.hero [data-payment-cta]')?.addEventListener('click', () => {
+  trackEvent('hero_preview_click', { location: 'hero' })
+})
+
+// Track the pricing-section continuation CTAs ("Or start with a £5 homepage preview").
+document.querySelectorAll('.plan-cta[data-payment-cta]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    trackEvent('pricing_continue_click', { location: btn.dataset.plan || 'pricing' })
+  })
+})
+
+// Fire a section-view event the first time Examples / Pricing scroll into view.
+const sectionEvents = [
+  ['#showcase', 'example_view'],
+  ['#pricing', 'pricing_view'],
+]
+const sectionViewObserver = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return
+      sectionViewObserver.unobserve(entry.target)
+      trackEvent(entry.target.dataset.track, { location: entry.target.id })
+    })
+  },
+  { threshold: 0.25 }
+)
+sectionEvents.forEach(([sel, ev]) => {
+  const el = document.querySelector(sel)
+  if (el) {
+    el.dataset.track = ev
+    sectionViewObserver.observe(el)
+  }
 })
 
 function initHeaderGlass() {
@@ -55,14 +95,6 @@ menuToggle.addEventListener('click', () => {
 siteNav.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu))
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu() })
 
-siteNav.querySelector('a[href="#contact"]')?.addEventListener('click', (e) => {
-  e.preventDefault()
-  closeMenu()
-  const form = document.getElementById('enquiry-form')
-  form.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  setTimeout(() => document.getElementById('f-name')?.focus(), 500)
-})
-
 const io = new IntersectionObserver(
   (entries) => {
     entries.forEach((entry) => {
@@ -97,132 +129,6 @@ revealEls.forEach((el) => {
   el.classList.add('reveal')
   io.observe(el)
 })
-
-const WHATSAPP_NUMBER = '4407345384868'
-const CONTACT_SCRIPT_URL = import.meta.env.NEXT_PUBLIC_CONTACT_SCRIPT_URL
-
-const form = document.getElementById('enquiry-form')
-const note = document.getElementById('form-note')
-const formWrap = document.getElementById('enquiry-form-wrap')
-const successPanel = document.getElementById('enquiry-success')
-const successTitle = document.getElementById('success-title')
-const successWaBtn = document.getElementById('success-wa-btn')
-
-function buildWhatsAppMessage(data) {
-  return [
-    'New enquiry from the Execora website -',
-    `Name: ${data.name || 'Not provided'}`,
-    `Business: ${data.business || 'Not provided'}`,
-    `Email: ${data.email || 'Not provided'}`,
-    data.phone ? `Phone: ${data.phone}` : '',
-    data.message ? `About: ${data.message}` : ''
-  ].filter(Boolean).join('\n').trim()
-}
-
-function openWhatsApp(data) {
-  const message = buildWhatsAppMessage(data)
-  window.open(`${'https://wa.me/'}${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank', 'noopener')
-}
-
-// Validate a UK WhatsApp number. Accepts either the international form
-// (+44 7xxxxxxxxx) or the national form (07xxxxxxxxx), ignoring spaces/dashes.
-function isValidWhatsApp(value) {
-  const digits = String(value || '').replace(/\D/g, '')
-  if (digits.length === 12 && digits.startsWith('447')) return true // +44 7xxxxxxxxx
-  if (digits.length === 11 && digits.startsWith('07')) return true  // 07xxxxxxxxx
-  return false
-}
-
-const phoneInput = document.getElementById('f-phone')
-function validatePhone() {
-  const msg = isValidWhatsApp(phoneInput.value)
-    ? ''
-    : 'Please enter a valid UK WhatsApp number starting with +44 (e.g. +44 7912 345678).'
-  phoneInput.setCustomValidity(msg)
-  return phoneInput.validity.valid
-}
-phoneInput.addEventListener('input', validatePhone)
-
-// Store the details so the WhatsApp button can open with them on click.
-let savedData = null
-
-form.addEventListener('submit', async (e) => {
-  e.preventDefault()
-  validatePhone()
-  if (!form.checkValidity()) {
-    form.reportValidity()
-    return
-  }
-  const data = Object.fromEntries(new FormData(form).entries())
-
-  note.textContent = 'Saving your details…'
-  note.style.color = '#78716c'
-
-  // If an Apps Script endpoint is configured, write to the sheet first.
-  if (CONTACT_SCRIPT_URL) {
-    const body = new URLSearchParams(data)
-    try {
-      // `cors` mode (not `no-cors`) lets us read the real HTTP status so a
-      // 403 (deployment not published to "Anyone") isn't silently confused
-      // with a successful write.
-      const res = await fetch(CONTACT_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'cors',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString()
-      })
-      if (!res.ok) {
-        console.error(
-          `[Execora] Sheet save rejected by server (HTTP ${res.status}).`,
-          `This usually means the Apps Script deployment is not published to "Anyone" access.`
-        )
-      } else {
-        console.info(`[Execora] Sheet save succeeded (HTTP ${res.status}).`)
-      }
-    } catch (err) {
-      // Never block the user - WhatsApp can still be opened even if saving fails.
-      console.error('[Execora] Sheet save failed:', err)
-    }
-  }
-
-  // Replace the form with a success panel so the user can opt in to WhatsApp.
-  savedData = data
-  formWrap.hidden = true
-  successTitle.textContent = `Got it, ${data.name || 'friend'}. Your details are saved.`
-  successPanel.hidden = false
-
-  // Fire as a confirmation/conversion once - no personal data is sent.
-  trackEvent('generate_lead')
-})
-
-successWaBtn.addEventListener('click', () => {
-  trackEvent('whatsapp_click', { location: 'enquiry_success' })
-  if (savedData) openWhatsApp(savedData)
-})
-
-const QUICK_WA_MESSAGE = [
-  'Hi Execora,',
-  '',
-  'I\'d like to get a website built for my business.',
-  '',
-  '',
-  'Could you share more about how we can get started, and what the next steps would be?',
-  '',
-  '',
-  'Thank you.'
-].join('\n')
-
-const quickWaBtn = document.getElementById('quick-wa-btn')
-if (quickWaBtn) {
-  quickWaBtn.addEventListener('click', () => {
-    trackEvent('whatsapp_click', { location: 'homepage_quick_contact' })
-    window.open(
-      `${'https://wa.me/'}${WHATSAPP_NUMBER}?text=${encodeURIComponent(QUICK_WA_MESSAGE)}`,
-      '_blank',
-      'noopener'
-    )
-  })
-}
 
 const privacyLink = document.getElementById('privacy-link')
 privacyLink.addEventListener('click', (e) => {

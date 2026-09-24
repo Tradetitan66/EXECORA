@@ -1,5 +1,5 @@
 /**
- * Execora - £5 prototype checkout flow
+ * Execora - £5 homepage preview checkout flow
  * ------------------------------------------------------------------
  * Opens a 3-step modal to collect business details (your details →
  * your business → review & pay), holds the data locally
@@ -56,6 +56,9 @@ export function openModal() {
   document.body.classList.add('modal-open')
   const first = modal.querySelector('input, select, textarea')
   window.setTimeout(() => first && first.focus(), 120)
+
+  // Preview form opened - the first step of the £5 journey. No personal data.
+  trackEvent('preview_form_start')
 }
 
 /* ---------- wire the payment CTAs to open the modal ---------- */
@@ -140,6 +143,10 @@ function showStep(n) {
 
   if (activeStep === wizard.panels.length) buildReview()
 
+  // Progress funnel - the deeper a visitor goes, the more committed they are.
+  if (activeStep === 2) trackEvent('preview_form_step_2')
+  if (activeStep === wizard.panels.length) trackEvent('preview_form_review')
+
   const first = wizard.panels[activeStep - 1].querySelector('input, select, textarea')
   window.setTimeout(() => first && first.focus(), 80)
 }
@@ -211,9 +218,9 @@ async function onSubmit(e) {
     return
   }
 
-  // User started the £5 prototype checkout (not a completed purchase).
-  // No personal data is sent.
-  trackEvent('prototype_checkout_click')
+  // User attempted to pay for the £5 homepage preview (not a completed purchase)
+  // - no personal data is sent.
+  trackEvent('preview_checkout_click')
 
   const data = Object.fromEntries(new FormData(form).entries())
 

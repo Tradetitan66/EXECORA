@@ -199,6 +199,11 @@ section {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  /* Give the gradient box a hair of breathing room so the last glyph
+     ("£5" in the hero) isn't flush to the clip edge and gets cut. */
+  display: inline-block;
+  padding: 0.02em 0.14em;
+  margin: -0.02em -0.14em;
 }
 
 /* ============================================================
@@ -536,7 +541,7 @@ section {
    ============================================================ */
 .step-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.4rem;
   max-width: var(--maxw);
   margin-inline: auto;
@@ -817,7 +822,7 @@ section {
 .journey-body { color: var(--muted); font-size: 0.92rem; font-weight: 300; line-height: 1.5; }
 
 /* ============================================================
-   £5 prototype offer band
+   £5 homepage preview offer band
    ============================================================ */
 .offer-band {
   background:
@@ -1289,6 +1294,30 @@ section {
     radial-gradient(120% 120% at 100% 0%, rgba(255, 183, 178, 0.3) 0%, rgba(255, 183, 178, 0) 45%),
     radial-gradient(130% 120% at 0% 100%, rgba(201, 164, 92, 0.24) 0%, rgba(201, 164, 92, 0) 50%);
 }
+.contact-page-lead {
+  padding-top: clamp(4.5rem, 10vw, 7rem);
+  padding-bottom: 0;
+  text-align: center;
+}
+.contact-page-lead .eyebrow { justify-content: center; }
+.contact-lead-title {
+  font-weight: 600;
+  font-size: clamp(2rem, 5vw, 3rem);
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  color: var(--ink);
+  margin: 1.1rem auto 1rem;
+  max-width: 22ch;
+}
+.contact-lead-title .cursive { font-size: 1.08em; }
+.contact-lead-sub {
+  color: var(--muted);
+  font-weight: 300;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  max-width: 52ch;
+  margin: 0 auto;
+}
 .contact-inner {
   position: relative;
   z-index: 2;
@@ -1363,6 +1392,7 @@ section {
   box-shadow: 0 0 0 4px rgba(255, 183, 178, 0.3);
 }
 .form-note { margin-top: 0.9rem; font-size: 0.85rem; color: var(--muted); text-align: center; }
+.checkout-fine { margin-top: 0.6rem; font-size: 0.78rem; color: var(--stone-400); }
 
 [hidden] { display: none !important; }
 
@@ -1565,7 +1595,7 @@ section {
 .legal-note { font-style: italic; }
 
 /* ============================================================
-   £5 prototype checkout modal
+   £5 homepage preview checkout modal
    ============================================================ */
 .checkout-modal {
   position: fixed;
@@ -2061,7 +2091,7 @@ body.modal-open { overflow: hidden; }
 
   .nav-links { gap: 1.3rem; }
 
-  .step-grid { grid-template-columns: repeat(3, 1fr); }
+  .step-grid { grid-template-columns: repeat(4, 1fr); }
   .biz-grid { grid-template-columns: repeat(3, 1fr); }
   .journey { grid-template-columns: repeat(4, 1fr); }
   .journey-item::after { display: block; }

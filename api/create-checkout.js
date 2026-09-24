@@ -4,8 +4,9 @@ import Stripe from 'stripe'
  * Execora — Create Stripe Checkout Session
  * ------------------------------------------------------------------
  * Vercel serverless function. Receives the business details collected
- * on the homepage modal, creates a Stripe Checkout Session for the
- * £5 prototype, and returns the checkout URL to redirect the user to.
+ * in the homepage preview modal, creates a Stripe Checkout Session for
+ * the £5 homepage preview, and returns the checkout URL to redirect the
+ * user to.
  *
  * The collected details are stored in `metadata` so the webhook can
  * write them to the Google Sheet after payment succeeds.
@@ -75,8 +76,8 @@ export default async function handler(req, res) {
             currency: 'gbp',
             unit_amount: 500, // £5.00
             product_data: {
-              name: 'Website Prototype',
-              description: 'A tailored homepage concept for your business',
+              name: 'Homepage Preview',
+              description: 'A personalised homepage preview for your business, delivered within 24 hours',
             },
           },
           quantity: 1,

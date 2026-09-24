@@ -4,7 +4,7 @@ import Stripe from 'stripe'
  * Execora — Look up a Checkout Session's key details.
  * ------------------------------------------------------------------
  * Vercel serverless function. Called from:
- *   - the thank-you page (after a £5 prototype payment) to read the
+ *   - the thank-you page (after a £5 homepage preview payment) to read the
  *     canonical `pi_...` PaymentIntent ID for the receipt / WhatsApp
  *     handoff;
  *   - the welcome page (after a £39/£59 subscription) to verify the

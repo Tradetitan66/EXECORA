@@ -60,6 +60,7 @@ export default async function handler(req, res) {
           ...metadata,
           // Force the "paid" routing markers so Apps Script writes to the
           // "Paid prototype customers" sheet (matching the current form keys).
+          // The sheet name is intentional and must stay in sync with Apps Script.
           type: metadata.type || '',
           location: metadata.location || '',
           style: metadata.style || '',
