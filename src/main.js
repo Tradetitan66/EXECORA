@@ -340,3 +340,46 @@ if (newsletterForm) {
     trackEvent('newsletter_subscribe')
   })
 }
+
+// A stable, accessible eyebrow: animated visually, read once by screen readers.
+const typingLabel = document.querySelector('[data-hero-typing]')
+if (typingLabel) {
+  const lines = [
+    'No website? Let’s change that.',
+    'A great website at a fair price.',
+  ]
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+  let timer
+  let line = 0
+  let character = lines[0].length
+  let deleting = true
+  function tick() {
+    if (reducedMotion.matches || document.hidden) return
+    character += deleting ? -1 : 1
+    typingLabel.textContent = lines[line].slice(0, character)
+    let delay = deleting ? 28 : 55
+    if (character === 0) {
+      deleting = false
+      line = (line + 1) % lines.length
+      delay = 350
+    } else if (!deleting && character === lines[line].length) {
+      deleting = true
+      delay = 3200
+    }
+    timer = window.setTimeout(tick, delay)
+  }
+  function restart() {
+    window.clearTimeout(timer)
+    if (reducedMotion.matches) {
+      line = 0
+      character = lines[0].length
+      deleting = true
+      typingLabel.textContent = lines[0]
+    } else if (!document.hidden) {
+      timer = window.setTimeout(tick, 3200)
+    }
+  }
+  reducedMotion.addEventListener('change', restart)
+  document.addEventListener('visibilitychange', restart)
+  restart()
+}

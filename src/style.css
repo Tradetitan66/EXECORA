@@ -1001,6 +1001,32 @@ section {
   box-shadow: var(--shadow-soft);
 }
 .pricing-callout b { color: var(--ink); font-weight: 700; }
+.pricing-callout-inclusions::before { content: " — "; }
+.pricing-callout-terms::before { content: " "; }
+
+@media (max-width: 1023px) {
+  .pricing-callout {
+    max-width: 40rem;
+    padding: 1.25rem 1.4rem;
+    border-radius: 1.1rem;
+    text-align: left;
+    line-height: 1.6;
+    box-shadow: none;
+  }
+  .pricing-callout b,
+  .pricing-callout-inclusions,
+  .pricing-callout-terms { display: block; }
+  .pricing-callout b { line-height: 1.45; }
+  .pricing-callout-inclusions { margin-top: 0.65rem; color: var(--ink); }
+  .pricing-callout-terms {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(201, 164, 92, 0.25);
+    font-size: 0.85rem;
+  }
+  .pricing-callout-inclusions::before,
+  .pricing-callout-terms::before { content: none; }
+}
 
 /* Feature-value tag under each price */
 .plan-value-tag {
@@ -2295,3 +2321,23 @@ body.modal-open { overflow: hidden; }
   transition: transform 0.25s var(--ease-slow);
 }
 .btn:hover .icon-play { transform: translateX(2px); }
+.plan-details-link { display: inline-block; color: var(--coral-ink); font-size: .9rem; font-weight: 600; margin-bottom: .35rem; }
+
+/* Reserve space for every rotating line so the hero does not jump. */
+.hero-copy > .hero-typing { max-width: 100%; font-size: .95rem; letter-spacing: .01em; text-transform: none; color: var(--coral-ink); }
+.hero-typing-lines { display: grid; min-width: 0; text-align: center; }
+.hero-typing-lines > span { grid-area: 1 / 1; }
+.hero-typing-sizer { visibility: hidden; pointer-events: none; }
+[data-hero-typing]::after { content: '|'; margin-left: .12em; color: var(--coral-ink); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@media (prefers-reduced-motion: reduce) { [data-hero-typing]::after { content: none; } }
+
+
+.hero-copy > .hero-typing {
+  font-family: 'Kalam', cursive;
+  font-size: clamp(1.1rem, 3.5vw, 1.4rem);
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0;
+  line-height: 1.5;
+}

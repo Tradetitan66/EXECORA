@@ -14,7 +14,9 @@ export default defineConfig({
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
           const url = (req.url || '').split('?')[0]
-          if (url === '/term' || url === '/terms' || url === '/terms/') {
+          if (/^\/(essential|growth|compare)\/?$/.test(url)) {
+            req.url = '/' + url.split('/')[1] + '.html'
+          } else if (url === '/term' || url === '/terms' || url === '/terms/') {
             req.url = '/terms.html'
           } else if (url === '/contact' || url === '/contact/') {
             req.url = '/contact.html'
@@ -128,6 +130,9 @@ export default defineConfig({
     outDir: 'dist',
     rollupOptions: {
       input: {
+        compare: fileURLToPath(new URL('./compare.html', import.meta.url)),
+        essential: fileURLToPath(new URL('./essential.html', import.meta.url)),
+        growth: fileURLToPath(new URL('./growth.html', import.meta.url)),
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         'thank-you': fileURLToPath(new URL('./thank-you.html', import.meta.url)),
         blog: fileURLToPath(new URL('./blog.html', import.meta.url)),

@@ -7,17 +7,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Execora builds websites for UK local service businesses. Based in Edinburgh, working across the UK. Start with a £5 homepage preview - delivered within 24 hours."
+      content="Professional websites for UK local businesses from £39/month. Hosting and SSL included. Edinburgh-based, serving the UK. Try a £5 homepage preview."
     />
     <meta name="theme-color" content="#F7F2E9" />
-    <title>Websites for UK Local Service Businesses | Execora</title>
+    <title>Websites for UK Local Businesses from £39/month | Execora</title>
     <link rel="canonical" href="https://www.execora.work/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Execora" />
-    <meta property="og:title" content="Websites for UK Local Service Businesses | Execora" />
+    <meta property="og:title" content="Websites for UK Local Businesses from £39/month | Execora" />
     <meta
       property="og:description"
-      content="Execora builds websites for UK local service businesses. Based in Edinburgh, working across the UK. Start with a £5 homepage preview - delivered within 24 hours."
+      content="Professional websites for UK local businesses from £39/month. Hosting and SSL included. Edinburgh-based, serving the UK. Try a £5 homepage preview."
     />
     <meta property="og:url" content="https://www.execora.work/" />
     <meta property="og:image" content="https://www.execora.work/og-card.png" />
@@ -27,16 +27,16 @@
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Execora - websites for local businesses" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Websites for UK Local Service Businesses | Execora" />
+    <meta name="twitter:title" content="Websites for UK Local Businesses from £39/month | Execora" />
     <meta
       name="twitter:description"
-      content="Execora builds websites for UK local service businesses. Based in Edinburgh, working across the UK. Start with a £5 homepage preview - delivered within 24 hours."
+      content="Professional websites for UK local businesses from £39/month. Hosting and SSL included. Edinburgh-based, serving the UK. Try a £5 homepage preview."
     />
     <meta name="twitter:image" content="https://www.execora.work/og-card.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Reenie+Beanie&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Reenie+Beanie&family=Kalam:wght@400;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/src/style.css" />
@@ -44,6 +44,8 @@
       {
         "@context": "https://schema.org",
         "@type": "Organization",
+        "@id": "https://www.execora.work/#organization",
+        "areaServed": { "@type": "Country", "name": "United Kingdom" },
         "name": "Execora",
         "url": "https://www.execora.work/",
         "logo": { "@type": "ImageObject", "url": "https://www.execora.work/favicon.png" },
@@ -95,9 +97,16 @@
 
         <div class="hero-inner">
           <div class="hero-copy">
-            <span class="eyebrow"><span class="eyebrow-dot"></span>Websites for <span class="eyebrow-highlight">local UK businesses</span></span>
-            <h1 class="hero-title">Your business. A homepage preview. Just <span class="accent-gold">£5</span>.</h1>
-            <p class="hero-sub">See how your business could look online with a personalised homepage preview, delivered within 24 hours. Then decide whether you want a full website.</p>
+            <span class="eyebrow hero-typing" data-fixed-service-copy>
+              <span class="sr-only">No website? Let’s change that.</span>
+              <span class="hero-typing-lines" aria-hidden="true">
+                <span class="hero-typing-sizer">No website? Let’s change that.</span>
+                <span class="hero-typing-sizer">A great website at a fair price.</span>
+                <span data-hero-typing>No website? Let’s change that.</span>
+              </span>
+            </span>
+            <h1 class="hero-title" data-fixed-service-copy>Professional websites for <span class="accent-gold">UK local businesses.</span></h1>
+            <p class="hero-sub" data-fixed-service-copy>Websites from £39/month, with hosting and SSL included and a 12-month minimum. Start with a personalised £5 homepage preview, delivered within 24 hours, before you decide.</p>
             <div class="hero-actions">
               <button class="btn btn-coral" type="button" data-payment-cta>Get my £5 homepage preview</button>
               <a class="btn btn-ghost" href="#showcase">View our work</a>
@@ -220,7 +229,7 @@
       <section class="showcase" id="showcase">
         <div class="section-head reveal">
           <span class="eyebrow">What we build</span>
-          <h2 class="section-title">Real websites for local businesses.</h2>
+          <h2 class="section-title">Website concepts for local businesses.</h2>
           <p class="section-lead">A glimpse at the clear, beautiful presence we build for businesses like yours. Every example below is a real Execora concept - honest labels, no stock claims.</p>
         </div>
 
@@ -387,7 +396,9 @@
         </div>
 
         <p class="pricing-callout reveal">
-          <b>Both plans are £39 or £59 per month with a 12-month minimum</b> - no setup fees, hosting &amp; SSL included. Billing continues monthly after 12 months; after that, cancel with 30 days' notice.
+          <b>Both plans are £39 or £59 per month with a 12-month minimum</b>
+          <span class="pricing-callout-inclusions">No setup fees · Hosting &amp; SSL included</span>
+          <span class="pricing-callout-terms">Billing continues monthly after 12 months; after that, cancel with 30 days' notice.</span>
         </p>
 
         <div class="pricing-table-wrap reveal">
@@ -453,12 +464,14 @@
                 <th scope="row">Get started</th>
                 <td>
                   <div class="plan-ctas">
+                    <a class="plan-details-link" href="/essential">View Essential plan details <span aria-hidden="true">→</span></a>
                     <a class="btn btn-coral plan-cta" href="/pay/essential" target="_blank" rel="noopener" data-subscribe-cta data-location="pricing_essential">Subscribe - £39/month</a>
 <button class="btn btn-ghost plan-cta" type="button" data-payment-cta data-plan="Essential">Or start with a £5 homepage preview</button>
                   </div>
                 </td>
                 <td class="is-featured">
                   <div class="plan-ctas">
+                    <a class="plan-details-link" href="/growth">View Growth plan details <span aria-hidden="true">→</span></a>
                     <a class="btn btn-coral plan-cta" href="/pay/growth" target="_blank" rel="noopener" data-subscribe-cta data-location="pricing_growth">Subscribe - £59/month</a>
 <button class="btn btn-ghost plan-cta" type="button" data-payment-cta data-plan="Growth">Or start with a £5 homepage preview</button>
                   </div>
@@ -488,7 +501,8 @@
                 <li>Basic on-page SEO</li>
               </ul>
               <div class="plan-ctas">
-                <a class="btn btn-coral plan-cta" href="/pay/essential" target="_blank" rel="noopener" data-subscribe-cta data-location="pricing_essential">Subscribe - £39/month</a>
+                <a class="plan-details-link" href="/essential">View Essential plan details <span aria-hidden="true">→</span></a>
+                    <a class="btn btn-coral plan-cta" href="/pay/essential" target="_blank" rel="noopener" data-subscribe-cta data-location="pricing_essential">Subscribe - £39/month</a>
                 <button class="btn btn-ghost plan-cta" type="button" data-payment-cta data-plan="Essential">Or start with a £5 homepage preview</button>
               </div>
             </article>
@@ -512,7 +526,8 @@
                 <li>Enquiry &amp; conversion tracking</li>
               </ul>
               <div class="plan-ctas">
-                <a class="btn btn-coral plan-cta" href="/pay/growth" target="_blank" rel="noopener" data-subscribe-cta data-location="pricing_growth">Subscribe - £59/month</a>
+                <a class="plan-details-link" href="/growth">View Growth plan details <span aria-hidden="true">→</span></a>
+                    <a class="btn btn-coral plan-cta" href="/pay/growth" target="_blank" rel="noopener" data-subscribe-cta data-location="pricing_growth">Subscribe - £59/month</a>
                 <button class="btn btn-ghost plan-cta" type="button" data-payment-cta data-plan="Growth">Or start with a £5 homepage preview</button>
               </div>
             </article>
@@ -706,7 +721,7 @@
               Both plans are £39 or £59 per month with a 12-month minimum and no setup fees;
               hosting, SSL and technical maintenance are included. Billing continues monthly after
               the first year, and you can cancel with 30 days' notice after the initial term. Full
-              details are in our Terms of Service.
+              details are in our <a href="/terms">Terms of Service</a>.
             </div>
           </details>
           <details class="faq-item reveal">

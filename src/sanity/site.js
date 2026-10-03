@@ -40,15 +40,6 @@ function applyIf(el, value) {
   if (el && value) el.textContent = value
 }
 
-// Update the plan monthly pricing cells in the comparison table.
-// Only applied when the monthly fee is present from Sanity; otherwise the
-// hard-coded copy in the HTML is kept. Plans have no setup fee.
-function applyPlanPrice(planKey, monthlyFee) {
-  if (typeof monthlyFee !== 'number') return
-  document.querySelectorAll(`[data-plan-monthly="${planKey}"]`)
-    .forEach((el) => { el.textContent = `£${monthlyFee}/month` })
-}
-
 export async function hydrateHomepage() {
   let settings
   try {
@@ -65,9 +56,9 @@ export async function hydrateHomepage() {
   const heroSub = document.querySelector('.hero .hero-sub')
   const heroCta = document.querySelector('.hero .hero-actions .btn-coral')
 
-  if (settings.heroEyebrow) applyIf(heroEyebrow, settings.heroEyebrow)
-  if (settings.heroTitle) setPrefixText(heroTitle, settings.heroTitle)
-  if (settings.heroSub) applyIf(heroSub, settings.heroSub)
+  if (settings.heroEyebrow && !heroEyebrow?.hasAttribute("data-fixed-service-copy")) applyIf(heroEyebrow, settings.heroEyebrow)
+  if (settings.heroTitle && !heroTitle?.hasAttribute("data-fixed-service-copy")) setPrefixText(heroTitle, settings.heroTitle)
+  if (settings.heroSub && !heroSub?.hasAttribute("data-fixed-service-copy")) applyIf(heroSub, settings.heroSub)
 
   // The primary CTA label is standardised site-wide and must not be overridden
   // by CMS content, so all home-page CTAs read "Get my £5 homepage preview".
@@ -84,6 +75,6 @@ export async function hydrateHomepage() {
   if (settings.footerTagline) applyIf(footerTagline, settings.footerTagline)
 
   // Pricing
-  applyPlanPrice('essential', settings.essentialMonthlyFee)
-  applyPlanPrice('growth', settings.growthMonthlyFee)
+  // Checkout prices are fixed by the configured Stripe links.
+  // Keep the visible price and commitment totals aligned with those links.
 }

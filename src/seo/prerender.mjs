@@ -169,6 +169,9 @@ export function prerenderPlugin() {
         })
         posts = await client.fetch(prerenderQuery)
       } catch (err) {
+        if (process.env.VERCEL_ENV === 'production') {
+          this.error('Blog prerender failed: Sanity could not be reached. Retry the build before publishing.')
+        }
         this.warn(
           `[execora-prerender] Sanity unavailable (${err.message}) - keeping SPA fallback for blog pages.`
         )

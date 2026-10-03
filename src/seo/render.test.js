@@ -251,21 +251,22 @@ test('sitemap lists home, contact, terms, blog and every post with real lastmod'
   assert.match(xml, /^<\?xml version="1.0" encoding="UTF-8"\?>/)
   assert.match(xml, /<loc>https:\/\/www\.execora\.work\/<\/loc>/)
   assert.match(xml, /<loc>https:\/\/www\.execora\.work\/contact<\/loc>/)
+  assert.ok(xml.includes('<loc>https://www.execora.work/essential</loc>'))
+  assert.ok(xml.includes('<loc>https://www.execora.work/growth</loc>'))
   assert.match(xml, /<loc>https:\/\/www\.execora\.work\/terms<\/loc>/)
   assert.match(xml, /<loc>https:\/\/www\.execora\.work\/blog<\/loc>/)
   assert.ok(
     xml.includes('<loc>https://www.execora.work/blog/how-to-show-your-prices-clearly-without-losing-enquiries</loc>')
   )
   assert.match(xml, /<lastmod>2026-03-04<\/lastmod>/)
-  assert.equal((xml.match(/<url>/g) || []).length, 5)
+  assert.equal((xml.match(/<url>/g) || []).length, 8)
 })
 
-test('robots.txt allows crawlers, disallows post-payment pages and declares the sitemap', () => {
+test('robots.txt allows crawlers to read noindex tags and declares the sitemap', () => {
   const robots = robotsTxt()
   assert.match(robots, /^User-agent: \*$/m)
   assert.match(robots, /^Allow: \/$/m)
-  assert.match(robots, /^Disallow: \/welcome$/m)
-  assert.match(robots, /^Disallow: \/thank-you$/m)
+  assert.doesNotMatch(robots, /^Disallow:/m)
   assert.match(robots, /Sitemap: https:\/\/www\.execora\.work\/sitemap\.xml/)
 })
 

@@ -98,7 +98,7 @@ test('returns a sitemap with home, blog and every returned post', async () => {
   assert.match(res._body, /https:\/\/www\.execora\.work\/blog\/how-to-show-your-prices-clearly/)
   assert.match(res._body, /https:\/\/www\.execora\.work\/blog\/another-tip/)
   assert.match(res._body, /<lastmod>2026-03-04<\/lastmod>/)
-  assert.equal((res._body.match(/<url>/g) || []).length, 6)
+  assert.equal((res._body.match(/<url>/g) || []).length, 9)
 })
 
 test('HEAD returns the same headers with no body', async () => {
@@ -142,7 +142,7 @@ test('falls back to a minimal valid sitemap when Sanity is unreachable', async (
   assert.match(res._body, /<loc>https:\/\/www\.execora\.work\/contact<\/loc>/)
   assert.match(res._body, /<loc>https:\/\/www\.execora\.work\/terms<\/loc>/)
   assert.match(res._body, /<loc>https:\/\/www\.execora\.work\/blog<\/loc>/)
-  assert.equal((res._body.match(/<url>/g) || []).length, 4)
+  assert.equal((res._body.match(/<url>/g) || []).length, 7)
 })
 
 test('passes the project/dataset from env to the client factory', async () => {

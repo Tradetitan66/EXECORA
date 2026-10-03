@@ -561,7 +561,7 @@ export function articleJsonLd(post, meta) {
     headline: post.title,
     description: meta.description || undefined,
     image: meta.image || undefined,
-    author: { '@type': 'Organization', name: post.author || EDITORIAL_TEAM, url: `${SITE_URL}/` },
+    author: { '@type': !post.author || post.author === EDITORIAL_TEAM ? 'Organization' : 'Person', name: post.author || EDITORIAL_TEAM, ...(post.authorUrl ? { url: post.authorUrl } : {}) },
     publisher: {
       '@type': 'Organization',
       name: BRAND_NAME,
@@ -609,6 +609,9 @@ export function sitemapXml(posts) {
   const urls = [
     { loc: `${SITE_URL}/` },
     { loc: `${SITE_URL}/contact` },
+    { loc: `${SITE_URL}/essential` },
+    { loc: `${SITE_URL}/compare` },
+    { loc: `${SITE_URL}/growth` },
     { loc: `${SITE_URL}/terms` },
     { loc: BLOG_URL },
   ]
@@ -633,9 +636,6 @@ export function robotsTxt() {
     '# Crawlers are welcome. The XML sitemap is declared below.',
     'User-agent: *',
     'Allow: /',
-    '# Private post-payment pages (no SEO value).',
-    'Disallow: /welcome',
-    'Disallow: /thank-you',
     '',
     `Sitemap: ${SITE_URL}/sitemap.xml`,
     '',
