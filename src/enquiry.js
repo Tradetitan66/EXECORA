@@ -15,14 +15,20 @@ const CONTACT_SCRIPT_URL = import.meta.env.NEXT_PUBLIC_CONTACT_SCRIPT_URL
 /** Build the pre-filled WhatsApp message for an enquiry. */
 export function buildEnquiryWhatsAppMessage(data = {}) {
   return [
-    'New enquiry from the Execora website -',
+    'Hi Execora,',
+    '',
+    'I filled in the contact form on your website and would like to discuss how you can help my business.',
+    '',
+    '*My details*',
     `Name: ${data.name || 'Not provided'}`,
-    `Business: ${data.business || 'Not provided'}`,
+    `Business name: ${data.business || 'Not provided'}`,
     `Email: ${data.email || 'Not provided'}`,
     data.phone ? `Phone: ${data.phone}` : '',
-    data.message ? `About: ${data.message}` : '',
+    '',
+    ...(data.message ? ['*What I need help with*', data.message, ''] : []),
+    'Could you let me know the next steps?',
+    'Thank you.',
   ]
-    .filter(Boolean)
     .join('\n')
     .trim()
 }
