@@ -111,7 +111,7 @@ const STAGGER_GRIDS = ['.step-grid', '.which-list']
 const revealEls = new Set(document.querySelectorAll('.reveal'))
 
 document.querySelectorAll('main > section > *').forEach((block) => {
-  if (block.hasAttribute('hidden') || block.getAttribute('aria-hidden') === 'true') return
+  if (block.hasAttribute('hidden') || block.getAttribute('aria-hidden') === 'true' || block.matches('.step-grid')) return
   revealEls.add(block)
 })
 

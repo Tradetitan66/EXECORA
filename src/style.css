@@ -2381,3 +2381,17 @@ body.modal-open { overflow: hidden; }
 .showcase-track.is-marquee { position: relative; scroll-snap-type: none; scroll-behavior: auto; scrollbar-width: none; }
 .showcase-track.is-marquee .showcase-card { scroll-snap-align: none; }
 .showcase-slider:has(.is-marquee) .showcase-arrow { display: none; }
+
+/* Each step enters separately; the grid stays still. */
+@media (prefers-reduced-motion: no-preference) {
+  #how-it-works .step.reveal { transform: translateY(18px); transition-duration: .55s; }
+  #how-it-works .step.reveal.is-visible { transform: translateY(0); }
+  #how-it-works .step.is-visible .coin-num { animation: step-coin-arrive .6s ease-out both; }
+  @keyframes step-coin-arrive {
+    from { transform: scale(.9) rotate(-8deg); }
+    to { transform: scale(1) rotate(0); }
+  }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  #how-it-works .step.reveal.is-visible:hover { transform: translateY(-4px); transition-delay: 0ms !important; }
+}
