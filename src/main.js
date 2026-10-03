@@ -207,7 +207,6 @@ function initAutoScrollTrack({ trackSel, prevSel, nextSel, autoMs = 4000 }) {
   updateArrows()
   start()
 }
-initAutoScrollTrack({ trackSel: '[data-showcase-track]', prevSel: '[data-showcase-prev]', nextSel: '[data-showcase-next]' })
 initAutoScrollTrack({ trackSel: '[data-reviews-track]', prevSel: '[data-reviews-prev]', nextSel: '[data-reviews-next]' })
 
 /* Live demo iframe overlay - opens the demo site in-page so visitors
@@ -383,3 +382,59 @@ if (typingLabel) {
   document.addEventListener('visibilitychange', restart)
   restart()
 }
+
+function initContinuousMarquee(businessTrack, direction = 1) {
+if (businessTrack) {
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+  const originals = [...businessTrack.children]
+  let paused = false
+  let frame
+  let previousTime
+  let loopWidth = 0
+  function measure() {
+    const firstClone = businessTrack.querySelector('[data-marquee-clone]')
+    loopWidth = firstClone ? firstClone.offsetLeft - originals[0].offsetLeft : 0
+  }
+  function animate(time) {
+    if (previousTime && !paused && !document.hidden && loopWidth) {
+      businessTrack.scrollLeft += direction * Math.min(time - previousTime, 50) * 0.035
+      if (businessTrack.scrollLeft >= loopWidth * 2) businessTrack.scrollLeft -= loopWidth
+      if (businessTrack.scrollLeft < loopWidth) businessTrack.scrollLeft += loopWidth
+    }
+    previousTime = time
+    frame = requestAnimationFrame(animate)
+  }
+  function configure() {
+    cancelAnimationFrame(frame)
+    previousTime = undefined
+    businessTrack.querySelectorAll('[data-marquee-clone]').forEach(el => el.remove())
+    businessTrack.classList.toggle('is-marquee', !reducedMotion.matches)
+    if (reducedMotion.matches) return
+    // Enough repeated cards to fill wide screens and wrap without a gap.
+    for (let repeat = 0; repeat < 3; repeat++) {
+      originals.forEach(card => {
+        const clone = card.cloneNode(true)
+        clone.setAttribute('data-marquee-clone', '')
+        clone.setAttribute('aria-hidden', 'true')
+        clone.setAttribute('inert', '')
+        businessTrack.appendChild(clone)
+      })
+    }
+    measure()
+    businessTrack.scrollLeft = loopWidth
+    frame = requestAnimationFrame(animate)
+  }
+  businessTrack.addEventListener('pointerenter', () => { paused = true })
+  businessTrack.addEventListener('pointerleave', () => { paused = false })
+  businessTrack.addEventListener('focusin', () => { paused = true })
+  businessTrack.addEventListener('focusout', () => { paused = false })
+  businessTrack.addEventListener('touchstart', () => { paused = true }, { passive: true })
+  businessTrack.addEventListener('touchend', () => { paused = false }, { passive: true })
+  reducedMotion.addEventListener('change', configure)
+  new ResizeObserver(measure).observe(businessTrack)
+  configure()
+}
+
+}
+initContinuousMarquee(document.getElementById('business-types-track'))
+initContinuousMarquee(document.querySelector('[data-showcase-track]'), -1)

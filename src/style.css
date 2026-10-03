@@ -2359,3 +2359,25 @@ body.modal-open { overflow: hidden; }
   letter-spacing: 0;
   line-height: 1.5;
 }
+
+/* Compact business types carousel. */
+#services { padding-block: 3.5rem; }
+#services .section-head { margin-bottom: 1.5rem; }
+.biz-carousel-controls { max-width: var(--maxw); margin: 0 auto .75rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; color: var(--muted); font-size: .85rem; }
+.biz-carousel-controls > div { display: flex; gap: .5rem; }
+.biz-scroll-button { width: 44px; height: 44px; border: 1px solid rgba(201,164,92,.3); border-radius: 50%; background: var(--card); color: var(--ink); font-size: 1.2rem; }
+.biz-scroll-button:disabled { opacity: .35; cursor: default; }
+#services .biz-grid { display: flex; max-width: var(--maxw); gap: 1rem; overflow-x: auto; scroll-snap-type: x mandatory; padding: .5rem .25rem 1rem; margin-inline: auto; }
+#services .biz-card { flex: 0 0 290px; display: grid; grid-template-columns: 48px minmax(0, 1fr); grid-template-rows: auto 1fr; align-content: start; column-gap: 1rem; row-gap: .65rem; padding: 1.25rem; scroll-snap-align: start; border-radius: 1.25rem; }
+#services .biz-icon { grid-column: 1; grid-row: 1; width: 48px; height: 48px; margin: 0; border-radius: 15px; }
+#services .biz-title { grid-column: 2; grid-row: 1; align-self: center; margin: 0; font-size: 1.05rem; }
+#services .biz-body { grid-column: 1 / -1; grid-row: 2; margin: 0; font-size: .9rem; line-height: 1.6; }
+@media (max-width: 640px) { #services .biz-card { flex-basis: min(290px, 85vw); } }
+
+#services .biz-grid.is-marquee { position: relative; scroll-snap-type: none; scrollbar-width: none; }
+#services .biz-grid.is-marquee::-webkit-scrollbar { display: none; }
+#services .biz-grid.is-marquee .biz-card { scroll-snap-align: none; }
+
+.showcase-track.is-marquee { position: relative; scroll-snap-type: none; scroll-behavior: auto; scrollbar-width: none; }
+.showcase-track.is-marquee .showcase-card { scroll-snap-align: none; }
+.showcase-slider:has(.is-marquee) .showcase-arrow { display: none; }

@@ -1,0 +1,37 @@
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css";
+@import "tw-animate-css";
+@source "../components";
+/* Scoped tokens keep the existing site's --muted and --card intact. */
+.comparison-block {
+ --background: oklch(0.961 0.008 91.5); --foreground: oklch(0.22 0.016 256.8);
+ --card: oklch(0.985 0.005 95.1); --card-foreground: var(--foreground);
+ --popover: var(--card); --popover-foreground: var(--foreground);
+ --primary: #ffb7b2; --primary-foreground: #292524;
+ --secondary: oklch(0.934 0.011 89.7); --secondary-foreground: var(--foreground);
+ --muted: oklch(0.934 0.011 89.7); --muted-foreground: oklch(0.495 0.029 263.2);
+ --accent: var(--secondary); --accent-foreground: var(--foreground);
+ --border: oklch(0.901 0.014 88.7); --input: var(--border); --ring: oklch(0.7 0.13 75);
+ --destructive: #b42318; --destructive-foreground: white; --radius: .65rem;
+ padding-inline: 0; color: var(--foreground);
+}
+.dark .comparison-block {
+ --background: oklch(0.176 0.014 258.4); --foreground: oklch(0.92 0.009 84.6);
+ --card: oklch(0.239 0.021 264.1); --primary: #ffb7b2; --primary-foreground: #292524;
+ --secondary: oklch(0.324 0.023 264.2); --muted: oklch(0.277 0.023 267.2); --muted-foreground: oklch(0.704 0.021 263);
+ --border: oklch(0.92 0.01 90 / 9%); --input: oklch(0.92 0.01 90 / 14%); --ring: oklch(0.74 0.12 78);
+}
+@theme inline {
+ --color-background: var(--background); --color-foreground: var(--foreground);
+ --color-card: var(--card); --color-card-foreground: var(--card-foreground);
+ --color-primary: var(--primary); --color-primary-foreground: var(--primary-foreground);
+ --color-secondary: var(--secondary); --color-secondary-foreground: var(--secondary-foreground);
+ --color-muted: var(--muted); --color-muted-foreground: var(--muted-foreground);
+ --color-accent: var(--accent); --color-accent-foreground: var(--accent-foreground);
+ --color-border: var(--border); --color-input: var(--input); --color-ring: var(--ring);
+ --color-destructive: var(--destructive); --color-destructive-foreground: var(--destructive-foreground);
+}
+
+.comparison-block a[data-subscribe-cta] { border-radius: 999px; box-shadow: 0 3px 0 #f79a94; }
+.comparison-block a[data-subscribe-cta]:hover { background-color: #f79a94; }

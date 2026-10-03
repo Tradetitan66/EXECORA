@@ -1,12 +1,18 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
+import tailwindcss from '@tailwindcss/vite'
+import { comparisonPrerender } from './src/comparison-prerender.mjs'
 import { prerenderPlugin } from './src/seo/prerender.mjs'
 
 export default defineConfig({
   // Expose env vars prefixed NEXT_PUBLIC_ (and standard VITE_) to client code,
   // so import.meta.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK is available at build time.
   envPrefix: ['NEXT_PUBLIC_', 'VITE_'],
+  resolve: { alias: { "@": fileURLToPath(new URL(".", import.meta.url)) } },
+  esbuild: { jsx: "automatic" },
   plugins: [
+    tailwindcss(),
+    comparisonPrerender(),
     // In dev, rewrite /blog and /blog/<slug> to blog.html (matches the Vercel
     // rewrites used in production for the Sanity-driven blog routes).
     {
