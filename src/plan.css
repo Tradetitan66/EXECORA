@@ -37,3 +37,6 @@
 .plan-faq details { padding: 1rem 0; border-bottom: 1px solid rgba(201,164,92,.25); }
 .plan-faq summary { cursor: pointer; font-weight: 600; }
 .plan-faq p { color: var(--muted); line-height: 1.6; margin-top: .75rem; }
+
+.plan-compare { display: inline-flex; align-items: center; gap: .45rem; }
+.plan-compare-icon { flex-shrink: 0; }
