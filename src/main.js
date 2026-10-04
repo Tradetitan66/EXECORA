@@ -391,15 +391,17 @@ if (businessTrack) {
   let frame
   let previousTime
   let loopWidth = 0
+  let scrollPosition = 0
   function measure() {
     const firstClone = businessTrack.querySelector('[data-marquee-clone]')
     loopWidth = firstClone ? firstClone.offsetLeft - originals[0].offsetLeft : 0
   }
   function animate(time) {
     if (previousTime && !paused && !document.hidden && loopWidth) {
-      businessTrack.scrollLeft += direction * Math.min(time - previousTime, 50) * 0.035
-      if (businessTrack.scrollLeft >= loopWidth * 2) businessTrack.scrollLeft -= loopWidth
-      if (businessTrack.scrollLeft < loopWidth) businessTrack.scrollLeft += loopWidth
+      scrollPosition += direction * Math.min(time - previousTime, 50) * 0.035
+      if (scrollPosition >= loopWidth * 2) scrollPosition -= loopWidth
+      if (scrollPosition < loopWidth) scrollPosition += loopWidth
+      businessTrack.scrollLeft = scrollPosition
     }
     previousTime = time
     frame = requestAnimationFrame(animate)
@@ -421,7 +423,8 @@ if (businessTrack) {
       })
     }
     measure()
-    businessTrack.scrollLeft = loopWidth
+    scrollPosition = loopWidth
+    businessTrack.scrollLeft = scrollPosition
     frame = requestAnimationFrame(animate)
   }
   businessTrack.addEventListener('pointerenter', () => { paused = true })

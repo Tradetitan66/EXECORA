@@ -2402,3 +2402,5 @@ body.modal-open { overflow: hidden; }
 .about-explanation { max-width: 48rem; margin: 0 auto; font-size: 1.05rem; line-height: 1.8; color: var(--muted); }
 .about-explanation p + p { margin-top: 1.25rem; }
 .about-explanation a { color: var(--coral-ink); text-decoration: underline; text-underline-offset: .2em; }
+
+#services .biz-grid.is-marquee { scroll-behavior: auto; }
